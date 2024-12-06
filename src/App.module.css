@@ -1,0 +1,35 @@
+.sentences {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  overflow-y: auto;
+  max-height: 300px;
+  box-shadow: 1px 2px 5px #0004;
+}
+
+.words {
+  padding: 5px 10px;
+}
+
+.words:nth-child(even) {
+  opacity: 0.5;
+  font-size: 0.5rem;
+}
+
+.word {
+  display: inline-block;
+  transition-duration: 0.5s;
+  transition-property: color, scale;
+}
+
+.past {
+  color: gray;
+}
+
+.present {
+  color: red;
+  scale: 1.1;
+}
+
+.future {
+  color: black;
+}

@@ -1,31 +1,66 @@
-import { useAtom } from "jotai";
-import Waveform from "./Waveform";
-import { microphoneStream, useRecording } from "./audio";
+import { Fragment } from "react";
+import { useAtomValue } from "jotai";
+import { sentencesAtom, videoAtom, type Sentence } from "./data";
+import Player, { playingAtom, timeAtom } from "./Player";
+import classes from "./App.module.css";
+import clsx from "clsx";
 
 function App() {
-  const [getMicrophoneStream] = useAtom(microphoneStream);
-  const [getMediaRecorder] = useAtom(microphoneStream);
+  const video = useAtomValue(videoAtom);
+  const sentences = useAtomValue(sentencesAtom);
 
-  const { start, recording, stop, waveform, src } = useRecording();
-
-  if (!getMicrophoneStream || !getMediaRecorder)
-    return (
-      <>
-        Reset this page's permissions, refresh, and allow usage of microphone.
-      </>
-    );
+  if (!video || !sentences) return <></>;
 
   return (
     <>
-      <button onClick={recording ? stop : start}>
-        {recording ? "stop" : "start"}
-      </button>
-
-      <Waveform waveform={waveform} />
-
-      <audio src={src} controls />
+      <Player video={video} />
+      <div className={classes.sentences}>
+        {sentences.map(({ original, translation }, index) => (
+          <Fragment key={index}>
+            <Words words={translation} />
+            <Words words={original} />
+          </Fragment>
+        ))}
+      </div>
     </>
   );
 }
 
 export default App;
+
+const Words = ({ words }: { words: Sentence["original"] }) => {
+  const time = useAtomValue(timeAtom);
+  const playing = useAtomValue(playingAtom);
+
+  return (
+    <div className={classes.words}>
+      {words.map(({ text, start, end }, index) => {
+        let state = "";
+        if (!playing) state = "";
+        else if (time < start) state = "future";
+        else if (time <= end) state = "present";
+        else state = "past";
+        return (
+          <span
+            ref={(el) => {
+              if (state === "present")
+                el?.parentElement?.scrollIntoView({
+                  block: "center",
+                  behavior: "smooth",
+                });
+            }}
+            key={index}
+            className={clsx(
+              classes.word,
+              state === "past" && classes.past,
+              state === "present" && classes.present,
+              state === "future" && classes.future
+            )}
+          >
+            {text}&nbsp;
+          </span>
+        );
+      })}
+    </div>
+  );
+};
