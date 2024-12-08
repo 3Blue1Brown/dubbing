@@ -1,18 +1,15 @@
 .sentences {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr;
   overflow-y: auto;
   max-height: 300px;
-  box-shadow: 1px 2px 5px #0004;
+  border: solid 1px lightgray;
+  border-radius: 5px;
+  padding: 10px;
 }
 
 .words {
-  padding: 5px 10px;
-}
-
-.words:nth-child(even) {
-  opacity: 0.5;
-  font-size: 0.5rem;
+  padding: 0 10px;
 }
 
 .word {

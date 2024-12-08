@@ -14,10 +14,7 @@ type Props = {
 const Player = ({ video }: Props) => {
   const playing = useAtomValue(playingAtom);
 
-  useInterval(
-    async () => setAtom(timeAtom, (await player?.getCurrentTime()) || 0),
-    playing ? 100 : null
-  );
+  useInterval(updateTime, playing ? 100 : null);
 
   return (
     <YouTube
@@ -27,8 +24,11 @@ const Player = ({ video }: Props) => {
         (player = event.target)
       }
       onStateChange={async (event) => {
-        /** when user seeks and releases */
-        if (event.data === 1) setAtom(playingAtom, true);
+        /** when user plays/seeks */
+        if (event.data === 1) {
+          setAtom(playingAtom, true);
+          updateTime();
+        }
         /** when user pauses/stops */
         if (event.data === 0 || event.data === 2) setAtom(playingAtom, false);
       }}
@@ -40,18 +40,27 @@ const Player = ({ video }: Props) => {
 
 export default Player;
 
+/** update time */
+const updateTime = async (time?: number) =>
+  setAtom(timeAtom, time ?? ((await player?.getCurrentTime()) || 0));
+
 /** internal player object */
 let player: YouTubePlayer | null = null;
 
-/** play video for certain time segment */
-export const play = (start?: number) => {
-  /** play from start */
-  player?.seekTo(start || 0, true);
+/** play video at certain time */
+export const play = (time: number = 0) => {
+  player?.seekTo(time, true);
   player?.playVideo();
 };
 
+/** seek video certain time */
+export const seek = async (time: number = 0) => {
+  player?.seekTo(time, true);
+  updateTime(time);
+};
+
 /** pause/stop video */
-export const stopVideo = () => {
+export const stop = () => {
   player?.pauseVideo();
 };
 
