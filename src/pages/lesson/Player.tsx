@@ -1,10 +1,8 @@
 import YouTube from "react-youtube";
-import type { YouTubePlayer } from "youtube-player/dist/types";
-import { lengthAtom } from "@/pages/lesson/data";
+import { playerAtom, volumeVideo } from "@/pages/lesson/state";
 import { setAtom } from "@/util/atoms";
+import { lengthAtom } from "./data";
 import classes from "./Player.module.css";
-
-export let player: YouTubePlayer | null = null;
 
 type Props = {
   video: string;
@@ -15,7 +13,9 @@ const Player = ({ video }: Props) => {
     <YouTube
       videoId={video}
       onReady={async (event) => {
-        player = event.target;
+        const player = event.target;
+        setAtom(playerAtom, player);
+        volumeVideo();
         const length = await player.getDuration();
         if (length) setAtom(lengthAtom, length);
       }}

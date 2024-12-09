@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useParams } from "react-router";
 import { useAtomValue } from "jotai";
+import { playerAtom } from "@/pages/lesson/state";
 import Controls from "./Controls";
 import { getData, sentencesAtom, videoAtom } from "./data";
 import classes from "./Lesson.module.css";
@@ -10,12 +11,14 @@ import Waveform from "./Waveform";
 
 const Lesson = () => {
   const video = useAtomValue(videoAtom);
+  const player = useAtomValue(playerAtom);
   const sentences = useAtomValue(sentencesAtom);
 
   const { year = "", title = "", language = "" } = useParams();
 
   useEffect(() => {
     getData({ year, title, language });
+    document.title = [year, title, language].join(" / ");
   }, [year, title, language]);
 
   if (!video || !sentences) return <></>;
@@ -23,9 +26,13 @@ const Lesson = () => {
   return (
     <div className={classes.lesson}>
       <Player video={video} />
-      <Sentences />
-      <Controls />
-      <Waveform />
+      {player && (
+        <>
+          <Sentences />
+          <Controls />
+          <Waveform />
+        </>
+      )}
     </div>
   );
 };

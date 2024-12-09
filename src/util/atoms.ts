@@ -10,4 +10,5 @@ export const setAtom = <Value>(atom: PrimitiveAtom<Value>, value: Value) =>
 export const subscribe = <Value>(
   atom: PrimitiveAtom<Value>,
   func: (value: Value) => void,
-) => getDefaultStore().sub(atom, () => func(getAtom(atom)));
+) =>
+  getDefaultStore().sub(atom, () => func(getAtom(atom)));

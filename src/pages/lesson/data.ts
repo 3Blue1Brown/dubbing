@@ -22,6 +22,7 @@ export const sentencesAtom = atom<Sentence[]>();
 export const lengthAtom = atom<number>(1);
 
 const pauseGap = 2;
+const pauseChars = Array(10).fill("▪").join(" ");
 
 export const getData = async (lesson: Lesson) => {
   const video = (await request<string>(videoUrl(lesson), "text"))
@@ -38,8 +39,8 @@ export const getData = async (lesson: Lesson) => {
       translationSentences.splice(index, 0, {
         start: prevEnd,
         end: nextStart,
-        input: "● ● ● ● ● ● ● ● ● ●",
-        translatedText: "● ● ● ● ● ● ● ● ● ●",
+        input: pauseChars,
+        translatedText: pauseChars,
         from_community_srt: "",
       });
       index--;

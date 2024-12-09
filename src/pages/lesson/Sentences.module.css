@@ -23,7 +23,7 @@
 
 .word {
   position: relative;
-  transition-duration: 0.5s;
+  transition-duration: 0.2s;
   transition-property: color, background, opacity;
 }
 

@@ -5,7 +5,7 @@
   --off-white: #f8fafa;
   --light-gray: #e8f0f0;
   --gray: #a8b0b0;
-  --dark-gray: #788080;
+  --dark-gray: #687070;
   --off-black: #485050;
   --black: #000000;
   --shadow: #00000040;
@@ -16,9 +16,9 @@
 
 body {
   margin: 0;
-  line-height: 2;
-  font-family: "Open Sans", sans-serif;
   accent-color: var(--primary);
+  line-height: 1.5;
+  font-family: "Open Sans", sans-serif;
 }
 
 #root {
@@ -30,6 +30,10 @@ body {
   gap: 20px;
 }
 
+p {
+  line-height: 2;
+}
+
 a {
   color: var(--primary);
 }
@@ -38,10 +42,23 @@ a:hover {
   color: var(--secondary);
 }
 
+label {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  gap: 5px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
 button {
   display: inline-flex;
   appearance: none;
-  padding: 10px;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 5px 10px;
   border: none;
   border-radius: var(--rounded);
   background: none;
@@ -51,6 +68,10 @@ button {
   transition:
     color var(--fast),
     background var(--fast);
+}
+
+button:has(> :only-child) {
+  padding: 0;
 }
 
 button:hover {
@@ -65,6 +86,10 @@ button:hover.accent {
   color: var(--secondary);
 }
 
+input {
+  min-width: 0;
+}
+
 input[type="checkbox"] {
   width: 15px;
   height: 15px;
@@ -74,12 +99,66 @@ input[type="range"] {
   cursor: pointer;
 }
 
-label {
+select {
   display: inline-flex;
+  appearance: none;
   align-items: center;
-  gap: 5px;
-  accent-color: var(--primary);
+  justify-content: center;
+  min-width: 30px;
+  max-width: 95px;
+  min-height: 30px;
+  padding: 5px 10px;
+  gap: 10px;
+  border: none;
+  border-radius: var(--rounded);
+  background: var(--light-gray);
+  color: currentColor;
+  font: inherit;
+  text-decoration: none;
   cursor: pointer;
+  transition:
+    background var(--fast),
+    color var(--fast);
+}
+
+select:hover {
+  background: var(--dark-gray);
+  color: var(--white);
+}
+
+label:has(select) select {
+  padding-right: 30px;
+}
+
+label:has(select)::after {
+  position: absolute;
+  right: 10px;
+  translate: 0 -2px;
+  content: "▾";
+  pointer-events: none;
+  transition: color var(--fast);
+}
+
+label:hover:has(select)::after {
+  color: var(--white);
+}
+
+.tippy-box {
+  padding: 10px 15px;
+  border-radius: var(--rounded);
+  background: var(--off-black);
+  color: var(--white);
+  font-size: 1rem;
+}
+
+.tippy-arrow {
+  z-index: 99;
+  color: var(--off-black);
+}
+
+.tippy-content {
+  max-width: 200px;
+  padding: 0;
 }
 
 :not(html) ::-webkit-scrollbar {
