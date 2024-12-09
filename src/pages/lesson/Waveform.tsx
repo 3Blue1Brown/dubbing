@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import audioBufferToWav from "audiobuffer-to-wav";
+import { useAtomValue } from "jotai";
 import WaveSurfer from "wavesurfer.js";
+import HoverPlugin from "wavesurfer.js/dist/plugins/hover.js";
 import RecordPlugin from "wavesurfer.js/dist/plugins/record.esm.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import ZoomPlugin from "wavesurfer.js/dist/plugins/zoom.js";
-import classes from "./Waveform.module.css";
-import HoverPlugin from "wavesurfer.js/dist/plugins/hover.js";
-import { useAtomValue } from "jotai";
+import { formatTime } from "@/util/string";
 import { lengthAtom } from "./data";
-import audioBufferToWav from "audiobuffer-to-wav";
-import { formatTime } from "./string";
+import classes from "./Waveform.module.css";
 
 const regions = RegionsPlugin.create();
 
@@ -50,17 +50,17 @@ const Waveform = () => {
             new AudioBuffer({
               length: 44100 * (length || 1),
               sampleRate: 44100,
-            })
+            }),
           ),
-        ])
+        ]),
       );
 
       wavesurfer.current = WaveSurfer.create({
         container: containerRef.current,
         minPxPerSec: 1,
         waveColor: "gray",
-        progressColor: "deepskyblue",
-        cursorColor: "deepskyblue",
+        progressColor: "var(--primary)",
+        cursorColor: "var(--primary)",
         autoScroll: true,
         autoCenter: true,
         url,

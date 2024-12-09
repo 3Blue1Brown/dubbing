@@ -1,14 +1,12 @@
 import { atom } from "jotai";
-import { request } from "./request";
-import { setAtom } from "./atoms";
+import { setAtom } from "@/util/atoms";
+import { request } from "@/util/request";
 
 type Lesson = {
-  year: number;
+  year: string;
   title: string;
   language: string;
 };
-
-const testLesson: Lesson = { year: 2019, title: "clacks", language: "italian" };
 
 const videoUrl = ({ year, title }: Lesson) =>
   `https://raw.githubusercontent.com/3b1b/captions/refs/heads/main/${year}/${title}/video_url.txt`;
@@ -21,17 +19,17 @@ const wordTimingsUrl = ({ year, title }: Lesson) =>
 
 export const videoAtom = atom<string>();
 export const sentencesAtom = atom<Sentence[]>();
-export const lengthAtom = atom<number>();
+export const lengthAtom = atom<number>(1);
 
 const pauseGap = 2;
 
-const getData = async (lesson: Lesson) => {
+export const getData = async (lesson: Lesson) => {
   const video = (await request<string>(videoUrl(lesson), "text"))
     .split(/\/|=/)
     .pop();
   setAtom(videoAtom, video);
   const translationSentences = await request<_TranslationSentences>(
-    sentenceTranslationsUrl(lesson)
+    sentenceTranslationsUrl(lesson),
   );
   for (let index = -1; index < translationSentences.length; index++) {
     const prevEnd = translationSentences[index - 1]?.end || 0;
@@ -64,7 +62,7 @@ const getData = async (lesson: Lesson) => {
           wordStart >= sentence.start &&
           wordStart <= sentence.end &&
           wordEnd >= sentence.start &&
-          wordEnd <= sentence.end
+          wordEnd <= sentence.end,
       )
       .map(([text, start, end]) => ({ text, start, end }));
     if (!original.length)
@@ -72,15 +70,13 @@ const getData = async (lesson: Lesson) => {
     const translation = splitEvenly(
       sentence.translatedText,
       sentence.start,
-      sentence.end
+      sentence.end,
     );
     return { original, translation };
   });
   setAtom(sentencesAtom, sentences);
   setAtom(lengthAtom, sentences.at(-1)!.translation.at(-1)!.end);
 };
-
-getData(testLesson);
 
 type _TranslationSentences = {
   input: string;

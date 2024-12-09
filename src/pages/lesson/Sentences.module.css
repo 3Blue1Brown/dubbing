@@ -1,11 +1,19 @@
+.container {
+  position: relative;
+}
+
+.button {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
 .sentences {
   display: grid;
   grid-template-columns: 1fr;
-  overflow-y: auto;
-  height: 200px;
-  border: solid 1px lightgray;
-  border-radius: 5px;
+  height: 140px;
   padding: 10px;
+  overflow-y: auto;
   resize: vertical;
 }
 
@@ -14,19 +22,15 @@
 }
 
 .word {
+  position: relative;
   transition-duration: 0.5s;
   transition-property: color, background, opacity;
-  position: relative;
 }
 
 .past {
-  color: deepskyblue;
+  color: var(--primary);
 }
 
 .present {
-  color: deeppink;
-}
-
-.future {
-  color: black;
+  color: var(--secondary);
 }

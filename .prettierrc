@@ -1,0 +1,19 @@
+{
+  "plugins": [
+    "@ianvs/prettier-plugin-sort-imports",
+    "prettier-plugin-css-order"
+  ],
+  "importOrder": [
+    "^react",
+    "^[a-zA-Z]",
+    "^@[a-zA-Z]",
+    "^@/",
+    "^/",
+    "^./",
+    "^../"
+  ],
+  "importOrderParserPlugins": ["typescript", "jsx", "importAssertions"],
+  "cssDeclarationSorterOrder": "smacss",
+  "jsdocCapitalizeDescription": false,
+  "htmlWhitespaceSensitivity": "strict"
+}

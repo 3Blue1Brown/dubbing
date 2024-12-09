@@ -1,0 +1,23 @@
+.lesson {
+  display: grid;
+  grid-template-columns: min(300px, 50%) 4fr;
+  align-items: center;
+  max-width: 100%;
+  gap: 20px;
+}
+
+@media (max-width: 600px) {
+  .lesson {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lesson > * {
+  border-radius: var(--rounded);
+  box-shadow: var(--box-shadow);
+}
+
+.lesson > :nth-child(3),
+.lesson > :nth-child(4) {
+  grid-column: 1 / -1;
+}

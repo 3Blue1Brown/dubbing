@@ -1,11 +1,8 @@
 .player {
   position: relative;
   aspect-ratio: 16 / 9;
-  width: 300px;
-  max-width: 100%;
   background-position: center;
   background-size: contain;
-  background-color: var(--dark-gray);
 }
 
 .iframe {
