@@ -21,6 +21,9 @@ const wordTimingsUrl = ({ year, title }: Lesson) =>
 
 export const videoAtom = atom<string>();
 export const sentencesAtom = atom<Sentence[]>();
+export const lengthAtom = atom<number>();
+
+const pauseGap = 2;
 
 const getData = async (lesson: Lesson) => {
   const video = (await request<string>(videoUrl(lesson), "text"))
@@ -30,9 +33,32 @@ const getData = async (lesson: Lesson) => {
   const translationSentences = await request<_TranslationSentences>(
     sentenceTranslationsUrl(lesson)
   );
+  for (let index = -1; index < translationSentences.length; index++) {
+    const prevEnd = translationSentences[index - 1]?.end || 0;
+    const nextStart = translationSentences[index]?.start || 0;
+    if (prevEnd < nextStart - pauseGap) {
+      translationSentences.splice(index, 0, {
+        start: prevEnd,
+        end: nextStart,
+        input: "● ● ● ● ● ● ● ● ● ●",
+        translatedText: "● ● ● ● ● ● ● ● ● ●",
+        from_community_srt: "",
+      });
+      index--;
+    }
+  }
   const wordTimings = await request<_WordTimings>(wordTimingsUrl(lesson));
+  const splitEvenly = (text: string, start: number, end: number) => {
+    const words = text.split(/\s/);
+    const step = (end - start) / words.length;
+    return words.map((text, index) => ({
+      text,
+      start: start + step * index,
+      end: start + step * (index + 1),
+    }));
+  };
   const sentences: Sentence[] = translationSentences.map((sentence) => {
-    const original = wordTimings
+    let original = wordTimings
       .filter(
         ([, wordStart, wordEnd]) =>
           wordStart >= sentence.start &&
@@ -41,18 +67,17 @@ const getData = async (lesson: Lesson) => {
           wordEnd <= sentence.end
       )
       .map(([text, start, end]) => ({ text, start, end }));
-
-    const translationWords = sentence.translatedText.split(/\s/);
-    const duration = sentence.end - sentence.start;
-    const timeStep = duration / translationWords.length;
-    const translation = translationWords.map((text, index) => ({
-      text,
-      start: sentence.start + timeStep * index,
-      end: sentence.start + timeStep * (index + 1),
-    }));
+    if (!original.length)
+      original = splitEvenly(sentence.input, sentence.start, sentence.end);
+    const translation = splitEvenly(
+      sentence.translatedText,
+      sentence.start,
+      sentence.end
+    );
     return { original, translation };
   });
   setAtom(sentencesAtom, sentences);
+  setAtom(lengthAtom, sentences.at(-1)!.translation.at(-1)!.end);
 };
 
 getData(testLesson);

@@ -2,10 +2,11 @@
   display: grid;
   grid-template-columns: 1fr;
   overflow-y: auto;
-  max-height: 300px;
+  height: 200px;
   border: solid 1px lightgray;
   border-radius: 5px;
   padding: 10px;
+  resize: vertical;
 }
 
 .words {
@@ -13,18 +14,17 @@
 }
 
 .word {
-  display: inline-block;
   transition-duration: 0.5s;
-  transition-property: color, scale;
+  transition-property: color, background, opacity;
+  position: relative;
 }
 
 .past {
-  color: gray;
+  color: deepskyblue;
 }
 
 .present {
-  color: red;
-  scale: 1.1;
+  color: deeppink;
 }
 
 .future {

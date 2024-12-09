@@ -1,8 +1,7 @@
 body {
   margin: 0;
-  font-family: sans-serif;
-  font-size: 13pt;
   line-height: 2;
+  font-family: "Open Sans", sans-serif;
 }
 
 #root {
@@ -12,4 +11,32 @@ body {
   align-items: center;
   gap: 20px;
   padding: 20px;
+}
+
+button {
+  display: inline-flex;
+  padding: 10px;
+  border: solid 1px lightgray;
+  border-radius: 5px;
+  cursor: pointer;
+  background: none;
+  color: deepskyblue;
+  font: inherit;
+}
+
+button:hover {
+  background: lightgray;
+}
+
+input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+}
+
+label {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  cursor: pointer;
+  accent-color: deepskyblue;
 }

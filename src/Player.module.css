@@ -1,9 +1,8 @@
 .player {
   position: relative;
   aspect-ratio: 16 / 9;
-  width: 500px;
+  width: 300px;
   max-width: 100%;
-  height: 100%;
   background-position: center;
   background-size: contain;
   background-color: var(--dark-gray);

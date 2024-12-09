@@ -3,6 +3,7 @@ import { sentencesAtom, videoAtom } from "./data";
 import Player from "./Player";
 import Sentences from "./Sentences";
 import Waveform from "./Waveform";
+import Controls from "./Controls";
 
 const App = () => {
   const video = useAtomValue(videoAtom);
@@ -13,8 +14,9 @@ const App = () => {
   return (
     <>
       <Player video={video} />
-      <Waveform />
       <Sentences />
+      <Controls />
+      <Waveform />
     </>
   );
 };

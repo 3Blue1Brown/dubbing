@@ -1,4 +1,3 @@
-/** general request */
 export async function request<Response>(
   url: string | URL,
   parse: "json" | "text" = "json"

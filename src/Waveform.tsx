@@ -2,14 +2,39 @@ import { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 import RecordPlugin from "wavesurfer.js/dist/plugins/record.esm.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
+import ZoomPlugin from "wavesurfer.js/dist/plugins/zoom.js";
 import classes from "./Waveform.module.css";
+import HoverPlugin from "wavesurfer.js/dist/plugins/hover.js";
+import { useAtomValue } from "jotai";
+import { lengthAtom } from "./data";
+import audioBufferToWav from "audiobuffer-to-wav";
+import { formatTime } from "./string";
+
+const regions = RegionsPlugin.create();
+
+const hover = HoverPlugin.create({
+  lineWidth: 1,
+  labelSize: "16px",
+  formatTimeCallback: formatTime,
+});
+
+const zoom = ZoomPlugin.create({
+  exponentialZooming: true,
+  maxZoom: 44100,
+});
+
+export const record = RecordPlugin.create({
+  continuousWaveform: true,
+  continuousWaveformDuration: 5,
+  mediaRecorderTimeslice: 1,
+});
 
 const Waveform = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const wavesurfer = useRef<WaveSurfer>();
-  const recorder = useRef<RecordPlugin>();
-  const regions = useRef<RegionsPlugin>();
   const [, setDevices] = useState<MediaDeviceInfo[]>([]);
+
+  const length = useAtomValue(lengthAtom);
 
   useEffect(() => {
     RecordPlugin.getAvailableAudioDevices().then(setDevices);
@@ -18,63 +43,64 @@ const Waveform = () => {
   useEffect(() => {
     (async () => {
       if (!containerRef.current) return;
-      regions.current = RegionsPlugin.create();
 
-      recorder.current = RecordPlugin.create({
-        continuousWaveform: true,
-        continuousWaveformDuration: 5,
-        mediaRecorderTimeslice: 1,
-      });
+      const url = window.URL.createObjectURL(
+        new Blob([
+          audioBufferToWav(
+            new AudioBuffer({
+              length: 44100 * (length || 1),
+              sampleRate: 44100,
+            })
+          ),
+        ])
+      );
 
       wavesurfer.current = WaveSurfer.create({
         container: containerRef.current,
+        minPxPerSec: 1,
         waveColor: "gray",
-        progressColor: "skyblue",
-        plugins: [recorder.current, regions.current],
+        progressColor: "deepskyblue",
+        cursorColor: "deepskyblue",
+        autoScroll: true,
+        autoCenter: true,
+        url,
+        plugins: [zoom, hover, record, regions],
       });
 
-      // wavesurfer.current.zoom(1);
+      // let start = 0;
+      // let previousIndex = 0;
 
-      let previousPeak = 0;
-
-      wavesurfer.current.on("decode", () => {
-        if (!wavesurfer.current || !regions.current) return;
-        const decoded = wavesurfer.current.getDecodedData();
-        if (!decoded) return;
-        const { sampleRate, getChannelData } = decoded;
-        const peak = getChannelData(0).findIndex(
-          (value, index) => index > previousPeak + sampleRate && value > 0.1
-        );
-        if (peak !== -1) {
-          regions.current.addRegion({
-            start: peak / sampleRate - sampleRate / 1000,
-            end: peak / sampleRate + sampleRate / 1000,
-            color: "#ff000020",
-            drag: false,
-            resize: false,
-          });
-          previousPeak = peak;
-        }
-      });
+      // wavesurfer.current.on("decode", () => {
+      //   if (!wavesurfer.current || !regions.current) return;
+      //   const decoded = wavesurfer.current.getDecodedData();
+      //   if (!decoded) return;
+      //   const { sampleRate, getChannelData } = decoded;
+      //   const channelData = [...getChannelData(0)];
+      //   for (let index = 0; index < channelData.length; index++) {
+      //     if (channelData[index]! > 0.1 && !start) start = index;
+      //     if (channelData[index]! <= 0.1 && start) {
+      //       regions.current.addRegion({
+      //         start: start / sampleRate,
+      //         end: index / sampleRate,
+      //         color: "#ff000020",
+      //         drag: false,
+      //         resize: false,
+      //       });
+      //       start = 0;
+      //     }
+      //   }
+      //   previousIndex = channelData.length;
+      // });
     })();
 
     return () => {
       wavesurfer.current?.destroy();
     };
-  }, []);
+  }, [length]);
 
   return (
     <>
-      <button
-        onClick={() =>
-          recorder.current?.startRecording({ deviceId: "default" })
-        }
-      >
-        Record
-      </button>
-      <button onClick={() => recorder.current?.stopRecording()}>Stop</button>
-
-      <div ref={containerRef} className={classes.container}></div>
+      <div ref={containerRef} className={classes.container} />
     </>
   );
 };
