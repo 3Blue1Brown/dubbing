@@ -1,7 +1,7 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 type Props = {
-  label: string;
+  label: ReactNode;
   options: { value: string; label: string }[];
   onChange?: (value: string) => void;
 } & Omit<ComponentProps<"select">, "onChange">;

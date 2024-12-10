@@ -16,7 +16,6 @@
 
 body {
   margin: 0;
-  accent-color: var(--primary);
   line-height: 1.5;
   font-family: "Open Sans", sans-serif;
 }
@@ -62,7 +61,7 @@ button {
   border: none;
   border-radius: var(--rounded);
   background: none;
-  color: var(--off-black);
+  color: var(--primary);
   font: inherit;
   cursor: pointer;
   transition:
@@ -75,15 +74,11 @@ button:has(> :only-child) {
 }
 
 button:hover {
-  color: var(--primary);
+  color: var(--off-black);
 }
 
 button.accent {
   background: var(--light-gray);
-}
-
-button:hover.accent {
-  color: var(--secondary);
 }
 
 input {
@@ -96,7 +91,13 @@ input[type="checkbox"] {
 }
 
 input[type="range"] {
+  accent-color: var(--primary);
   cursor: pointer;
+  transition: accent-color var(--fast);
+}
+
+input[type="range"]:hover {
+  accent-color: var(--off-black);
 }
 
 select {
@@ -135,6 +136,7 @@ label:has(select)::after {
   right: 10px;
   translate: 0 -2px;
   content: "▾";
+  opacity: 0.5;
   pointer-events: none;
   transition: color var(--fast);
 }

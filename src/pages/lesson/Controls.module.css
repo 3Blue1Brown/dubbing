@@ -11,12 +11,18 @@
 .row {
   display: flex;
   position: relative;
+  flex-shrink: 1;
   align-items: center;
   justify-content: center;
+  min-width: 0;
   gap: 5px;
 }
 
 .small {
-  color: var(--gray);
+  color: var(--dark-gray);
   font-size: 0.75em;
+}
+
+.monitor {
+  cursor: pointer;
 }

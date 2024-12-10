@@ -7,7 +7,8 @@ import { record } from "./Waveform";
 
 export const contextAtom = atom<AudioContext>();
 export const micStreamAtom = atom<MediaStream>();
-export const monitorAtom = atom<number[]>([]);
+export const micTimeAtom = atom<number[]>([]);
+export const micFreqAtom = atom<number[]>([]);
 export const devicesAtom = atom<MediaDeviceInfo[]>([]);
 export const deviceAtom = atom<string>();
 export const playerAtom = atom<YouTubePlayer>();
@@ -24,24 +25,27 @@ const fftSize = 2 ** 10;
 
 let micStream: MediaStreamAudioSourceNode;
 let micAnalyzer: AnalyserNode;
-let micBuffer: Uint8Array;
+const micTimeBuffer = new Uint8Array(fftSize / 2);
+const micFreqBuffer = new Uint8Array(fftSize / 2);
 
 const updateMic = () => {
-  micAnalyzer?.getByteTimeDomainData(micBuffer);
+  micAnalyzer?.getByteTimeDomainData(micTimeBuffer);
+  micAnalyzer?.getByteFrequencyData(micFreqBuffer);
   setAtom(
-    monitorAtom,
-    Array.from(micBuffer ?? []).map((value) => 1 - value / 128),
+    micTimeAtom,
+    Array.from(micTimeBuffer ?? []).map((value) => 1 - value / 128),
+  );
+  setAtom(
+    micFreqAtom,
+    Array.from(micFreqBuffer ?? []).map((value) => value / 128),
   );
 };
-window.setInterval(updateMic, 50);
+window.setInterval(updateMic, 20);
 
 const updateContext = async () => {
   getAtom(contextAtom)?.close();
   micStream?.disconnect();
   micAnalyzer?.disconnect();
-
-  const context = new AudioContext();
-  setAtom(contextAtom, context);
 
   const stream = await navigator.mediaDevices.getUserMedia({
     video: false,
@@ -52,14 +56,17 @@ const updateContext = async () => {
       echoCancellation: false,
       noiseSuppression: false,
       autoGainControl: false,
+      deviceId: getAtom(deviceAtom),
     },
   });
   setAtom(micStreamAtom, stream);
 
+  const context = new AudioContext();
+  setAtom(contextAtom, context);
+
   micStream = context.createMediaStreamSource(stream);
   micAnalyzer = context.createAnalyser();
   micAnalyzer.fftSize = fftSize;
-  micBuffer = new Uint8Array(micAnalyzer.frequencyBinCount);
   micStream.connect(micAnalyzer);
 };
 

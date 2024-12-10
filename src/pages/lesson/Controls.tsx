@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import {
   FaCircle,
   FaMicrophone,
@@ -8,8 +9,10 @@ import {
 import { MdTranslate } from "react-icons/md";
 import { PiMouseScrollBold } from "react-icons/pi";
 import { useAtom, useAtomValue } from "jotai";
+import { max } from "lodash";
 import CheckButton from "@/components/CheckButton";
 import Select from "@/components/Select";
+import { tension } from "@/util/math";
 import { formatMs, formatTime } from "@/util/string";
 import classes from "./Controls.module.css";
 import { lengthAtom } from "./data";
@@ -18,8 +21,9 @@ import {
   balanceAtom,
   deviceAtom,
   devicesAtom,
+  micFreqAtom,
   micStreamAtom,
-  monitorAtom,
+  micTimeAtom,
   play,
   playingAtom,
   recordingAtom,
@@ -48,31 +52,34 @@ const Controls = () => {
     <div className={classes.controls}>
       <div className={classes.row}>
         {devices.length ? (
-          <Select
-            label="Mic"
-            value={device}
-            onChange={setDevice}
-            options={devices.map(({ deviceId, label }) => ({
-              value: deviceId,
-              label,
-            }))}
-            onClick={refreshDevices}
-          />
+          <>
+            <Select
+              label={<FaMicrophone className={classes.small} />}
+              data-tooltip="Microphone device"
+              value={device}
+              onChange={setDevice}
+              options={devices.map(({ deviceId, label }) => ({
+                value: deviceId,
+                label,
+              }))}
+              onClick={refreshDevices}
+            />
+            <Monitor />
+          </>
         ) : (
           <span className={classes.small}>No devices</span>
         )}
+      </div>
 
+      <div className={classes.row}>
         {micStream ? (
-          <>
-            <Monitor />
-            <CheckButton
-              label="Record"
-              checked={recording}
-              onClick={() => (recording ? stopRecording() : startRecording())}
-            >
-              {recording ? <FaStop /> : <FaCircle />}
-            </CheckButton>
-          </>
+          <CheckButton
+            label="Record"
+            checked={recording}
+            onClick={() => (recording ? stopRecording() : startRecording())}
+          >
+            {recording ? <FaStop /> : <FaCircle />}
+          </CheckButton>
         ) : (
           <span className={classes.small}>Allow mic access</span>
         )}
@@ -143,22 +150,66 @@ const Controls = () => {
 
 export default Controls;
 
-const Monitor = () => {
-  const monitor = useAtomValue(monitorAtom);
+const width = 50;
+const height = 25;
 
-  const width = monitor.length;
-  const height = monitor.length / 5;
+const Monitor = () => {
+  const [byFreq, setByFreq] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>();
+
+  const time = useAtomValue(micTimeAtom);
+  const peak = max(time) ?? 0;
+  const freq = useAtomValue(micFreqAtom);
+
+  let monitor: number[] = [];
+  if (byFreq)
+    monitor = freq.map(
+      (value, index) => value * tension(index / freq.length, 0.1),
+    );
+  else {
+    const skip = Math.floor(time.length / width);
+    monitor = time
+      .filter((_, index) => index % skip === 0)
+      .map((value) => tension(Math.abs(value), 0.1));
+  }
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const scale = 5;
+    canvasRef.current.width = width * scale;
+    canvasRef.current.height = height * scale;
+    ctxRef.current = canvasRef.current.getContext("2d");
+    if (ctxRef.current) {
+      ctxRef.current.scale(scale, scale);
+      ctxRef.current.lineCap = "round";
+    }
+  }, []);
+
+  useEffect(() => {
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
+    ctx.translate(0, height / 2);
+    ctx.scale(width / monitor.length, height / 2);
+    ctx.beginPath();
+    monitor.forEach((y, x) => {
+      ctx.moveTo(x, -y);
+      ctx.lineTo(x, y);
+    });
+    ctx.restore();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = peak > 0.9 ? "#ff1493" : "#00bfff";
+    ctx.stroke();
+  });
 
   return (
-    <svg viewBox={[0, -height, width, height * 2].join(" ")} width="100">
-      <path
-        fill="none"
-        stroke="var(--primary)"
-        strokeWidth={width / 100}
-        d={monitor
-          .map((y, x) => [x ? "L" : "M", x, y * height].join(" "))
-          .join(" ")}
-      />
-    </svg>
+    <canvas
+      ref={canvasRef}
+      className={classes.monitor}
+      style={{ width }}
+      onClick={() => setByFreq(!byFreq)}
+    />
   );
 };
