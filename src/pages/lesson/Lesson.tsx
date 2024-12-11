@@ -38,19 +38,24 @@ const Lesson = () => {
   if (!video || !sentences) return <></>;
 
   return (
-    <div className={classes.lesson}>
-      <Player video={video} />
-      {player && (
-        <>
-          <Sentences />
-          <Controls />
-          <Waveform waveform={waveform} time={time} />
-        </>
-      )}
-      <button onClick={async () => await save([year, title, language, "dub"])}>
+    <>
+      <div className={classes.lesson}>
+        <Player video={video} />
+        {player && (
+          <>
+            <Sentences />
+            <Controls />
+            <Waveform waveform={waveform} time={time} />
+          </>
+        )}
+      </div>
+      <button
+        className="accent"
+        onClick={async () => await save([year, title, language, "dub"])}
+      >
         Save
       </button>
-    </div>
+    </>
   );
 };
 

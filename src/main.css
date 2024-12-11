@@ -1,5 +1,5 @@
 :root {
-  --primary: #00bfff;
+  --primary: #00ade6;
   --secondary: #ff1493;
   --white: #ffffff;
   --off-white: #f8fafa;
@@ -60,8 +60,8 @@ button {
   padding: 5px 10px;
   border: none;
   border-radius: var(--rounded);
-  background: none;
-  color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
   font: inherit;
   cursor: pointer;
   transition:
@@ -74,11 +74,11 @@ button:has(> :only-child) {
 }
 
 button:hover {
-  color: var(--off-black);
+  background: var(--off-black);
 }
 
-button.accent {
-  background: var(--light-gray);
+button.checked {
+  background: var(--secondary);
 }
 
 input {

@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { createMp3Encoder } from "wasm-media-encoders";
 import { lengthAtom } from "@/pages/lesson/data";
-import { playVideo, seekVideo, stopVideo } from "@/pages/lesson/Player";
+import { playVideo, seekVideo, pauseVideo } from "@/pages/lesson/Player";
 import { toFloat } from "@/util/array";
 import { getAtom, setAtom, subscribe } from "@/util/atoms";
 import { download, type Filename } from "@/util/download";
@@ -142,7 +142,7 @@ export const play = () => {
 };
 
 export const stop = () => {
-  stopVideo();
+  pauseVideo();
   setAtom(playingAtom, false);
   window.clearInterval(timer);
 };

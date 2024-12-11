@@ -10,7 +10,12 @@ type Props = {
   time: number;
 };
 
-const warning = peak * 0.9;
+const lineWidth = 1;
+const clippingThreshold = peak * 0.9;
+const past = "#00bfff";
+const pastClipping = "#ff1493";
+const future = "#a0a0a0";
+const futureClipping = "#808080";
 
 const Waveform = ({ waveform, time }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -26,7 +31,7 @@ const Waveform = ({ waveform, time }: Props) => {
     ctxRef.current = canvasRef.current.getContext("2d");
     if (!ctxRef.current) return;
     ctxRef.current.scale(scale, scale);
-    ctxRef.current.lineWidth = 1;
+    ctxRef.current.lineWidth = lineWidth;
   }, [width, height]);
 
   useEffect(() => {
@@ -39,19 +44,20 @@ const Waveform = ({ waveform, time }: Props) => {
       const start = Math.floor(waveform.length * (x / width));
       const end = Math.ceil(waveform.length * ((x + 1) / width));
       const { max, min } = range(waveform, start, end - 1);
-      const future = start > sampleRate * time;
-      const clipping = Math.abs(max) > warning || Math.abs(min) > warning;
+      const isFuture = start > sampleRate * time;
+      const isClipping =
+        Math.abs(max) > clippingThreshold || Math.abs(min) > clippingThreshold;
       points.push({
         x,
         top: tension(max / peak, 0.1),
         bottom: tension(min / peak, 0.1),
-        color: clipping
-          ? future
-            ? "#404040"
-            : "#ff1493"
-          : future
-            ? "#a0a0a0"
-            : "#00bfff",
+        color: isClipping
+          ? isFuture
+            ? futureClipping
+            : pastClipping
+          : isFuture
+            ? future
+            : past,
       });
     }
 
@@ -62,11 +68,17 @@ const Waveform = ({ waveform, time }: Props) => {
     for (const { x, bottom, top, color } of points) {
       ctx.strokeStyle = color;
       ctx.beginPath();
-      ctx.moveTo(x, bottom || -0.01);
-      ctx.lineTo(x, top || 0.01);
+      ctx.moveTo(x, bottom || -(lineWidth / height));
+      ctx.lineTo(x, top || lineWidth / height);
       ctx.stroke();
-      ctx.fill();
     }
+    ctx.beginPath();
+    const x = (time * sampleRate * width) / waveform.length;
+    ctx.strokeStyle = pastClipping;
+    ctx.lineWidth = lineWidth * 2;
+    ctx.moveTo(x, -1);
+    ctx.lineTo(x, 1);
+    ctx.stroke();
     ctx.restore();
   });
 

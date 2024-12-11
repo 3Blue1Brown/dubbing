@@ -1,8 +1,8 @@
 import {
   FaCircle,
   FaMicrophone,
+  FaPause,
   FaPlay,
-  FaStop,
   FaVideo,
 } from "react-icons/fa6";
 import { MdTranslate } from "react-icons/md";
@@ -78,7 +78,6 @@ const Controls = () => {
             label={recording ? "Disarm recording" : "Arm recording"}
             checked={recording}
             onClick={() => (recording ? disarmRecording() : armRecording())}
-            style={{ color: recording ? "red" : "" }}
           >
             <FaCircle />
           </CheckButton>
@@ -91,7 +90,7 @@ const Controls = () => {
           checked={playing}
           onClick={() => (playing ? stop() : play())}
         >
-          {playing ? <FaStop /> : <FaPlay />}
+          {playing ? <FaPause /> : <FaPlay />}
         </CheckButton>
       </div>
 
@@ -108,6 +107,7 @@ const Controls = () => {
           max={length}
           step={0.001}
           onChange={(event) => seek(Number(event.target.value))}
+          data-tooltip="Timeline"
         />
         <span className={classes.small}>{formatTime(length)}</span>
       </div>

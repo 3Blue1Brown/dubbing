@@ -1,13 +1,13 @@
 import YouTube, { type YouTubePlayer } from "react-youtube";
 import { atom } from "jotai";
-import { throttle } from "lodash";
+import "lodash";
 import { playingAtom } from "@/pages/lesson/audio";
 import { getAtom, setAtom, subscribe } from "@/util/atoms";
 import { lengthAtom } from "./data";
 import classes from "./Player.module.css";
 
 export const playerAtom = atom<YouTubePlayer>();
-export const balanceAtom = atom(1);
+export const balanceAtom = atom(0.8);
 
 type Props = {
   video: string;
@@ -32,23 +32,17 @@ const Player = ({ video }: Props) => {
 
 export default Player;
 
-export const playVideo = throttle(
-  async () => await getAtom(playerAtom)?.playVideo(),
-  250,
-);
+export const playVideo = async () => await getAtom(playerAtom)?.playVideo();
 
-export const stopVideo = throttle(
-  async () => await getAtom(playerAtom)?.pauseVideo(),
-  250,
-);
+export const pauseVideo = async () => await getAtom(playerAtom)?.pauseVideo();
 
-export const seekVideo = throttle(async (time: number) => {
+export const seekVideo = async (time: number) => {
   const player = getAtom(playerAtom);
   if (!player) return;
   await player.seekTo(time, true);
   if (getAtom(playingAtom)) await player.playVideo();
-  else await player.stopVideo();
-}, 250);
+  else await player.pauseVideo();
+};
 
 export const volumeVideo = (balance?: number) =>
   getAtom(playerAtom)?.setVolume(

@@ -23,8 +23,19 @@
 
 .word {
   position: relative;
-  transition-duration: 0.2s;
-  transition-property: color, background, opacity;
+  border-bottom: solid 2px transparent;
+  transition-duration: 0.25s;
+  transition-property: color, background;
+}
+
+.word::before {
+  position: absolute;
+  inset: -2px;
+  border-bottom: solid 2px transparent;
+  content: "";
+  pointer-events: none;
+  transition-duration: 0.25s;
+  transition-property: border-color;
 }
 
 .past {
@@ -33,4 +44,8 @@
 
 .present {
   color: var(--secondary);
+}
+
+.present::before {
+  border-color: var(--secondary);
 }

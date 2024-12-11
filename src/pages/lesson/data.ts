@@ -50,8 +50,8 @@ export const getData = async (lesson: Lesson) => {
   const splitEvenly = (text: string, start: number, end: number) => {
     const words = text.split(/\s/);
     const step = (end - start) / words.length;
-    return words.map((text, index) => ({
-      text,
+    return words.map((word, index) => ({
+      text: word,
       start: start + step * index,
       end: start + step * (index + 1),
     }));

@@ -16,7 +16,7 @@ const CheckButton = ({
   return (
     <button
       {...props}
-      className={clsx(checked && "accent", className)}
+      className={clsx(checked && "checked", className)}
       role="checkbox"
       data-tooltip={label}
       aria-checked={checked ? "true" : "false"}
