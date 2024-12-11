@@ -1,14 +1,11 @@
 import clsx from "clsx";
-import { useAtomValue } from "jotai";
+import { atom, useAtomValue } from "jotai";
 import { sentencesAtom, videoAtom } from "./data";
 import classes from "./Sentences.module.css";
-import {
-  autoscrollAtom,
-  playingAtom,
-  seek,
-  showOriginalAtom,
-  timeAtom,
-} from "./state";
+import { playingAtom, seek, timeAtom } from "./audio";
+
+export const showOriginalAtom = atom(false);
+export const autoscrollAtom = atom(true);
 
 const Sentences = () => {
   const video = useAtomValue(videoAtom);

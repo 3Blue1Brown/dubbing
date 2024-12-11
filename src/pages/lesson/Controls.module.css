@@ -22,7 +22,3 @@
   color: var(--dark-gray);
   font-size: 0.75em;
 }
-
-.monitor {
-  cursor: pointer;
-}

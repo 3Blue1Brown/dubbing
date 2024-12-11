@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import {
   FaCircle,
   FaMicrophone,
@@ -9,32 +8,32 @@ import {
 import { MdTranslate } from "react-icons/md";
 import { PiMouseScrollBold } from "react-icons/pi";
 import { useAtom, useAtomValue } from "jotai";
-import { max } from "lodash";
 import CheckButton from "@/components/CheckButton";
+import Monitor from "@/components/Monitor";
 import Select from "@/components/Select";
-import { tension } from "@/util/math";
-import { formatMs, formatTime } from "@/util/string";
-import classes from "./Controls.module.css";
-import { lengthAtom } from "./data";
 import {
-  autoscrollAtom,
-  balanceAtom,
   deviceAtom,
   devicesAtom,
   micFreqAtom,
   micStreamAtom,
   micTimeAtom,
+  refreshDevices,
+} from "@/pages/lesson/audio";
+import { balanceAtom } from "@/pages/lesson/Player";
+import { autoscrollAtom, showOriginalAtom } from "@/pages/lesson/Sentences";
+import { formatMs, formatTime } from "@/util/string";
+import {
+  armRecording,
+  disarmRecording,
   play,
   playingAtom,
   recordingAtom,
-  refreshDevices,
   seek,
-  showOriginalAtom,
-  startRecording,
   stop,
-  stopRecording,
   timeAtom,
-} from "./state";
+} from "./audio";
+import classes from "./Controls.module.css";
+import { lengthAtom } from "./data";
 
 const Controls = () => {
   const devices = useAtomValue(devicesAtom);
@@ -42,6 +41,8 @@ const Controls = () => {
   const micStream = useAtomValue(micStreamAtom);
   const recording = useAtomValue(recordingAtom);
   const playing = useAtomValue(playingAtom);
+  const micTime = useAtomValue(micTimeAtom);
+  const micFreq = useAtomValue(micFreqAtom);
   const time = useAtomValue(timeAtom);
   const length = useAtomValue(lengthAtom);
   const [balance, setBalance] = useAtom(balanceAtom);
@@ -64,7 +65,7 @@ const Controls = () => {
               }))}
               onClick={refreshDevices}
             />
-            <Monitor />
+            <Monitor time={micTime} freq={micFreq} />
           </>
         ) : (
           <span className={classes.small}>No devices</span>
@@ -74,18 +75,19 @@ const Controls = () => {
       <div className={classes.row}>
         {micStream ? (
           <CheckButton
-            label="Record"
+            label={recording ? "Disarm recording" : "Arm recording"}
             checked={recording}
-            onClick={() => (recording ? stopRecording() : startRecording())}
+            onClick={() => (recording ? disarmRecording() : armRecording())}
+            style={{ color: recording ? "red" : "" }}
           >
-            {recording ? <FaStop /> : <FaCircle />}
+            <FaCircle />
           </CheckButton>
         ) : (
           <span className={classes.small}>Allow mic access</span>
         )}
 
         <CheckButton
-          label="Play"
+          label={playing ? "Pause" : "Play"}
           checked={playing}
           onClick={() => (playing ? stop() : play())}
         >
@@ -120,7 +122,7 @@ const Controls = () => {
           step={0.1}
           style={{ width: 50 }}
           onChange={(event) => setBalance(Number(event.target.value))}
-          data-tooltip="Playback preview volume of original dub vs. your recorded dub"
+          data-tooltip="Playback preview volume of original video vs. your recorded dub"
         />
         <FaMicrophone className={classes.small} />
       </div>
@@ -149,67 +151,3 @@ const Controls = () => {
 };
 
 export default Controls;
-
-const width = 50;
-const height = 25;
-
-const Monitor = () => {
-  const [byFreq, setByFreq] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const ctxRef = useRef<CanvasRenderingContext2D | null>();
-
-  const time = useAtomValue(micTimeAtom);
-  const peak = max(time) ?? 0;
-  const freq = useAtomValue(micFreqAtom);
-
-  let monitor: number[] = [];
-  if (byFreq)
-    monitor = freq.map(
-      (value, index) => value * tension(index / freq.length, 0.1),
-    );
-  else {
-    const skip = Math.floor(time.length / width);
-    monitor = time
-      .filter((_, index) => index % skip === 0)
-      .map((value) => tension(Math.abs(value), 0.1));
-  }
-
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    const scale = 5;
-    canvasRef.current.width = width * scale;
-    canvasRef.current.height = height * scale;
-    ctxRef.current = canvasRef.current.getContext("2d");
-    if (ctxRef.current) {
-      ctxRef.current.scale(scale, scale);
-      ctxRef.current.lineCap = "round";
-    }
-  }, []);
-
-  useEffect(() => {
-    const ctx = ctxRef.current;
-    if (!ctx) return;
-    ctx.clearRect(0, 0, width, height);
-    ctx.save();
-    ctx.translate(0, height / 2);
-    ctx.scale(width / monitor.length, height / 2);
-    ctx.beginPath();
-    monitor.forEach((y, x) => {
-      ctx.moveTo(x, -y);
-      ctx.lineTo(x, y);
-    });
-    ctx.restore();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = peak > 0.9 ? "#ff1493" : "#00bfff";
-    ctx.stroke();
-  });
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className={classes.monitor}
-      style={{ width }}
-      onClick={() => setByFreq(!byFreq)}
-    />
-  );
-};
