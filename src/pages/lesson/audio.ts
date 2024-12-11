@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { createMp3Encoder } from "wasm-media-encoders";
 import { lengthAtom } from "@/pages/lesson/data";
-import { playVideo, seekVideo, pauseVideo } from "@/pages/lesson/Player";
+import { pauseVideo, playVideo, seekVideo } from "@/pages/lesson/Player";
 import { toFloat } from "@/util/array";
 import { getAtom, setAtom, subscribe } from "@/util/atoms";
 import { download, type Filename } from "@/util/download";
@@ -96,23 +96,6 @@ const updateAnalyzer = () => {
   );
 };
 
-export const waveformAtom = atom<Int16Array>(new Int16Array());
-
-export const offsetAtom = atom(0);
-
-const updateRecorder = ({ data }: MessageEvent<Int16Array>) => {
-  let waveform = getAtom(waveformAtom);
-  if (!waveform.length)
-    waveform = new Int16Array(sampleRate * getAtom(lengthAtom));
-
-  if (getAtom(recordingAtom)) {
-    const offset = getAtom(offsetAtom);
-    waveform.set(data, offset);
-    setAtom(offsetAtom, offset + data.length);
-  }
-  setAtom(waveformAtom, waveform);
-};
-
 export const init = async () => {
   subscribe(deviceAtom, updateContext);
   await refreshDevices();
@@ -120,23 +103,44 @@ export const init = async () => {
   window.setInterval(updateAnalyzer, 30);
 };
 
-let timer: number;
-let startedTime = 0;
-let startedTimestamp = 0;
+export const waveformAtom = atom<Int16Array>(new Int16Array());
+export const waveformUpdatedAtom = atom(0);
 
-const updateTimer = (time?: number) => {
-  startedTime = time ?? getAtom(timeAtom);
-  startedTimestamp = window.performance.now();
+let timer: number;
+let markTime = 0;
+let markTimestamp = 0;
+let markSample = 0;
+
+const updateRecorder = ({ data }: MessageEvent<Int16Array>) => {
+  let waveform = getAtom(waveformAtom);
+  if (!waveform.length)
+    waveform = new Int16Array(sampleRate * getAtom(lengthAtom));
+
+  if (getAtom(playingAtom)) {
+    if (getAtom(recordingAtom)) {
+      waveform.set(data, markSample);
+      setAtom(waveformUpdatedAtom, getAtom(waveformUpdatedAtom) + 1);
+    }
+    markSample += data.length;
+  }
+
+  setAtom(waveformAtom, waveform);
+};
+
+const timerMark = (time?: number) => {
+  markTime = time ?? getAtom(timeAtom);
+  markTimestamp = window.performance.now();
+  markSample = markTime * sampleRate;
 };
 
 export const play = () => {
   playVideo();
   setAtom(playingAtom, true);
-  updateTimer();
+  timerMark();
   timer = window.setInterval(() =>
     setAtom(
       timeAtom,
-      startedTime + (window.performance.now() - startedTimestamp) / 1000,
+      markTime + (window.performance.now() - markTimestamp) / 1000,
     ),
   );
 };
@@ -148,9 +152,9 @@ export const stop = () => {
 };
 
 export const seek = (time: number = 0) => {
-  disarmRecording();
+  // if (getAtom(playingAtom)) disarmRecording();
   seekVideo(time);
-  updateTimer(time);
+  timerMark(time);
   setAtom(timeAtom, time);
 };
 

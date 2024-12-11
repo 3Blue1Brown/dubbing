@@ -4,10 +4,10 @@ import { useAtomValue } from "jotai";
 import Waveform from "@/components/Waveform";
 import {
   init,
-  offsetAtom,
   save,
   timeAtom,
   waveformAtom,
+  waveformUpdatedAtom,
 } from "@/pages/lesson/audio";
 import { playerAtom } from "@/pages/lesson/Player";
 import Controls from "./Controls";
@@ -22,7 +22,7 @@ const Lesson = () => {
   const sentences = useAtomValue(sentencesAtom);
   const waveform = useAtomValue(waveformAtom);
   const time = useAtomValue(timeAtom);
-  useAtomValue(offsetAtom);
+  useAtomValue(waveformUpdatedAtom);
 
   const { year = "", title = "", language = "" } = useParams();
 
