@@ -1,0 +1,11 @@
+<!doctype html>
+<html>
+  <body>
+    <script type="text/javascript">
+      console.debug("Redirecting from:", location);
+      const { origin, pathname, search, hash } = location;
+      sessionStorage.redirectPath = pathname + search + hash;
+      location = "/";
+    </script>
+  </body>
+</html>

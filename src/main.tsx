@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, redirect, RouterProvider } from "react-router";
 import Home from "@/pages/Home.tsx";
 import Lesson from "@/pages/lesson/Lesson.tsx";
 import "@/util/tooltips";
@@ -10,6 +10,14 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+    loader: async () => {
+      const path = window.sessionStorage.redirectPath || "";
+      if (path) {
+        console.debug("Redirecting to:", path);
+        window.sessionStorage.removeItem("redirectPath");
+        return redirect(path);
+      } else return null;
+    },
   },
   {
     path: "/:year/:title/:language",
