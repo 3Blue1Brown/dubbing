@@ -1,7 +1,10 @@
 import { atom } from "jotai";
+import { createMp3Encoder } from "wasm-media-encoders";
 import { lengthAtom } from "@/pages/lesson/data";
 import { playVideo, seekVideo, stopVideo } from "@/pages/lesson/Player";
+import { toFloat } from "@/util/array";
 import { getAtom, setAtom, subscribe } from "@/util/atoms";
+import { download, type Filename } from "@/util/download";
 import worklet from "./wave-processor.js?url";
 
 export const timeAtom = atom(0);
@@ -23,6 +26,7 @@ export const fftSize = 2 ** 10;
 let micSource: MediaStreamAudioSourceNode;
 let micAnalyzer: AnalyserNode;
 let micRecorder: AudioWorkletNode;
+let workletInstalled = false;
 
 export const refreshDevices = async () => {
   const devices = (await navigator.mediaDevices.enumerateDevices()).filter(
@@ -33,38 +37,47 @@ export const refreshDevices = async () => {
 };
 
 const updateContext = async () => {
+  let micStream = getAtom(micStreamAtom);
+  if (!micStream) {
+    micStream = await navigator.mediaDevices.getUserMedia({
+      video: false,
+      audio: {
+        sampleRate,
+        sampleSize: bitRate,
+        channelCount: 1,
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+        deviceId: getAtom(deviceAtom),
+      },
+    });
+    setAtom(micStreamAtom, micStream);
+  }
+
   let context = getAtom(contextAtom);
-  if (context?.state === "running") await context.close();
-  micSource?.disconnect();
-  micRecorder?.disconnect();
-  micAnalyzer?.disconnect();
 
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: false,
-    audio: {
-      sampleRate,
-      sampleSize: bitRate,
-      channelCount: 1,
-      echoCancellation: false,
-      noiseSuppression: false,
-      autoGainControl: false,
-      deviceId: getAtom(deviceAtom),
-    },
-  });
-  setAtom(micStreamAtom, stream);
+  if (!context) {
+    context = new AudioContext();
+    setAtom(contextAtom, context);
+  }
 
-  context = new AudioContext();
-  setAtom(contextAtom, context);
-  await context.audioWorklet.addModule(worklet);
+  if (!workletInstalled) {
+    await context.audioWorklet.addModule(worklet);
+    workletInstalled = true;
+  }
 
-  micSource = context.createMediaStreamSource(stream);
-  micAnalyzer = context.createAnalyser();
-  micAnalyzer.fftSize = fftSize;
-  micSource.connect(micAnalyzer);
+  if (!micSource) {
+    micSource = context.createMediaStreamSource(micStream);
+    micAnalyzer = context.createAnalyser();
+    micAnalyzer.fftSize = fftSize;
+    micSource.connect(micAnalyzer);
+  }
 
-  micRecorder = new AudioWorkletNode(context, "wave-processor");
-  micRecorder.port.onmessage = updateRecorder;
-  micSource.connect(micRecorder);
+  if (!micRecorder) {
+    micRecorder = new AudioWorkletNode(context, "wave-processor");
+    micSource.connect(micRecorder);
+    micRecorder.port.onmessage = updateRecorder;
+  }
 };
 
 const micTimeBuffer = new Uint8Array(fftSize);
@@ -94,7 +107,7 @@ const updateRecorder = ({ data }: MessageEvent<Int16Array>) => {
 
   if (getAtom(recordingAtom)) {
     const offset = getAtom(offsetAtom);
-    waveform.set(data, getAtom(offsetAtom));
+    waveform.set(data, offset);
     setAtom(offsetAtom, offset + data.length);
   }
   setAtom(waveformAtom, waveform);
@@ -156,3 +169,14 @@ subscribe(timeAtom, (value) => {
     setAtom(timeAtom, length);
   }
 });
+
+export const save = async (filename: Filename) => {
+  const encoder = await createMp3Encoder();
+  encoder.configure({ sampleRate, channels: 1, bitrate: 192 });
+  const frames = encoder.encode([toFloat(getAtom(waveformAtom))]);
+  const lastFrames = encoder.finalize();
+  const blob = new Blob([frames, lastFrames], { type: "audio/mpeg" });
+  const url = window.URL.createObjectURL(blob);
+  download(url, filename, "mp3");
+  window.URL.revokeObjectURL(url);
+};

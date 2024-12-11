@@ -2,7 +2,13 @@ import { useEffect } from "react";
 import { useParams } from "react-router";
 import { useAtomValue } from "jotai";
 import Waveform from "@/components/Waveform";
-import { init, offsetAtom, timeAtom, waveformAtom } from "@/pages/lesson/audio";
+import {
+  init,
+  offsetAtom,
+  save,
+  timeAtom,
+  waveformAtom,
+} from "@/pages/lesson/audio";
 import { playerAtom } from "@/pages/lesson/Player";
 import Controls from "./Controls";
 import { getData, sentencesAtom, videoAtom } from "./data";
@@ -41,6 +47,9 @@ const Lesson = () => {
           <Waveform waveform={waveform} time={time} />
         </>
       )}
+      <button onClick={async () => await save([year, title, language, "dub"])}>
+        Save
+      </button>
     </div>
   );
 };

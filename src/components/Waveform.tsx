@@ -33,26 +33,41 @@ const Waveform = ({ waveform, time }: Props) => {
     const ctx = ctxRef.current;
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, width, height);
-    ctx.save();
-    ctx.translate(0, height / 2);
-    ctx.scale(1, height / 2);
+    const points: { x: number; top: number; bottom: number; color: string }[] =
+      [];
     for (let x = 0; x < width; x += 1) {
       const start = Math.floor(waveform.length * (x / width));
       const end = Math.ceil(waveform.length * ((x + 1) / width));
       const { max, min } = range(waveform, start, end - 1);
-      ctx.strokeStyle =
-        Math.abs(max) > warning || Math.abs(min) > warning
-          ? "#ff1493"
-          : "#00bfff";
-      ctx.globalAlpha = start > sampleRate * time ? 0.5 : 1;
+      const future = start > sampleRate * time;
+      const clipping = Math.abs(max) > warning || Math.abs(min) > warning;
+      points.push({
+        x,
+        top: tension(max / peak, 0.1),
+        bottom: tension(min / peak, 0.1),
+        color: clipping
+          ? future
+            ? "#404040"
+            : "#ff1493"
+          : future
+            ? "#a0a0a0"
+            : "#00bfff",
+      });
+    }
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
+    ctx.translate(0, height / 2);
+    ctx.scale(1, height / 2);
+    for (const { x, bottom, top, color } of points) {
+      ctx.strokeStyle = color;
       ctx.beginPath();
-      ctx.moveTo(x, tension(min / peak, 0.1));
-      ctx.lineTo(x, tension(max / peak, 0.1));
+      ctx.moveTo(x, bottom || -0.01);
+      ctx.lineTo(x, top || 0.01);
       ctx.stroke();
+      ctx.fill();
     }
     ctx.restore();
-    console.log(range(waveform));
   });
 
   return <canvas ref={canvasRef} className={classes.waveform} />;

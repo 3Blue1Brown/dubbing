@@ -15,7 +15,7 @@ const Monitor = ({ time, freq }: Props) => {
 
   const [{ width, height }] = useMeasure(canvasRef);
 
-  const [byFreq, setByFreq] = useState(false);
+  const [byFreq, setByFreq] = useState(true);
 
   const peak = max(time) ?? 0;
 
