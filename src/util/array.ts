@@ -1,15 +1,19 @@
+import { clamp } from "lodash";
 import { peak } from "@/pages/lesson/audio";
 
 export const range = (array: Int16Array, start = 0, end?: number) => {
   end ??= array.length;
-  let max = -Infinity;
-  let min = Infinity;
+  start = clamp(start, 0, array.length - 1);
+  end = clamp(end, 0, array.length - 1);
+  let max = 0;
+  let min = 0;
   for (let index = start; index < end; index++) {
-    const value = array[index]!;
+    const value = array[index];
+    if (!value) continue;
     if (value > max) max = value;
     if (value < min) min = value;
   }
-  return { min, max };
+  return { min: min / peak, max: max / peak, abs: Math.max(-min, max) / peak };
 };
 
 export const toFloat = (array: Int16Array) => {

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams } from "react-router";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import Waveform from "@/components/Waveform";
 import {
   init,
@@ -21,7 +21,7 @@ const Lesson = () => {
   const player = useAtomValue(playerAtom);
   const sentences = useAtomValue(sentencesAtom);
   const waveform = useAtomValue(waveformAtom);
-  const time = useAtomValue(timeAtom);
+  const [time, setTime] = useAtom(timeAtom);
   useAtomValue(waveformUpdatedAtom);
 
   const { year = "", title = "", language = "" } = useParams();
@@ -45,7 +45,7 @@ const Lesson = () => {
           <>
             <Sentences />
             <Controls />
-            <Waveform waveform={waveform} time={time} />
+            <Waveform waveform={waveform} time={time} onSeek={setTime} />
           </>
         )}
       </div>
