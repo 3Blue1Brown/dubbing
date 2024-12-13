@@ -137,11 +137,13 @@ export const play = () => {
   playVideo();
   setAtom(playingAtom, true);
   timerMark();
-  timer = window.setInterval(() =>
-    setAtom(
-      timeAtom,
-      markTime + (window.performance.now() - markTimestamp) / 1000,
-    ),
+  timer = window.setInterval(
+    () =>
+      setAtom(
+        timeAtom,
+        markTime + (window.performance.now() - markTimestamp) / 1000,
+      ),
+    20,
   );
 };
 

@@ -3,11 +3,13 @@ import { peak } from "@/pages/lesson/audio";
 
 export const range = (array: Int16Array, start = 0, end?: number) => {
   end ??= array.length;
-  start = clamp(start, 0, array.length - 1);
-  end = clamp(end, 0, array.length - 1);
+  start = clamp(start, 0, array.length - 1) || 0;
+  end = clamp(end, 0, array.length - 1) || 0;
+  const skip = clamp(Math.round((end - start) / 10000), 1, 10);
   let max = 0;
   let min = 0;
-  for (let index = start; index < end; index++) {
+  for (let index = start; index < end; index += skip) {
+    if (index % skip !== 0) continue;
     const value = array[index];
     if (!value) continue;
     if (value > max) max = value;
