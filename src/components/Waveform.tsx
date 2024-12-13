@@ -24,14 +24,14 @@ const pastClipping = "#ff1493";
 const future = "#a0a0a0";
 const futureClipping = "#808080";
 const tickDist = 50;
-const tickIntervals = [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10, 20, 30];
+const tickIntervals = [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10, 20, 30, 60, 120, 600];
 const oversample = window.devicePixelRatio * 2;
 
 const Waveform = ({ waveform, time, onSeek }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>();
 
-  const [{ width, height }] = useMeasure(canvasRef);
+  const [{ width = 100, height = 100 }] = useMeasure(canvasRef);
   const { left, top } = useElementBounding(canvasRef);
 
   const matrix = useRef(new Matrix4());
@@ -59,20 +59,18 @@ const Waveform = ({ waveform, time, onSeek }: Props) => {
   }, []);
 
   const updateTransform = useCallback(() => {
-    if (!width || !height || !waveform.length) return;
+    const length = waveform.length || 1;
     const { translate, scale } = decompose();
-    scale.max(new Vector3(width / waveform.length, 1 * (height / 2), 1));
+    scale.max(new Vector3(width / length, 1 * (height / 2), 1));
     scale.min(new Vector3(10, 10 * (height / 2), 1));
-    translate.max(
-      new Vector3(width - scale.x * waveform.length, height / 2, 0),
-    );
+    translate.max(new Vector3(width - scale.x * length, height / 2, 0));
     translate.min(new Vector3(0, height / 2, 0));
     matrix.current.compose(translate, new Quaternion(), scale);
     setTransform((transform) => transform + 1);
-  }, [decompose, waveform, width, height]);
+  }, [decompose, waveform.length, width, height]);
 
   useEffect(() => {
-    // matrix.current.scale(new Vector3(0.00000001, 1, 1));
+    matrix.current.scale(new Vector3(0, 1, 1));
     updateTransform();
   }, [updateTransform]);
 
@@ -94,7 +92,7 @@ const Waveform = ({ waveform, time, onSeek }: Props) => {
           const { min, max, abs } = range(waveform, startX, endX);
           return { x, startX, endX, minY: min, maxY: max, absY: abs };
         }),
-    [width, waveform, domToCanvas],
+    [transform, width, waveform, domToCanvas],
   );
 
   useEffect(() => {
