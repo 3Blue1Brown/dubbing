@@ -1,12 +1,11 @@
 import { Fragment } from "react";
 import clsx from "clsx";
 import { atom, useAtomValue } from "jotai";
-import { playingAtom, seek, timeAtom } from "./audio";
+import { autoScrollAtom, playingAtom, seek, timeAtom } from "./audio";
 import { sentencesAtom, videoAtom } from "./data";
 import classes from "./Sentences.module.css";
 
 export const showOriginalAtom = atom(false);
-export const autoscrollAtom = atom(true);
 
 const Sentences = () => {
   const video = useAtomValue(videoAtom);
@@ -14,7 +13,7 @@ const Sentences = () => {
   const playing = useAtomValue(playingAtom);
   const time = useAtomValue(timeAtom);
   const showOriginal = useAtomValue(showOriginalAtom);
-  const autoscroll = useAtomValue(autoscrollAtom);
+  const autoScroll = useAtomValue(autoScrollAtom);
 
   if (!video || !sentences) return <></>;
 
@@ -32,7 +31,7 @@ const Sentences = () => {
                 <Fragment key={index}>
                   <span
                     ref={(el) => {
-                      if (!autoscroll) return;
+                      if (!autoScroll) return;
                       if (!el || state !== "present") return;
                       // if (playing && index !== 0) return;
                       el.scrollIntoView({

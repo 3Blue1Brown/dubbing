@@ -1,5 +1,6 @@
 import {
   FaCircle,
+  FaHeadphonesSimple,
   FaMicrophone,
   FaPause,
   FaPlay,
@@ -12,15 +13,18 @@ import CheckButton from "@/components/CheckButton";
 import Monitor from "@/components/Monitor";
 import Select from "@/components/Select";
 import {
+  autoScrollAtom,
+  balanceAtom,
   deviceAtom,
   devicesAtom,
   micFreqAtom,
   micStreamAtom,
   micTimeAtom,
+  playthroughAtom,
   refreshDevices,
 } from "@/pages/lesson/audio";
-import { balanceAtom } from "@/pages/lesson/Player";
-import { autoscrollAtom, showOriginalAtom } from "@/pages/lesson/Sentences";
+import { showOriginalAtom } from "@/pages/lesson/Sentences";
+import { useShortcutClick } from "@/util/hooks";
 import { formatMs, formatTime } from "@/util/string";
 import {
   armRecording,
@@ -46,27 +50,29 @@ const Controls = () => {
   const time = useAtomValue(timeAtom);
   const length = useAtomValue(lengthAtom);
   const [balance, setBalance] = useAtom(balanceAtom);
+  const [playthrough, setPlaythrough] = useAtom(playthroughAtom);
   const [showOriginal, setShowOriginal] = useAtom(showOriginalAtom);
-  const [autoscroll, setAutoscroll] = useAtom(autoscrollAtom);
+  const [autoScroll, setautoScroll] = useAtom(autoScrollAtom);
+
+  const playButtonRef = useShortcutClick<HTMLButtonElement>(" ");
+  const playthroughButtonRef = useShortcutClick<HTMLButtonElement>("p");
+  const recordButtonRef = useShortcutClick<HTMLButtonElement>("r");
 
   return (
     <div className={classes.controls}>
       <div className={classes.row}>
         {devices.length ? (
-          <>
-            <Select
-              label={<FaMicrophone className={classes.small} />}
-              data-tooltip="Microphone device"
-              value={device}
-              onChange={setDevice}
-              options={devices.map(({ deviceId, label }) => ({
-                value: deviceId,
-                label,
-              }))}
-              onClick={refreshDevices}
-            />
-            <Monitor time={micTime} freq={micFreq} />
-          </>
+          <Select
+            label={<FaMicrophone className={classes.small} />}
+            data-tooltip="Microphone device"
+            value={device ?? ""}
+            onChange={setDevice}
+            options={devices.map(({ deviceId, label }) => ({
+              value: deviceId,
+              label: label || "Device",
+            }))}
+            onClick={refreshDevices}
+          />
         ) : (
           <span className={classes.small}>No devices</span>
         )}
@@ -74,19 +80,36 @@ const Controls = () => {
 
       <div className={classes.row}>
         {micStream ? (
-          <CheckButton
-            label={recording ? "Disarm recording" : "Arm recording"}
-            checked={recording}
-            onClick={() => (recording ? disarmRecording() : armRecording())}
-          >
-            <FaCircle />
-          </CheckButton>
+          <>
+            <CheckButton
+              ref={playthroughButtonRef}
+              label={
+                playthrough
+                  ? "Stop playthrough"
+                  : "Microphone playthrough (USE HEADPHONES TO AVOID FEEDBACK)"
+              }
+              checked={playthrough}
+              onClick={() => setPlaythrough(!playthrough)}
+            >
+              <FaHeadphonesSimple />
+            </CheckButton>
+            <Monitor time={micTime} freq={micFreq} />
+            <CheckButton
+              ref={recordButtonRef}
+              label={recording ? "Disarm recording (R)" : "Arm recording (R)"}
+              checked={recording}
+              onClick={() => (recording ? disarmRecording() : armRecording())}
+            >
+              <FaCircle />
+            </CheckButton>
+          </>
         ) : (
           <span className={classes.small}>Allow mic access</span>
         )}
 
         <CheckButton
-          label={playing ? "Pause" : "Play"}
+          ref={playButtonRef}
+          label={playing ? "Pause (Space)" : "Play (Space)"}
           checked={playing}
           onClick={() => (playing ? stop() : play())}
         >
@@ -139,9 +162,9 @@ const Controls = () => {
 
         <CheckButton
           role="checkbox"
-          checked={autoscroll}
-          label="Auto-scroll text"
-          onClick={() => setAutoscroll(!autoscroll)}
+          checked={autoScroll}
+          label="Auto-scroll text and waveform"
+          onClick={() => setautoScroll(!autoScroll)}
         >
           <PiMouseScrollBold />
         </CheckButton>

@@ -1,4 +1,4 @@
-import { type ComponentProps } from "react";
+import { forwardRef, type ComponentProps, type Ref } from "react";
 import clsx from "clsx";
 
 type Props = {
@@ -6,24 +6,24 @@ type Props = {
   label: string;
 } & ComponentProps<"button">;
 
-const CheckButton = ({
-  checked,
-  label,
-  className,
-  children,
-  ...props
-}: Props) => {
-  return (
-    <button
-      {...props}
-      className={clsx(checked && "checked", className)}
-      role="checkbox"
-      data-tooltip={label}
-      aria-checked={checked ? "true" : "false"}
-    >
-      {children}
-    </button>
-  );
-};
+const CheckButton = forwardRef(
+  (
+    { checked, label, className, children, ...props }: Props,
+    ref: Ref<HTMLButtonElement>,
+  ) => {
+    return (
+      <button
+        ref={ref}
+        {...props}
+        className={clsx(checked && "checked", className)}
+        role="checkbox"
+        data-tooltip={label}
+        aria-checked={checked ? "true" : "false"}
+      >
+        {children}
+      </button>
+    );
+  },
+);
 
 export default CheckButton;

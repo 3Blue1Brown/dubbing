@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { clamp } from "lodash";
+import { useAtomValue } from "jotai";
 import { Matrix4, Quaternion, Vector3 } from "three";
 import { useDeepCompareMemo } from "use-deep-compare";
 import {
@@ -7,7 +7,7 @@ import {
   useEventListener,
   useMeasure,
 } from "@reactuses/core";
-import { sampleRate } from "@/pages/lesson/audio";
+import { autoScrollAtom, sampleRate } from "@/pages/lesson/audio";
 import { range } from "@/util/array";
 import { round } from "@/util/math";
 import { formatMs, formatTime } from "@/util/string";
@@ -28,11 +28,11 @@ const tickDist = 50;
 const tickIntervals = [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10, 20, 30, 60, 120, 600];
 const oversample = window.devicePixelRatio * 2;
 
-let skip = 1;
-
 const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>();
+
+  const autoScroll = useAtomValue(autoScrollAtom);
 
   const [{ width = 100, height = 100 }] = useMeasure(canvasRef);
   const { left, top } = useElementBounding(canvasRef);
@@ -77,13 +77,21 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     updateTransform();
   }, [updateTransform]);
 
+  const scroll = useCallback(
+    (time: number) => {
+      const timeX = time * sampleRate;
+      const { scale } = decompose();
+      matrix.current.setPosition(
+        new Vector3(width / 2 - timeX * scale.x, 0, 0),
+      );
+      updateTransform();
+    },
+    [width, decompose, updateTransform],
+  );
+
   useEffect(() => {
-    if (!playing) return;
-    const timeX = time * sampleRate;
-    const { scale } = decompose();
-    matrix.current.setPosition(new Vector3(width / 2 - timeX * scale.x, 0, 0));
-    updateTransform();
-  }, [playing, width, time, decompose, updateTransform]);
+    if (playing && autoScroll) scroll(time);
+  }, [scroll, playing, autoScroll, time]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -93,20 +101,18 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     ctxRef.current?.scale(oversample, oversample);
   }, [width, height]);
 
-  const points = useDeepCompareMemo(() => {
-    const startTime = window.performance.now();
-    const points = Array(Math.floor(width) + 1)
-      .fill(0)
-      .map((_, x) => {
-        const startX = Math.floor(domToCanvas(x, 0).x);
-        const endX = Math.floor(domToCanvas(x + 1, 0).x);
-        const { min, max } = range(waveform, startX, endX, skip);
-        return { x, startX, endX, minY: min, maxY: max };
-      });
-    skip += window.performance.now() - startTime > 5 ? 1 : -1;
-    skip = clamp(skip, 1, 10);
-    return points;
-  }, [transform, width, waveform, domToCanvas]);
+  const points = useDeepCompareMemo(
+    () =>
+      Array(Math.floor(width) + 1)
+        .fill(0)
+        .map((_, x) => {
+          const startX = Math.floor(domToCanvas(x, 0).x);
+          const endX = Math.floor(domToCanvas(x + 1, 0).x);
+          const { min, max } = range(waveform, startX, endX);
+          return { x, startX, endX, minY: min, maxY: max };
+        }),
+    [playing, transform, width, waveform, domToCanvas],
+  );
 
   useEffect(() => {
     const ctx = ctxRef.current;
@@ -121,8 +127,8 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     for (const { startX, minY, maxY, x } of points) {
       ctx.beginPath();
       ctx.strokeStyle = startX > timeX ? futureColor : pastColor;
-      ctx.moveTo(x, canvasToDom(x, minY).y);
-      ctx.lineTo(x, canvasToDom(x, maxY).y);
+      ctx.moveTo(x, canvasToDom(x, minY).y - lineWidth / 2);
+      ctx.lineTo(x, canvasToDom(x, maxY).y + lineWidth / 2);
       ctx.stroke();
     }
 

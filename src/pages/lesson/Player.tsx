@@ -1,12 +1,10 @@
 import YouTube, { type YouTubePlayer } from "react-youtube";
 import { atom } from "jotai";
-import "lodash";
 import { playingAtom } from "@/pages/lesson/audio";
-import { getAtom, setAtom, subscribe } from "@/util/atoms";
+import { getAtom, setAtom } from "@/util/atoms";
 import classes from "./Player.module.css";
 
 export const playerAtom = atom<YouTubePlayer>();
-export const balanceAtom = atom(0.8);
 
 type Props = {
   video: string;
@@ -19,7 +17,6 @@ const Player = ({ video }: Props) => {
       onReady={async (event) => {
         const player = event.target;
         setAtom(playerAtom, player);
-        volumeVideo();
       }}
       className={classes.player}
       iframeClassName={classes.iframe}
@@ -41,9 +38,5 @@ export const seekVideo = async (time: number) => {
   else await player.pauseVideo();
 };
 
-export const volumeVideo = (balance?: number) =>
-  getAtom(playerAtom)?.setVolume(
-    (1 - (balance ?? getAtom(balanceAtom))) ** 2 * 100,
-  );
-
-subscribe(balanceAtom, volumeVideo);
+export const volumeVideo = (volume: number) =>
+  getAtom(playerAtom)?.setVolume(volume);
