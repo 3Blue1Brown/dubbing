@@ -82,11 +82,6 @@ const updateContext = async () => {
   });
   setAtom(micStreamAtom, micStream);
 
-  micSource?.disconnect();
-  micAnalyzer?.disconnect();
-  micRecorder?.disconnect();
-  micPlaythroughGain?.disconnect();
-
   if (!micContext) {
     micContext = new AudioContext();
 
@@ -96,7 +91,6 @@ const updateContext = async () => {
     await micContext.audioWorklet.addModule(worklet);
     micRecorder = new AudioWorkletNode(micContext, "wave-processor");
     micRecorder.port.onmessage = updateRecorder;
-
     micPlaythroughGain = micContext.createGain();
   }
 
@@ -197,8 +191,6 @@ const updatePlaybackBuffer = () => {
 };
 
 const updatePlaybackNode = () => {
-  playbackSource?.disconnect();
-  playbackGain?.disconnect();
   if (!playbackContext || !playbackBuffer) return;
   playbackSource = playbackContext.createBufferSource();
   playbackSource.buffer = playbackBuffer;
