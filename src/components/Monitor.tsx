@@ -28,7 +28,7 @@ const Monitor = ({ time, freq }: Props) => {
     const skip = Math.floor(time.length / width);
     monitor = time
       .filter((_, index) => index % skip === 0)
-      .map((value) => tension(Math.abs(value), 0.01));
+      .map((value) => Math.abs(value));
   }
 
   useEffect(() => {

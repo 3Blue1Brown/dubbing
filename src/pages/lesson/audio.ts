@@ -26,58 +26,51 @@ export const fftSize = 2 ** 10;
 let micSource: MediaStreamAudioSourceNode;
 let micAnalyzer: AnalyserNode;
 let micRecorder: AudioWorkletNode;
-let workletInstalled = false;
 
 export const refreshDevices = async () => {
-  const devices = (await navigator.mediaDevices.enumerateDevices()).filter(
-    ({ kind, label }) => kind === "audioinput" && label,
-  );
+  const devices = (await navigator.mediaDevices.enumerateDevices())
+    .filter(({ kind }) => kind === "audioinput")
+    .map(({ label, ...device }) => ({ ...device, label: label || "Device" }));
   setAtom(devicesAtom, devices);
-  if (!getAtom(deviceAtom)) setAtom(deviceAtom, devices[0]?.deviceId);
+  if (!getAtom(deviceAtom)) setAtom(deviceAtom, devices[0]?.deviceId || "");
 };
 
 const updateContext = async () => {
-  let micStream = getAtom(micStreamAtom);
-  if (!micStream) {
-    micStream = await navigator.mediaDevices.getUserMedia({
-      video: false,
-      audio: {
-        sampleRate,
-        sampleSize: bitRate,
-        channelCount: 1,
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false,
-        deviceId: getAtom(deviceAtom),
-      },
-    });
-    setAtom(micStreamAtom, micStream);
-  }
+  const micStream = await navigator.mediaDevices.getUserMedia({
+    video: false,
+    audio: {
+      sampleRate,
+      sampleSize: bitRate,
+      channelCount: 1,
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false,
+      deviceId: getAtom(deviceAtom),
+    },
+  });
+  setAtom(micStreamAtom, micStream);
 
   let context = getAtom(contextAtom);
 
   if (!context) {
     context = new AudioContext();
     setAtom(contextAtom, context);
-  }
 
-  if (!workletInstalled) {
-    await context.audioWorklet.addModule(worklet);
-    workletInstalled = true;
-  }
-
-  if (!micSource) {
-    micSource = context.createMediaStreamSource(micStream);
     micAnalyzer = context.createAnalyser();
     micAnalyzer.fftSize = fftSize;
-    micSource.connect(micAnalyzer);
-  }
 
-  if (!micRecorder) {
+    await context.audioWorklet.addModule(worklet);
     micRecorder = new AudioWorkletNode(context, "wave-processor");
-    micSource.connect(micRecorder);
     micRecorder.port.onmessage = updateRecorder;
   }
+
+  micAnalyzer.disconnect();
+  micSource?.disconnect();
+
+  micSource = context.createMediaStreamSource(micStream);
+
+  micSource.connect(micAnalyzer);
+  micSource.connect(micRecorder);
 };
 
 const micTimeBuffer = new Uint8Array(fftSize);
@@ -99,7 +92,6 @@ const updateAnalyzer = () => {
 export const init = async () => {
   subscribe(deviceAtom, updateContext);
   await refreshDevices();
-  await updateContext();
   window.setInterval(updateAnalyzer, 30);
 };
 
@@ -154,7 +146,6 @@ export const stop = () => {
 };
 
 export const seek = (time: number = 0) => {
-  // if (getAtom(playingAtom)) disarmRecording();
   seekVideo(time);
   timerMark(time);
   setAtom(timeAtom, time);

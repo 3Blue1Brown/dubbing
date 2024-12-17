@@ -3,7 +3,6 @@ import { atom } from "jotai";
 import "lodash";
 import { playingAtom } from "@/pages/lesson/audio";
 import { getAtom, setAtom, subscribe } from "@/util/atoms";
-import { lengthAtom } from "./data";
 import classes from "./Player.module.css";
 
 export const playerAtom = atom<YouTubePlayer>();
@@ -21,8 +20,6 @@ const Player = ({ video }: Props) => {
         const player = event.target;
         setAtom(playerAtom, player);
         volumeVideo();
-        const length = await player.getDuration();
-        if (length) setAtom(lengthAtom, length);
       }}
       className={classes.player}
       iframeClassName={classes.iframe}

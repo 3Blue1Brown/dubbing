@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { clamp } from "lodash";
 import { Matrix4, Quaternion, Vector3 } from "three";
 import { useDeepCompareMemo } from "use-deep-compare";
 import {
@@ -8,7 +9,7 @@ import {
 } from "@reactuses/core";
 import { sampleRate } from "@/pages/lesson/audio";
 import { range } from "@/util/array";
-import { round, tension } from "@/util/math";
+import { round } from "@/util/math";
 import { formatMs, formatTime } from "@/util/string";
 import classes from "./Waveform.module.css";
 
@@ -20,14 +21,14 @@ type Props = {
 };
 
 const lineWidth = 1;
-const clippingY = 0.9;
-const past = "#00bfff";
-const pastClipping = "#ff1493";
-const future = "#c0c0c0";
-const futureClipping = "#bc5d90";
+const pastColor = "#00bfff";
+const timeColor = "#ff1493";
+const futureColor = "#c0c0c0";
 const tickDist = 50;
 const tickIntervals = [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10, 20, 30, 60, 120, 600];
 const oversample = window.devicePixelRatio * 2;
+
+let skip = 1;
 
 const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -92,18 +93,20 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     ctxRef.current?.scale(oversample, oversample);
   }, [width, height]);
 
-  const points = useDeepCompareMemo(
-    () =>
-      Array(Math.floor(width) + 1)
-        .fill(0)
-        .map((_, x) => {
-          const startX = Math.floor(domToCanvas(x, 0).x);
-          const endX = Math.floor(domToCanvas(x + 1, 0).x);
-          const { min, max, abs } = range(waveform, startX, endX);
-          return { x, startX, endX, minY: min, maxY: max, absY: abs };
-        }),
-    [transform, width, waveform, domToCanvas],
-  );
+  const points = useDeepCompareMemo(() => {
+    const startTime = window.performance.now();
+    const points = Array(Math.floor(width) + 1)
+      .fill(0)
+      .map((_, x) => {
+        const startX = Math.floor(domToCanvas(x, 0).x);
+        const endX = Math.floor(domToCanvas(x + 1, 0).x);
+        const { min, max } = range(waveform, startX, endX, skip);
+        return { x, startX, endX, minY: min, maxY: max };
+      });
+    skip += window.performance.now() - startTime > 5 ? 1 : -1;
+    skip = clamp(skip, 1, 10);
+    return points;
+  }, [transform, width, waveform, domToCanvas]);
 
   useEffect(() => {
     const ctx = ctxRef.current;
@@ -115,21 +118,11 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
 
     ctx.lineWidth = lineWidth;
 
-    for (const { startX, absY, minY, maxY, x } of points) {
-      const isFuture = startX > timeX;
-      const isClipping = absY > clippingY;
+    for (const { startX, minY, maxY, x } of points) {
       ctx.beginPath();
-      ctx.strokeStyle = isClipping
-        ? isFuture
-          ? futureClipping
-          : pastClipping
-        : isFuture
-          ? future
-          : past;
-      const top = tension(minY, 0.1);
-      const bottom = tension(maxY, 0.1);
-      ctx.moveTo(x, top ? canvasToDom(x, top).y : height / 2 - lineWidth);
-      ctx.lineTo(x, bottom ? canvasToDom(x, bottom).y : height / 2 + lineWidth);
+      ctx.strokeStyle = startX > timeX ? futureColor : pastColor;
+      ctx.moveTo(x, canvasToDom(x, minY).y);
+      ctx.lineTo(x, canvasToDom(x, maxY).y);
       ctx.stroke();
     }
 
@@ -149,7 +142,7 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     for (let time = startX; time <= endX; time += interval / 2) {
       const x = canvasToDom(time * sampleRate, 0).x;
       ctx.beginPath();
-      ctx.strokeStyle = future;
+      ctx.strokeStyle = futureColor;
       ctx.moveTo(x, 0);
       ctx.lineTo(x, (2 * height) / tickDist);
       ctx.stroke();
@@ -163,7 +156,7 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     }
     ctx.lineWidth = lineWidth;
     ctx.beginPath();
-    ctx.strokeStyle = future;
+    ctx.strokeStyle = futureColor;
     const mouseTop = canvasToDom(mouseX, -1);
     const mouseBottom = canvasToDom(mouseX, 1);
     ctx.moveTo(mouseTop.x, mouseTop.y);
@@ -172,14 +165,14 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
 
     ctx.lineWidth = lineWidth * 2;
     ctx.beginPath();
-    ctx.strokeStyle = pastClipping;
+    ctx.strokeStyle = timeColor;
     const timeTop = canvasToDom(timeX, -1);
     const timeBottom = canvasToDom(timeX, 1);
     ctx.moveTo(timeTop.x, timeTop.y);
     ctx.lineTo(timeBottom.x, timeBottom.y);
     ctx.stroke();
 
-    ctx.strokeStyle = future;
+    ctx.strokeStyle = futureColor;
     ctx.lineWidth = lineWidth * 2;
     ctx.beginPath();
     const factor = width / waveform.length;
