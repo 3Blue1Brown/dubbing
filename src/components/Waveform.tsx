@@ -123,6 +123,11 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     const timeX = sampleRate * time;
 
     ctx.lineWidth = lineWidth;
+    ctx.textBaseline = "hanging";
+    ctx.textAlign = "center";
+    ctx.font = "14px Open Sans";
+    ctx.strokeStyle = futureColor;
+    ctx.fillStyle = futureColor;
 
     for (const { startX, minY, maxY, x } of points) {
       ctx.beginPath();
@@ -131,9 +136,6 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
       ctx.lineTo(x, canvasToDom(x, maxY).y + lineWidth / 2);
       ctx.stroke();
     }
-
-    ctx.textBaseline = "hanging";
-    ctx.textAlign = "center";
 
     const ticks =
       (domToCanvas(tickDist, 0).x - domToCanvas(0, 0).x) / sampleRate;
@@ -144,11 +146,12 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     const startX = round(domToCanvas(0, 0).x / sampleRate, interval);
     const endX = round(domToCanvas(width, 0).x / sampleRate, interval);
 
+    ctx.strokeStyle = futureColor;
+
     let text = true;
     for (let time = startX; time <= endX; time += interval / 2) {
       const x = canvasToDom(time * sampleRate, 0).x;
       ctx.beginPath();
-      ctx.strokeStyle = futureColor;
       ctx.moveTo(x, 0);
       ctx.lineTo(x, (2 * height) / tickDist);
       ctx.stroke();
@@ -160,9 +163,8 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
         );
       text = !text;
     }
-    ctx.lineWidth = lineWidth;
+
     ctx.beginPath();
-    ctx.strokeStyle = futureColor;
     const mouseTop = canvasToDom(mouseX, -1);
     const mouseBottom = canvasToDom(mouseX, 1);
     ctx.moveTo(mouseTop.x, mouseTop.y);
@@ -170,8 +172,8 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     ctx.stroke();
 
     ctx.lineWidth = lineWidth * 2;
-    ctx.beginPath();
     ctx.strokeStyle = timeColor;
+    ctx.beginPath();
     const timeTop = canvasToDom(timeX, -1);
     const timeBottom = canvasToDom(timeX, 1);
     ctx.moveTo(timeTop.x, timeTop.y);
@@ -179,7 +181,6 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     ctx.stroke();
 
     ctx.strokeStyle = futureColor;
-    ctx.lineWidth = lineWidth * 2;
     ctx.beginPath();
     const factor = width / waveform.length;
     ctx.moveTo(factor * domToCanvas(0, 0).x, height - ctx.lineWidth / 2);
