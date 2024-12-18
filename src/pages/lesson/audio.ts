@@ -84,7 +84,7 @@ const updateContext = async () => {
   setAtom(micStreamAtom, micStream);
 
   if (!micContext) {
-    micContext = new AudioContext();
+    micContext = new AudioContext({ sampleRate });
 
     micAnalyzer = micContext.createAnalyser();
     micAnalyzer.fftSize = fftSize;
@@ -96,7 +96,7 @@ const updateContext = async () => {
   }
 
   if (!playbackContext) {
-    playbackContext = new AudioContext();
+    playbackContext = new AudioContext({ sampleRate });
     updatePlaybackBuffer();
   }
 
