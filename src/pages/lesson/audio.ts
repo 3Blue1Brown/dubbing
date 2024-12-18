@@ -3,6 +3,7 @@ import { createMp3Encoder } from "wasm-media-encoders";
 import { lengthAtom } from "@/pages/lesson/data";
 import {
   pauseVideo,
+  playerAtom,
   playVideo,
   seekVideo,
   volumeVideo,
@@ -157,6 +158,7 @@ export const init = async () => {
   subscribe(timeAtom, updateTime);
 
   subscribe(balanceAtom, updatePlaybackGain);
+  subscribe(playerAtom, updatePlaybackGain);
 
   subscribe(playthroughAtom, updatePlaythroughGain);
 
