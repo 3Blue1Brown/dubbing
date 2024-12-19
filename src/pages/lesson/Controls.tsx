@@ -4,7 +4,7 @@ import {
   FaMicrophone,
   FaPause,
   FaPlay,
-  FaVideo,
+  FaVolumeHigh,
 } from "react-icons/fa6";
 import { MdTranslate } from "react-icons/md";
 import { PiMouseScrollBold } from "react-icons/pi";
@@ -14,7 +14,6 @@ import Monitor from "@/components/Monitor";
 import Select from "@/components/Select";
 import {
   autoScrollAtom,
-  balanceAtom,
   deviceAtom,
   devicesAtom,
   micFreqAtom,
@@ -22,6 +21,7 @@ import {
   micTimeAtom,
   playthroughAtom,
   refreshDevices,
+  volumeAtom,
 } from "@/pages/lesson/audio";
 import { showOriginalAtom } from "@/pages/lesson/Sentences";
 import { useShortcutClick } from "@/util/hooks";
@@ -49,7 +49,7 @@ const Controls = () => {
   const micFreq = useAtomValue(micFreqAtom);
   const time = useAtomValue(timeAtom);
   const length = useAtomValue(lengthAtom);
-  const [balance, setBalance] = useAtom(balanceAtom);
+  const [volume, setVolume] = useAtom(volumeAtom);
   const [playthrough, setPlaythrough] = useAtom(playthroughAtom);
   const [showOriginal, setShowOriginal] = useAtom(showOriginalAtom);
   const [autoScroll, setautoScroll] = useAtom(autoScrollAtom);
@@ -117,6 +117,20 @@ const Controls = () => {
         </CheckButton>
       </div>
 
+      <div className={classes.row}>
+        <FaVolumeHigh className={classes.small} />
+        <input
+          type="range"
+          value={volume}
+          min={0}
+          max={1}
+          step={0.1}
+          style={{ width: 50 }}
+          onChange={(event) => setVolume(Number(event.target.value))}
+          data-tooltip="Playback and mic playthrough volume"
+        />
+      </div>
+
       <div className={classes.row} style={{ flexGrow: 1 }}>
         <span>
           {formatTime(time)}
@@ -133,21 +147,6 @@ const Controls = () => {
           data-tooltip="Timeline"
         />
         <span className={classes.small}>{formatTime(length)}</span>
-      </div>
-
-      <div className={classes.row}>
-        <FaVideo className={classes.small} />
-        <input
-          type="range"
-          value={balance}
-          min={0}
-          max={1}
-          step={0.1}
-          style={{ width: 50 }}
-          onChange={(event) => setBalance(Number(event.target.value))}
-          data-tooltip="Playback preview volume of original video vs. your recorded dub"
-        />
-        <FaMicrophone className={classes.small} />
       </div>
 
       <div className={classes.row}>

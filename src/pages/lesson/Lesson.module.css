@@ -1,6 +1,6 @@
 .lesson {
   display: grid;
-  grid-template-columns: min(300px, 50%) 4fr;
+  grid-template-columns: min(400px, 50%) 4fr;
   align-items: center;
   max-width: 100%;
   gap: 20px;

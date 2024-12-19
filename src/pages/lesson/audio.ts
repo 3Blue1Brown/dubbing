@@ -1,13 +1,7 @@
 import { atom } from "jotai";
 import { createMp3Encoder } from "wasm-media-encoders";
 import { lengthAtom } from "@/pages/lesson/data";
-import {
-  pauseVideo,
-  playerAtom,
-  playVideo,
-  seekVideo,
-  volumeVideo,
-} from "@/pages/lesson/Player";
+import { pauseVideo, playVideo, seekVideo } from "@/pages/lesson/Player";
 import test from "@/test.raw?url";
 import { toFloat } from "@/util/array";
 import { getAtom, setAtom, subscribe } from "@/util/atoms";
@@ -17,7 +11,7 @@ import worklet from "./wave-processor.js?url";
 export const timeAtom = atom(0);
 export const playingAtom = atom(false);
 export const recordingAtom = atom(false);
-export const balanceAtom = atom(0.8);
+export const volumeAtom = atom(1);
 export const autoScrollAtom = atom(true);
 export const playthroughAtom = atom(false);
 
@@ -109,8 +103,7 @@ const updateContext = async () => {
     micPlaythroughGain.connect(micContext.destination);
   }
 
-  updatePlaythroughGain();
-  updatePlaybackGain();
+  updateGain();
 };
 
 const updateAnalyzer = () => {
@@ -126,16 +119,11 @@ const updateAnalyzer = () => {
   );
 };
 
-const updatePlaybackGain = () => {
-  const balance = getAtom(balanceAtom);
-  const power = 2;
-  volumeVideo((1 - balance) ** power * 100);
-  if (playbackGain) playbackGain.gain.value = balance ** power;
-};
-
-const updatePlaythroughGain = () => {
+const updateGain = () => {
+  const gain = getAtom(volumeAtom) ** 2;
+  if (playbackGain) playbackGain.gain.value = gain;
   if (micPlaythroughGain)
-    micPlaythroughGain.gain.value = getAtom(playthroughAtom) ? 1 : 0;
+    micPlaythroughGain.gain.value = getAtom(playthroughAtom) ? gain : 0;
 };
 
 const updateTime = () => {
@@ -157,10 +145,8 @@ export const init = async () => {
 
   subscribe(timeAtom, updateTime);
 
-  subscribe(balanceAtom, updatePlaybackGain);
-  subscribe(playerAtom, updatePlaybackGain);
-
-  subscribe(playthroughAtom, updatePlaythroughGain);
+  subscribe(volumeAtom, updateGain);
+  subscribe(playthroughAtom, updateGain);
 
   await refreshDevices();
 
