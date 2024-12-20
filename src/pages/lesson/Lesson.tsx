@@ -11,7 +11,6 @@ import {
   waveformAtom,
   waveformUpdatedAtom,
 } from "@/pages/lesson/audio";
-import { playerAtom } from "@/pages/lesson/Player";
 import Controls from "./Controls";
 import { getData, sentencesAtom, videoAtom } from "./data";
 import classes from "./Lesson.module.css";
@@ -20,7 +19,6 @@ import Sentences from "./Sentences";
 
 const Lesson = () => {
   const video = useAtomValue(videoAtom);
-  const player = useAtomValue(playerAtom);
   const sentences = useAtomValue(sentencesAtom);
   const waveform = useAtomValue(waveformAtom);
   const time = useAtomValue(timeAtom);
@@ -44,18 +42,14 @@ const Lesson = () => {
     <>
       <div className={classes.lesson}>
         <Player video={video} />
-        {player && (
-          <>
-            <Sentences />
-            <Controls />
-            <Waveform
-              waveform={waveform}
-              playing={playing}
-              time={time}
-              onSeek={seek}
-            />
-          </>
-        )}
+        <Sentences />
+        <Controls />
+        <Waveform
+          waveform={waveform}
+          playing={playing}
+          time={time}
+          onSeek={seek}
+        />
       </div>
       <button
         className="accent"

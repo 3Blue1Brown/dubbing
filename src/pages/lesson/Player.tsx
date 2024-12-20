@@ -4,7 +4,7 @@ import { playingAtom } from "@/pages/lesson/audio";
 import { getAtom, setAtom } from "@/util/atoms";
 import classes from "./Player.module.css";
 
-export const playerAtom = atom<YouTubePlayer>();
+const playerAtom = atom<YouTubePlayer>();
 
 type Props = {
   video: string;

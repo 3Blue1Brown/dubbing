@@ -64,10 +64,8 @@ export const init = async () => {
 
   initted = true;
 
-  if (navigator.userAgent.toLowerCase().includes("firefox")) {
-    console.debug("firefox");
+  if (navigator.userAgent.toLowerCase().includes("firefox"))
     setAtom(sampleRateAtom, new AudioContext().sampleRate);
-  }
 
   subscribe(deviceAtom, updateContext);
 
