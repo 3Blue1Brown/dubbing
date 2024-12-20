@@ -208,11 +208,11 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
       const x = clientX - left;
       const y = clientY - top;
       if (shiftKey || ctrlKey) {
-        matrix.current.scale(new Vector3(1, 1.01 ** deltaY, 1));
+        matrix.current.scale(new Vector3(1, 1.01 ** -deltaY, 1));
         updateTransform();
       } else if (deltaY && Math.abs(deltaX) < 2) {
         const mouse = domToCanvas(x, y);
-        matrix.current.scale(new Vector3(1.01 ** deltaY, 1, 1));
+        matrix.current.scale(new Vector3(1.01 ** -deltaY, 1, 1));
         updateTransform();
         const newMouse = domToCanvas(x, y);
         const { translate, scale } = decompose();
@@ -221,7 +221,7 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
         updateTransform();
       } else if (deltaX && Math.abs(deltaY) < 2) {
         const { translate } = decompose();
-        translate.add(new Vector3(-deltaX * 10, 0, 0));
+        translate.add(new Vector3(deltaX * 10, 0, 0));
         matrix.current.setPosition(translate);
         updateTransform();
       }
