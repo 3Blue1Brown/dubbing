@@ -1,10 +1,11 @@
 import { atom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 import { createMp3Encoder } from "wasm-media-encoders";
 import { lengthAtom } from "@/pages/lesson/data";
 import { pauseVideo, playVideo, seekVideo } from "@/pages/lesson/Player";
 import test from "@/test.raw?url";
 import { toFloat } from "@/util/array";
-import { getAtom, setAtom, subscribe } from "@/util/atoms";
+import { countdownAtom, getAtom, setAtom, subscribe } from "@/util/atoms";
 import { download, type Filename } from "@/util/download";
 import worklet from "./wave-processor.js?url";
 
@@ -19,9 +20,9 @@ export const micStreamAtom = atom<MediaStream>();
 export const micTimeAtom = atom<number[]>([]);
 export const micFreqAtom = atom<number[]>([]);
 export const devicesAtom = atom<MediaDeviceInfo[]>([]);
-export const deviceAtom = atom<string | null>(null);
+export const deviceAtom = atomWithStorage<string | null>("device", null);
 
-export const sampleRate = 44100;
+export const sampleRateAtom = atom(44100);
 export const bitRate = 16;
 export const peak = 2 ** (bitRate - 1);
 export const fftSize = 2 ** 10;
@@ -33,26 +34,53 @@ let micRecorder: AudioWorkletNode | undefined;
 let micPlaythroughGain: GainNode | undefined;
 const micTimeBuffer = new Uint8Array(fftSize);
 const micFreqBuffer = new Uint8Array(fftSize / 2);
+export const recorderUpdatingAtom = countdownAtom(1000);
+export const micSignalAtom = countdownAtom(500);
 
 let playbackContext: AudioContext | undefined;
 let playbackSource: AudioBufferSourceNode | undefined;
 let playbackBuffer: AudioBuffer | undefined;
 let playbackGain: GainNode | undefined;
 
+let timeTimer: number;
+let markTime = 0;
+let markTimestamp = 0;
+let markSample = 0;
+
 export const waveformAtom = atom<Int16Array>(new Int16Array());
 export const waveformUpdatedAtom = atom(0);
 
-fetch(test)
+void fetch(test)
   .then((response) => response.arrayBuffer())
   .then((buffer) => {
     setAtom(waveformAtom, new Int16Array(buffer));
     updatePlaybackBuffer();
   });
 
-let timeTimer: number;
-let markTime = 0;
-let markTimestamp = 0;
-let markSample = 0;
+let initted = false;
+
+export const init = async () => {
+  if (initted) return;
+
+  initted = true;
+
+  if (navigator.userAgent.toLowerCase().includes("firefox")) {
+    console.debug("firefox");
+    setAtom(sampleRateAtom, new AudioContext().sampleRate);
+  }
+
+  subscribe(deviceAtom, updateContext);
+
+  subscribe(timeAtom, updateTime);
+
+  subscribe(volumeAtom, updateGain);
+  subscribe(playthroughAtom, updateGain);
+
+  await navigator.mediaDevices.getUserMedia({ audio: true });
+  await refreshDevices();
+
+  window.setInterval(updateAnalyzer, 30);
+};
 
 export const refreshDevices = async () => {
   const devices = await navigator.mediaDevices.enumerateDevices();
@@ -66,7 +94,7 @@ const updateContext = async () => {
   const micStream = await navigator.mediaDevices.getUserMedia({
     video: false,
     audio: {
-      sampleRate,
+      sampleRate: getAtom(sampleRateAtom),
       sampleSize: bitRate,
       channelCount: 1,
       echoCancellation: false,
@@ -78,7 +106,7 @@ const updateContext = async () => {
   setAtom(micStreamAtom, micStream);
 
   if (!micContext) {
-    micContext = new AudioContext({ sampleRate });
+    micContext = new AudioContext({ sampleRate: getAtom(sampleRateAtom) });
 
     micAnalyzer = micContext.createAnalyser();
     micAnalyzer.fftSize = fftSize;
@@ -86,14 +114,16 @@ const updateContext = async () => {
     await micContext.audioWorklet.addModule(worklet);
     micRecorder = new AudioWorkletNode(micContext, "wave-processor");
     micRecorder.port.onmessage = updateRecorder;
+
     micPlaythroughGain = micContext.createGain();
   }
 
   if (!playbackContext) {
-    playbackContext = new AudioContext({ sampleRate });
+    playbackContext = new AudioContext({ sampleRate: getAtom(sampleRateAtom) });
     updatePlaybackBuffer();
   }
 
+  micSource?.disconnect();
   micSource = micContext.createMediaStreamSource(micStream);
 
   if (micAnalyzer) micSource.connect(micAnalyzer);
@@ -117,6 +147,7 @@ const updateAnalyzer = () => {
     micFreqAtom,
     Array.from(micFreqBuffer ?? []).map((value) => value / 128),
   );
+  if (getAtom(micTimeAtom).some(Boolean)) micSignalAtom.reset();
 };
 
 const updateGain = () => {
@@ -126,37 +157,20 @@ const updateGain = () => {
     micPlaythroughGain.gain.value = getAtom(playthroughAtom) ? gain : 0;
 };
 
-const updateTime = () => {
+const updateTime = async () => {
   const length = getAtom(lengthAtom);
   if (getAtom(timeAtom) > length) {
-    stop();
     setAtom(timeAtom, length);
+    await stop();
   }
 };
 
-let initted = false;
-
-export const init = async () => {
-  if (initted) return;
-
-  initted = true;
-
-  subscribe(deviceAtom, updateContext);
-
-  subscribe(timeAtom, updateTime);
-
-  subscribe(volumeAtom, updateGain);
-  subscribe(playthroughAtom, updateGain);
-
-  await refreshDevices();
-
-  window.setInterval(updateAnalyzer, 30);
-};
-
 const updateRecorder = ({ data }: MessageEvent<Int16Array>) => {
+  if (data.some(Boolean)) recorderUpdatingAtom.reset();
+
   let waveform = getAtom(waveformAtom);
   if (!waveform.length)
-    waveform = new Int16Array(sampleRate * getAtom(lengthAtom));
+    waveform = new Int16Array(getAtom(sampleRateAtom) * getAtom(lengthAtom));
 
   if (getAtom(playingAtom)) {
     if (getAtom(recordingAtom)) {
@@ -174,7 +188,11 @@ const updatePlaybackBuffer = () => {
   const waveform = getAtom(waveformAtom);
   if (!waveform.length) return;
   const floats = toFloat(waveform);
-  playbackBuffer = playbackContext.createBuffer(1, waveform.length, sampleRate);
+  playbackBuffer = playbackContext.createBuffer(
+    1,
+    waveform.length,
+    getAtom(sampleRateAtom),
+  );
   playbackBuffer.getChannelData(0).set(floats);
 };
 
@@ -204,13 +222,13 @@ const stopPlayback = () => {
 const timerMark = (time?: number) => {
   markTime = time ?? getAtom(timeAtom);
   markTimestamp = window.performance.now();
-  markSample = markTime * sampleRate;
+  markSample = markTime * getAtom(sampleRateAtom);
 };
 
-export const play = () => {
+export const play = async () => {
   timerMark();
   playPlayback(getAtom(timeAtom));
-  playVideo();
+  await playVideo();
   setAtom(playingAtom, true);
   timeTimer = window.setInterval(
     () =>
@@ -222,17 +240,17 @@ export const play = () => {
   );
 };
 
-export const stop = () => {
+export const stop = async () => {
   stopPlayback();
-  pauseVideo();
+  await pauseVideo();
   setAtom(playingAtom, false);
   window.clearInterval(timeTimer);
 };
 
-export const seek = (time: number) => {
+export const seek = async (time: number) => {
   timerMark(time);
   if (getAtom(playingAtom)) playPlayback(time);
-  seekVideo(time);
+  await seekVideo(time);
   setAtom(timeAtom, time);
 };
 
@@ -247,7 +265,11 @@ export const disarmRecording = () => {
 
 export const save = async (filename: Filename) => {
   const encoder = await createMp3Encoder();
-  encoder.configure({ sampleRate, channels: 1, bitrate: 192 });
+  encoder.configure({
+    sampleRate: getAtom(sampleRateAtom),
+    channels: 1,
+    bitrate: 192,
+  });
   const frames = encoder.encode([toFloat(getAtom(waveformAtom))]);
   const lastFrames = encoder.finalize();
   const blob = new Blob([frames, lastFrames], { type: "audio/mpeg" });

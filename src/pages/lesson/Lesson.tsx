@@ -30,12 +30,12 @@ const Lesson = () => {
   const { year = "", title = "", language = "" } = useParams();
 
   useEffect(() => {
-    getData({ year, title, language });
+    void getData({ year, title, language });
     document.title = [year, title, language].join(" / ");
   }, [year, title, language]);
 
   useEffect(() => {
-    init();
+    void init();
   }, []);
 
   if (!video || !sentences) return <></>;

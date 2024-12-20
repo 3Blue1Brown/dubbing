@@ -17,7 +17,7 @@ const Player = ({ video }: Props) => {
       onReady={async (event) => {
         const player = event.target;
         setAtom(playerAtom, player);
-        player.mute();
+        await player.mute();
       }}
       className={classes.player}
       iframeClassName={classes.iframe}

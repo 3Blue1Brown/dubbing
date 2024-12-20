@@ -9,6 +9,7 @@
   --off-black: #485050;
   --black: #000000;
   --shadow: #00000040;
+  --warning: rgb(255, 200, 0);
   --box-shadow: 0 0 2px var(--shadow), 1px 2px 3px -2px var(--shadow);
   --rounded: 5px;
   --fast: 0.2s ease;

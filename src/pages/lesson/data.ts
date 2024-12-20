@@ -24,7 +24,13 @@ export const lengthAtom = atom<number>(1);
 const pauseGap = 2;
 const pauseChars = Array(10).fill("▪").join(" ");
 
+let gotten = false;
+
 export const getData = async (lesson: Lesson) => {
+  if (gotten) return;
+
+  gotten = true;
+
   const video = (await request<string>(videoUrl(lesson), "text"))
     .split(/\/|=/)
     .pop();

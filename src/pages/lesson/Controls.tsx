@@ -4,6 +4,7 @@ import {
   FaMicrophone,
   FaPause,
   FaPlay,
+  FaTriangleExclamation,
   FaVolumeHigh,
 } from "react-icons/fa6";
 import { MdTranslate } from "react-icons/md";
@@ -20,7 +21,8 @@ import {
   micStreamAtom,
   micTimeAtom,
   playthroughAtom,
-  refreshDevices,
+  recorderUpdatingAtom,
+  sampleRateAtom,
   volumeAtom,
 } from "@/pages/lesson/audio";
 import { showOriginalAtom } from "@/pages/lesson/Sentences";
@@ -47,7 +49,9 @@ const Controls = () => {
   const playing = useAtomValue(playingAtom);
   const micTime = useAtomValue(micTimeAtom);
   const micFreq = useAtomValue(micFreqAtom);
+  const recorderUpdating = useAtomValue(recorderUpdatingAtom.atom);
   const time = useAtomValue(timeAtom);
+  const sampleRate = useAtomValue(sampleRateAtom);
   const length = useAtomValue(lengthAtom);
   const [volume, setVolume] = useAtom(volumeAtom);
   const [playthrough, setPlaythrough] = useAtom(playthroughAtom);
@@ -64,14 +68,13 @@ const Controls = () => {
         {devices.length ? (
           <Select
             label={<FaMicrophone className={classes.small} />}
-            data-tooltip="Microphone device"
+            data-tooltip={`Microphone device, ${sampleRate / 1000} kHz`}
             value={device ?? ""}
             onChange={setDevice}
             options={devices.map(({ deviceId, label }) => ({
               value: deviceId,
               label: label || "Device",
             }))}
-            onClick={refreshDevices}
           />
         ) : (
           <span className={classes.small}>No devices</span>
@@ -93,7 +96,15 @@ const Controls = () => {
             >
               <FaHeadphonesSimple />
             </CheckButton>
+
             <Monitor time={micTime} freq={micFreq} />
+
+            {!recorderUpdating && (
+              <FaTriangleExclamation
+                style={{ color: "var(--warning)" }}
+                data-tooltip="Mic recording not working"
+              />
+            )}
             <CheckButton
               ref={recordButtonRef}
               label={recording ? "Disarm recording (R)" : "Arm recording (R)"}

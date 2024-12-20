@@ -7,7 +7,7 @@ import {
   useEventListener,
   useMeasure,
 } from "@reactuses/core";
-import { autoScrollAtom, sampleRate } from "@/pages/lesson/audio";
+import { autoScrollAtom, sampleRateAtom } from "@/pages/lesson/audio";
 import { range } from "@/util/array";
 import { round } from "@/util/math";
 import { formatMs, formatTime } from "@/util/string";
@@ -32,6 +32,7 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>();
 
+  const sampleRate = useAtomValue(sampleRateAtom);
   const autoScroll = useAtomValue(autoScrollAtom);
 
   const [{ width = 100, height = 100 }] = useMeasure(canvasRef);
@@ -70,7 +71,7 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     translate.min(new Vector3(0, height / 2, 0));
     matrix.current.compose(translate, new Quaternion(), scale);
     setTransform((transform) => transform + 1);
-  }, [decompose, waveform, width, height]);
+  }, [decompose, waveform, width, height, sampleRate]);
 
   useEffect(() => {
     matrix.current.scale(new Vector3(0, 1, 1));
@@ -86,7 +87,7 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
       );
       updateTransform();
     },
-    [width, decompose, updateTransform],
+    [width, decompose, updateTransform, sampleRate],
   );
 
   useEffect(() => {
@@ -196,6 +197,7 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
     mouseX,
     points,
     time,
+    sampleRate,
   ]);
 
   const wheel = useCallback(
