@@ -203,28 +203,48 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
   const wheel = useCallback(
     (event: WheelEvent) => {
       if (!matrix.current) return;
+
       event.preventDefault();
-      const { deltaX, deltaY, shiftKey, ctrlKey, clientX, clientY } = event;
+
+      let { deltaX, deltaY, shiftKey, ctrlKey, clientX, clientY } = event;
+
+      maxDelta = Math.max(maxDelta, Math.abs(deltaX), Math.abs(deltaY));
+
+      deltaX /= maxDelta;
+      deltaY /= maxDelta;
+
       const x = clientX - left;
       const y = clientY - top;
-      if (shiftKey || ctrlKey) {
-        matrix.current.scale(new Vector3(1, 1.01 ** -deltaY, 1));
-        updateTransform();
-      } else if (deltaY && Math.abs(deltaX) < 2) {
-        const mouse = domToCanvas(x, y);
-        matrix.current.scale(new Vector3(1.01 ** -deltaY, 1, 1));
-        updateTransform();
-        const newMouse = domToCanvas(x, y);
-        const { translate, scale } = decompose();
-        translate.add(new Vector3((newMouse.x - mouse.x) * scale.x, 0, 0));
-        matrix.current.setPosition(translate);
-        updateTransform();
-      } else if (deltaX && Math.abs(deltaY) < 2) {
+
+      const vertical = Math.abs(deltaY) / Math.abs(deltaX) > 3;
+      const horizontal = Math.abs(deltaX) / Math.abs(deltaY) > 3;
+
+      if (vertical) {
+        if (ctrlKey) {
+          matrix.current.scale(new Vector3(1, powerY ** -deltaY, 1));
+          updateTransform();
+        } else if (shiftKey) {
+          const { translate } = decompose();
+          translate.add(new Vector3(deltaY * powerX, 0, 0));
+          matrix.current.setPosition(translate);
+          updateTransform();
+        } else {
+          const mouse = domToCanvas(x, y);
+          matrix.current.scale(new Vector3(powerY ** -deltaY, 1, 1));
+          updateTransform();
+          const newMouse = domToCanvas(x, y);
+          const { translate, scale } = decompose();
+          translate.add(new Vector3((newMouse.x - mouse.x) * scale.x, 0, 0));
+          matrix.current.setPosition(translate);
+          updateTransform();
+        }
+      } else if (horizontal) {
         const { translate } = decompose();
-        translate.add(new Vector3(deltaX * 10, 0, 0));
+        translate.add(new Vector3(deltaX * powerX, 0, 0));
         matrix.current.setPosition(translate);
         updateTransform();
       }
+
       setMouseX(domToCanvas(x, 0).x);
     },
     [left, top, domToCanvas, decompose, updateTransform],
@@ -244,3 +264,7 @@ const Waveform = ({ waveform, playing, time, onSeek }: Props) => {
 };
 
 export default Waveform;
+
+let maxDelta = 0;
+const powerX = 100;
+const powerY = 1.2;
