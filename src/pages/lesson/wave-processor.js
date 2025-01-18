@@ -1,4 +1,4 @@
-// https://www.reddit.com/r/learnjavascript/comments/1buqjr3/solution_web_audio_replacing/
+/** https://www.reddit.com/r/learnjavascript/comments/1buqjr3/solution_web_audio_replacing/ */
 
 const bufferChunks = 100;
 const peak = 2 ** (16 - 1);

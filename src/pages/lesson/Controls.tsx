@@ -18,6 +18,7 @@ import {
   deviceAtom,
   devicesAtom,
   micFreqAtom,
+  micSignalAtom,
   micStreamAtom,
   micTimeAtom,
   playthroughAtom,
@@ -25,6 +26,7 @@ import {
   sampleRateAtom,
   volumeAtom,
 } from "@/pages/lesson/audio";
+import type { Length } from "@/pages/lesson/data";
 import { showOriginalAtom } from "@/pages/lesson/Sentences";
 import { useShortcutClick } from "@/util/hooks";
 import { formatMs, formatTime } from "@/util/string";
@@ -39,9 +41,13 @@ import {
   timeAtom,
 } from "./audio";
 import classes from "./Controls.module.css";
-import { lengthAtom } from "./data";
 
-const Controls = () => {
+type Props = {
+  length: Length;
+};
+
+/** play, pause, seek bar, etc. */
+const Controls = ({ length }: Props) => {
   const devices = useAtomValue(devicesAtom);
   const [device, setDevice] = useAtom(deviceAtom);
   const micStream = useAtomValue(micStreamAtom);
@@ -49,10 +55,10 @@ const Controls = () => {
   const playing = useAtomValue(playingAtom);
   const micTime = useAtomValue(micTimeAtom);
   const micFreq = useAtomValue(micFreqAtom);
+  const micSignal = useAtomValue(micSignalAtom.atom);
   const recorderUpdating = useAtomValue(recorderUpdatingAtom.atom);
   const time = useAtomValue(timeAtom);
   const sampleRate = useAtomValue(sampleRateAtom);
-  const length = useAtomValue(lengthAtom);
   const [volume, setVolume] = useAtom(volumeAtom);
   const [playthrough, setPlaythrough] = useAtom(playthroughAtom);
   const [showOriginal, setShowOriginal] = useAtom(showOriginalAtom);
@@ -97,7 +103,7 @@ const Controls = () => {
               <FaHeadphonesSimple />
             </CheckButton>
 
-            <Monitor time={micTime} freq={micFreq} />
+            <Monitor time={micTime} freq={micFreq} hasSignal={micSignal} />
 
             {!recorderUpdating && (
               <FaTriangleExclamation

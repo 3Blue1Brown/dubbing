@@ -1,7 +1,6 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { createMp3Encoder } from "wasm-media-encoders";
-import { lengthAtom } from "@/pages/lesson/data";
 import { pauseVideo, playVideo, seekVideo } from "@/pages/lesson/Player";
 import test from "@/test.raw?url";
 import { toFloat } from "@/util/array";
@@ -154,6 +153,8 @@ const updateGain = () => {
   if (micPlaythroughGain)
     micPlaythroughGain.gain.value = getAtom(playthroughAtom) ? gain : 0;
 };
+
+const lengthAtom = atom(100);
 
 const updateTime = async () => {
   const length = getAtom(lengthAtom);

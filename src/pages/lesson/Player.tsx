@@ -4,12 +4,11 @@ import { playingAtom } from "@/pages/lesson/audio";
 import { getAtom, setAtom } from "@/util/atoms";
 import classes from "./Player.module.css";
 
-const playerAtom = atom<YouTubePlayer>();
-
 type Props = {
   video: string;
 };
 
+/** video player (singleton) */
 const Player = ({ video }: Props) => {
   return (
     <YouTube
@@ -26,6 +25,8 @@ const Player = ({ video }: Props) => {
 };
 
 export default Player;
+
+const playerAtom = atom<YouTubePlayer>();
 
 export const playVideo = async () => await getAtom(playerAtom)?.playVideo();
 

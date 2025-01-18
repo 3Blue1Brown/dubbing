@@ -1,5 +1,3 @@
-import { atom } from "jotai";
-import { setAtom } from "@/util/atoms";
 import { request } from "@/util/request";
 
 type Lesson = {
@@ -8,36 +6,35 @@ type Lesson = {
   language: string;
 };
 
-const videoUrl = ({ year, title }: Lesson) =>
+/** video file url template */
+const videoFile = ({ year, title }: Lesson) =>
   `https://raw.githubusercontent.com/3b1b/captions/refs/heads/main/${year}/${title}/video_url.txt`;
 
-const sentenceTranslationsUrl = ({ year, title, language }: Lesson) =>
+/** sentence translation file url template */
+const sentenceTranslationsFile = ({ year, title, language }: Lesson) =>
   `https://raw.githubusercontent.com/3b1b/captions/refs/heads/main/${year}/${title}/${language}/sentence_translations.json`;
 
-const wordTimingsUrl = ({ year, title }: Lesson) =>
+/** word timings file url template */
+const wordTimingsFile = ({ year, title }: Lesson) =>
   `https://raw.githubusercontent.com/3b1b/captions/refs/heads/main/${year}/${title}/english/word_timings.json`;
 
-export const videoAtom = atom<string>();
-export const sentencesAtom = atom<Sentence[]>();
-export const lengthAtom = atom<number>(1);
-
+/** if more than this amount of time between timings, add "pause" characters */
 const pauseGap = 2;
+/** characters that indicate pause and let user judge time until next sentence */
 const pauseChars = Array(10).fill("▪").join(" ");
 
-let gotten = false;
+/** get lesson data */
+export const getData = async (lesson: Lesson): Promise<Data> => {
+  /** get video url */
+  const video =
+    (await request<string>(videoFile(lesson), "text")).split(/\/|=/).pop() ??
+    "";
 
-export const getData = async (lesson: Lesson) => {
-  if (gotten) return;
-
-  gotten = true;
-
-  const video = (await request<string>(videoUrl(lesson), "text"))
-    .split(/\/|=/)
-    .pop();
-  setAtom(videoAtom, video);
+  /** get raw translation sentences */
   const translationSentences = await request<_TranslationSentences>(
-    sentenceTranslationsUrl(lesson),
+    sentenceTranslationsFile(lesson),
   );
+
   for (let index = -1; index < translationSentences.length; index++) {
     const prevEnd = translationSentences[index - 1]?.end || 0;
     const nextStart = translationSentences[index]?.start || 0;
@@ -52,7 +49,7 @@ export const getData = async (lesson: Lesson) => {
       index--;
     }
   }
-  const wordTimings = await request<_WordTimings>(wordTimingsUrl(lesson));
+  const wordTimings = await request<_WordTimings>(wordTimingsFile(lesson));
   const splitEvenly = (text: string, start: number, end: number) => {
     const words = text.split(/\s/);
     const step = (end - start) / words.length;
@@ -81,10 +78,14 @@ export const getData = async (lesson: Lesson) => {
     );
     return { original, translation };
   });
-  setAtom(sentencesAtom, sentences);
-  setAtom(lengthAtom, sentences.at(-1)!.translation.at(-1)!.end);
+
+  /** video length, based on sentence timings */
+  const length = sentences.at(-1)!.translation.at(-1)!.end;
+
+  return { video, sentences, length };
 };
 
+/** raw translation sentences format */
 type _TranslationSentences = {
   input: string;
   translatedText: string;
@@ -93,9 +94,17 @@ type _TranslationSentences = {
   end: number;
 }[];
 
+/** raw word timings */
 type _WordTimings = [string, number, number][];
 
+export type Video = string;
+
+/** converted sentences format */
 export type Sentence = {
   original: { text: string; start: number; end: number }[];
   translation: { text: string; start: number; end: number }[];
 };
+
+export type Length = number;
+
+export type Data = { video: Video; sentences: Sentence[]; length: Length };

@@ -24,8 +24,9 @@
 .word {
   position: relative;
   border-bottom: solid 2px transparent;
-  transition-duration: 0.25s;
-  transition-property: color, background;
+  /* causes slowdown in safari due to many elements */
+  /* transition-duration: 0.25s; */
+  /* transition-property: color, background; */
 }
 
 .word::before {
@@ -34,8 +35,8 @@
   border-bottom: solid 2px transparent;
   content: "";
   pointer-events: none;
-  transition-duration: 0.25s;
-  transition-property: border-color;
+  /* transition-duration: 0.25s; */
+  /* transition-property: border-color; */
 }
 
 .past {

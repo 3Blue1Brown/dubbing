@@ -1,15 +1,19 @@
 import { Fragment } from "react";
 import clsx from "clsx";
 import { atom, useAtomValue } from "jotai";
+import type { Sentence, Video } from "@/pages/lesson/data";
 import { autoScrollAtom, playingAtom, seek, timeAtom } from "./audio";
-import { sentencesAtom, videoAtom } from "./data";
 import classes from "./Sentences.module.css";
 
 export const showOriginalAtom = atom(false);
 
-const Sentences = () => {
-  const video = useAtomValue(videoAtom);
-  const sentences = useAtomValue(sentencesAtom);
+type Props = {
+  video: Video;
+  sentences: Sentence[];
+};
+
+/** translation sentences */
+const Sentences = ({ sentences, video }: Props) => {
   const playing = useAtomValue(playingAtom);
   const time = useAtomValue(timeAtom);
   const showOriginal = useAtomValue(showOriginalAtom);
@@ -23,21 +27,21 @@ const Sentences = () => {
         <div key={index} className={classes.words}>
           {(showOriginal ? original : translation).map(
             ({ text, start, end }, index) => {
+              /** get time state of word */
               let state = "";
               if (time < start) state = "future";
               else if (time < end) state = "present";
               else state = "past";
+
               return (
                 <Fragment key={index}>
                   <span
                     ref={(el) => {
-                      if (!autoScroll) return;
-                      if (!el || state !== "present") return;
-                      // if (playing && index !== 0) return;
-                      el.scrollIntoView({
-                        block: "center",
-                        behavior: playing ? "smooth" : "instant",
-                      });
+                      if (el && state === "present" && autoScroll)
+                        el.scrollIntoView({
+                          block: "center",
+                          behavior: playing ? "smooth" : "instant",
+                        });
                     }}
                     className={clsx(
                       classes.word,
