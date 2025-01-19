@@ -6,7 +6,7 @@ import {
   useEventListener,
   useMouse,
 } from "@reactuses/core";
-import { range } from "@/util/array";
+import { peaks } from "@/util/array";
 import { round } from "@/util/math";
 import { formatMs, formatTime } from "@/util/string";
 import classes from "./Waveform.module.css";
@@ -71,12 +71,11 @@ const Waveform = ({
   }, []);
 
   /** element size */
-  const {
-    left,
-    top,
-    width = 100,
-    height = 100,
-  } = useElementBounding(canvasRef);
+  let { left, top, width, height } = useElementBounding(canvasRef);
+  left ||= 0;
+  top ||= 0;
+  width ||= 100;
+  height ||= 100;
 
   /** when size changes */
   useEffect(() => {
@@ -144,6 +143,7 @@ const Waveform = ({
     );
   }, [width, height, sampleRate, waveform.length]);
 
+  /** limit on every render */
   limitTransform();
 
   /** center current time in waveform view */
@@ -164,24 +164,16 @@ const Waveform = ({
   }, [scroll, playing, autoScroll, time]);
 
   /** waveform points to draw */
-  const points = useMemo(
-    () =>
-      /** client x from 0 (left side of waveform viewport) to width (right side) */
-      Array(Math.floor(width) + 1)
-        .fill(0)
-        .map((_, clientX) => {
-          /** silence eslint react-hooks warning */
-          void transformChanged;
-          /** left-most sample within pixel */
-          const leftSample = Math.floor(clientToWaveform(clientX, 0).x);
-          /** right-most sample within pixel */
-          const rightSample = Math.floor(clientToWaveform(clientX + 1, 0).x);
-          /** get extent of samples within range */
-          const { min, max } = range(waveform, leftSample, rightSample);
-          return { clientX, leftSample, rightSample, minAmp: min, maxAmp: max };
-        }),
-    [width, waveform, clientToWaveform, transformChanged],
-  );
+  const points = useMemo(() => {
+    /** assuage react-hooks eslint rules about transform dep */
+    void transformChanged;
+    return peaks(
+      waveform,
+      clientToWaveform(0, 0).x,
+      clientToWaveform(width, 0).x,
+      width,
+    );
+  }, [width, waveform, clientToWaveform, transformChanged]);
 
   /** mouse coords */
   const _mouse = useMouse(canvasRef);
@@ -207,11 +199,15 @@ const Waveform = ({
     ctx.fillStyle = futureColor;
 
     /** draw waveform */
-    for (const { leftSample, minAmp, maxAmp, clientX } of points) {
+    for (let clientX = 0; clientX < width; clientX++) {
+      const { min = 0, max = 0 } = points[clientX] ?? {};
       ctx.beginPath();
-      ctx.strokeStyle = leftSample > currentSample ? futureColor : pastColor;
-      ctx.moveTo(clientX, waveformToClient(0, minAmp).y - lineWidth / 2);
-      ctx.lineTo(clientX, waveformToClient(0, maxAmp).y + lineWidth / 2);
+      ctx.strokeStyle =
+        clientToWaveform(clientX, 0).x > currentSample
+          ? futureColor
+          : pastColor;
+      ctx.moveTo(clientX, waveformToClient(0, min).y - lineWidth / 2);
+      ctx.lineTo(clientX, waveformToClient(0, max).y + lineWidth / 2);
       ctx.stroke();
     }
 
@@ -311,7 +307,7 @@ const Waveform = ({
 
       /** whether user is trying to scroll mostly vertically */
       const vertical = Math.abs(deltaY) / Math.abs(deltaX) > 1;
-      /** whether user is trying to scroll mostly horizontally (usually means trackpad) */
+      /** whether user is trying to scroll mostly horizontally (usually means track pad) */
       const horizontal = Math.abs(deltaX) / Math.abs(deltaY) > 1;
 
       if (vertical) {

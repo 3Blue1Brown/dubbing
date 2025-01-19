@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "rm -rf node_modules/.vite node_modules/.vite-temp & vite --open",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && asc assembly/index.ts --target release && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "asbuild": "asc assembly/index.ts --target release"
   },
   "dependencies": {
     "@reactuses/core": "^5.0.23",
@@ -36,6 +37,7 @@
     "@types/three": "^0.170.0",
     "@types/youtube-player": "^5.5.11",
     "@vitejs/plugin-react": "^4.3.4",
+    "assemblyscript": "^0.27.31",
     "eslint": "^9.17.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
@@ -47,5 +49,11 @@
     "typescript-eslint": "^8.18.1",
     "vite": "^6.0.1",
     "vite-plugin-mkcert": "^1.17.6"
+  },
+  "exports": {
+    ".": {
+      "import": "./build/release.js",
+      "types": "./build/release.d.ts"
+    }
   }
 }

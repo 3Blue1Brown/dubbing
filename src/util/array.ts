@@ -1,29 +1,31 @@
-import { clamp } from "lodash";
+import { chunk, clamp } from "lodash";
+import { peaks as wasmPeaks } from "../../build/release";
 
 /** peak value, assuming 16 bit data type */
 const peak = 2 ** (16 - 1);
 
 /** get min/max values in array buffer */
-export const range = (array: Int16Array, start: number, end: number) => {
+export const peaks = (
+  array: Int16Array,
+  start: number,
+  end: number,
+  divisions: number,
+) => {
   /** limit start/end */
-  start = clamp(start, 0, array.length - 1) || 0;
-  end = clamp(end, 0, array.length - 1) || 0;
-  /** track min/max */
-  let max = 0;
-  let min = 0;
-  /** for performance reasons, limit number of samples checked */
-  const skip = clamp(Math.round((end - start) / 500), 1, 100);
-  /** get range */
-  for (let index = start; index < end; index += skip) {
-    const value = array[index];
-    if (!value) continue;
-    if (value > max) max = value;
-    if (value < min) min = value;
-  }
-  /** normalize to -1 to 1 */
-  min /= peak;
-  max /= peak;
-  return { min, max };
+  start = Math.round(clamp(start, 0, array.length - 1)) || 0;
+  end = Math.round(clamp(end, 0, array.length - 1)) || 0;
+  if (start > end) [start, end] = [end, start];
+
+  /** run web assembly */
+  const peaks = chunk(wasmPeaks(array, start, end, divisions), 2).map(
+    ([min, max]) => ({
+      /** normalize to -1 to 1 */
+      min: (min || 0) / peak,
+      max: (max || 0) / peak,
+    }),
+  );
+
+  return peaks;
 };
 
 /** 16-bit ints to 32-bit floats  */
