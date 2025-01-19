@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { clamp } from "lodash";
-import { proxy, useSnapshot } from "valtio";
 import {
   useElementBounding,
   useEventListener,
@@ -48,8 +47,8 @@ const tickTimes = [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10, 20, 30, 60, 120, 600];
 /** extra draw resolution */
 const oversample = window.devicePixelRatio * 2;
 /** speed/strength of waveform scrolling */
-const scrollXPower = 500;
-const scrollYPower = 1.5;
+const scrollXPower = 1000;
+const scrollYPower = 1.75;
 let maxDelta = 0;
 
 /** audio waveform with zoom, pan, etc */
@@ -87,80 +86,42 @@ const Waveform = ({
     ctxRef.current?.scale(oversample, oversample);
   }, [width, height]);
 
-  /** mutable transform */
-  const transform = useRef(
-    proxy({
-      translate: { x: 0, y: 0 },
-      scale: { x: 0, y: 1 },
-    }),
-  );
-
-  /** re-render anytime transform changes */
-  const transformChanged = useSnapshot(transform.current);
-
-  /** convert waveform to client coords */
-  const waveformToClient = useCallback((x: number, y: number) => {
-    x *= transform.current.scale.x;
-    y *= transform.current.scale.y;
-    x += transform.current.translate.x;
-    y += transform.current.translate.y;
-    return { x, y };
-  }, []);
-
-  /** convert client coords to waveform coords */
-  const clientToWaveform = useCallback((x: number, y: number) => {
-    x -= transform.current.translate.x;
-    y -= transform.current.translate.y;
-    x /= transform.current.scale.x;
-    y /= transform.current.scale.y;
-    return { x, y };
-  }, []);
+  const [transform, setTransform] = useState<Transform>({
+    translate: { x: 0, y: 0 },
+    scale: { x: 0, y: 1 },
+  });
 
   /** limit transform  */
-  const limitTransform = useCallback(() => {
-    const length = waveform.length || sampleRate;
-    /** limit zoom */
-    transform.current.scale.x = clamp(
-      transform.current.scale.x,
-      width / length,
-      length / (100 * sampleRate),
-    );
-    transform.current.scale.y = clamp(
-      transform.current.scale.y,
-      1 * (height / 2),
-      100 * (height / 2),
-    );
-    /** limit pan */
-    transform.current.translate.x = clamp(
-      transform.current.translate.x,
-      width - transform.current.scale.x * length,
-      0,
-    );
-    transform.current.translate.y = clamp(
-      transform.current.translate.y,
-      height / 2,
-      height / 2,
-    );
-  }, [width, height, sampleRate, waveform.length]);
-
-  limitTransform();
-
-  /** center current time in waveform view */
-  const scroll = useCallback(
-    (time: number) => {
-      /** current time sample # */
-      const currentSample = time * sampleRate;
-      /** center */
-      transform.current.translate.x =
-        width / 2 - currentSample * transform.current.scale.x;
+  const limitTransform = useCallback(
+    ({ translate, scale }: Transform) => {
+      const length = waveform.length || sampleRate;
+      /** limit zoom */
+      scale.x = clamp(scale.x, width / length, length / (100 * sampleRate));
+      scale.y = clamp(scale.y, 1 * (height / 2), 100 * (height / 2));
+      /** limit pan */
+      translate.x = clamp(translate.x, width - scale.x * length, 0);
+      translate.y = clamp(translate.y, height / 2, height / 2);
+      return { translate, scale };
     },
-    [width, sampleRate],
+    [width, height, sampleRate, waveform.length],
   );
 
+  /** initial limit */
   useEffect(() => {
-    /** auto-scroll */
-    if (playing && autoScroll) scroll(time);
-  }, [scroll, playing, autoScroll, time]);
+    setTransform(limitTransform);
+  }, [limitTransform]);
+
+  /** auto-scroll */
+  useEffect(() => {
+    if (playing && autoScroll)
+      setTransform(({ translate, scale }) => {
+        /** current time sample # */
+        const currentSample = time * sampleRate;
+        /** center horizontally */
+        translate.x = width / 2 - currentSample * scale.x;
+        return limitTransform({ translate, scale });
+      });
+  }, [sampleRate, width, playing, autoScroll, time, limitTransform]);
 
   /** waveform points to draw */
   const points = useMemo(
@@ -169,23 +130,29 @@ const Waveform = ({
       Array(Math.floor(width) + 1)
         .fill(0)
         .map((_, clientX) => {
-          /** silence eslint react-hooks warning */
-          void transformChanged;
           /** left-most sample within pixel */
-          const leftSample = Math.floor(clientToWaveform(clientX, 0).x);
+          const leftSample = Math.floor(
+            clientToWaveform(transform, clientX, 0).x,
+          );
           /** right-most sample within pixel */
-          const rightSample = Math.floor(clientToWaveform(clientX + 1, 0).x);
+          const rightSample = Math.floor(
+            clientToWaveform(transform, clientX + 1, 0).x,
+          );
           /** get extent of samples within range */
           const { min, max } = range(waveform, leftSample, rightSample);
           return { clientX, leftSample, rightSample, minAmp: min, maxAmp: max };
         }),
-    [width, waveform, clientToWaveform, transformChanged],
+    [width, waveform, transform],
   );
 
   /** mouse coords */
   const _mouse = useMouse(canvasRef);
   const mouseClient = { x: _mouse.elementX || 0, y: _mouse.elementY || 0 };
-  const mouseWaveform = clientToWaveform(mouseClient.x, mouseClient.y);
+  const mouseWaveform = clientToWaveform(
+    transform,
+    mouseClient.x,
+    mouseClient.y,
+  );
 
   useEffect(() => {
     const ctx = ctxRef.current;
@@ -211,19 +178,20 @@ const Waveform = ({
     for (const { leftSample, minAmp, maxAmp, clientX } of points) {
       ctx.beginPath();
       ctx.strokeStyle = leftSample > currentSample ? futureColor : pastColor;
-      ctx.moveTo(clientX, waveformToClient(0, minAmp).y - 0.5);
-      ctx.lineTo(clientX, waveformToClient(0, maxAmp).y + 0.5);
+      ctx.moveTo(clientX, waveformToClient(transform, 0, minAmp).y - 0.5);
+      ctx.lineTo(clientX, waveformToClient(transform, 0, maxAmp).y + 0.5);
       ctx.stroke();
     }
 
     /** left side of waveform viewport */
-    const waveformLeft = clientToWaveform(0, 0);
+    const waveformLeft = clientToWaveform(transform, 0, 0);
     /** right side of waveform viewport */
-    const waveformRight = clientToWaveform(width, 0);
+    const waveformRight = clientToWaveform(transform, width, 0);
 
     /** convert min tick dist to time interval */
     const minTickTime =
-      (clientToWaveform(tickDist, 0).x - waveformLeft.x) / sampleRate;
+      (clientToWaveform(transform, tickDist, 0).x - waveformLeft.x) /
+      sampleRate;
     /** find min tick time interval that satisfies min tick dist  */
     const tickTime =
       tickTimes.find((tickTime) => tickTime > minTickTime) || tickTimes.at(-1)!;
@@ -239,7 +207,7 @@ const Waveform = ({
     let text = "";
     for (let time = leftTime; time <= rightTime; time += tickTime / 2) {
       /** client x coord */
-      const clientX = waveformToClient(time * sampleRate, 0).x;
+      const clientX = waveformToClient(transform, time * sampleRate, 0).x;
 
       /** draw tick line mark */
       ctx.beginPath();
@@ -282,15 +250,14 @@ const Waveform = ({
     ctx.strokeStyle = timeColor;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    const timeTop = waveformToClient(currentSample, -1);
-    const timeBottom = waveformToClient(currentSample, 1);
+    const timeTop = waveformToClient(transform, currentSample, -1);
+    const timeBottom = waveformToClient(transform, currentSample, 1);
     ctx.moveTo(timeTop.x, timeTop.y);
     ctx.lineTo(timeBottom.x, timeBottom.y);
     ctx.stroke();
   }, [
+    transform,
     waveform,
-    clientToWaveform,
-    waveformToClient,
     width,
     height,
     points,
@@ -315,10 +282,10 @@ const Waveform = ({
       deltaX /= maxDelta;
       deltaY /= maxDelta;
 
-      /** increase wheel effect */
+      /** make wheel effect more precise */
       if (altKey) {
-        deltaX *= 5;
-        deltaY *= 5;
+        deltaX /= 5;
+        deltaY /= 5;
       }
 
       /** coords in terms of element */
@@ -330,31 +297,36 @@ const Waveform = ({
       /** whether user is trying to scroll mostly horizontally (usually means trackpad) */
       const horizontal = Math.abs(deltaX) / Math.abs(deltaY) > 1;
 
+      /** copy transform */
+      let newTransform = { ...transform };
+
       if (vertical) {
         if (ctrlKey) {
           /** zoom amplitude */
-          transform.current.scale.y *= scrollYPower ** -deltaY;
+          newTransform.scale.y *= scrollYPower ** -deltaY;
         } else if (shiftKey) {
           /** pan left/right */
-          transform.current.translate.x += deltaY * scrollXPower;
+          newTransform.translate.x += deltaY * scrollXPower;
         } else {
           /** zoom in/out */
-          const mouseWaveform = clientToWaveform(x, y);
-          transform.current.scale.x *= scrollYPower ** -deltaY;
-          limitTransform();
+          const mouseWaveform = clientToWaveform(newTransform, x, y);
+          newTransform.scale.x *= scrollYPower ** -deltaY;
+          newTransform = limitTransform(newTransform);
           /** offset left/right pan so mouse stays over same spot in waveform */
-          const newMouse = clientToWaveform(x, y);
-          transform.current.translate.x +=
-            (newMouse.x - mouseWaveform.x) * transform.current.scale.x;
+          const newMouse = clientToWaveform(newTransform, x, y);
+          newTransform.translate.x +=
+            (newMouse.x - mouseWaveform.x) * newTransform.scale.x;
         }
       } else if (horizontal) {
         /** pan left/right */
-        transform.current.translate.x += deltaX * scrollXPower;
+        newTransform.translate.x += deltaX * scrollXPower;
       }
 
-      limitTransform();
+      /** update transform */
+      newTransform = limitTransform(newTransform);
+      setTransform(newTransform);
     },
-    [left, top, clientToWaveform, limitTransform],
+    [transform, left, top, limitTransform],
   );
 
   /** on mouse wheel or track pad scroll */
@@ -365,10 +337,33 @@ const Waveform = ({
       ref={canvasRef}
       className={classes.waveform}
       onClick={({ clientX }) =>
-        onSeek(clientToWaveform(clientX - left, 0).x / sampleRate)
+        onSeek(clientToWaveform(transform, clientX - left, 0).x / sampleRate)
       }
     />
   );
 };
 
 export default Waveform;
+
+type Transform = {
+  translate: { x: number; y: number };
+  scale: { x: number; y: number };
+};
+
+/** convert waveform to client coords */
+const waveformToClient = (transform: Transform, x: number, y: number) => {
+  x *= transform.scale.x;
+  y *= transform.scale.y;
+  x += transform.translate.x;
+  y += transform.translate.y;
+  return { x, y };
+};
+
+/** convert client coords to waveform coords */
+const clientToWaveform = (transform: Transform, x: number, y: number) => {
+  x -= transform.translate.x;
+  y -= transform.translate.y;
+  x /= transform.scale.x;
+  y /= transform.scale.y;
+  return { x, y };
+};

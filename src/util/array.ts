@@ -12,7 +12,7 @@ export const range = (array: Int16Array, start: number, end: number) => {
   let max = 0;
   let min = 0;
   /** for performance reasons, limit number of samples checked */
-  const skip = clamp(Math.round((end - start) / 500), 1, 100);
+  const skip = clamp(Math.round((end - start) / 10), 1, 100);
   /** get range */
   for (let index = start; index < end; index += skip) {
     const value = array[index];
