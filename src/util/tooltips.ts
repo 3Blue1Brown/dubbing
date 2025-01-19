@@ -10,9 +10,10 @@ const options: Partial<Props> = {
   // onHide: () => false,
 };
 
+
 const init = () => {
   updateAll();
-
+  /** watch for any data attr changes in document */
   new MutationObserver(updateAll).observe(document.body, {
     childList: true,
     subtree: true,
@@ -21,9 +22,11 @@ const init = () => {
   });
 };
 
+/** update all elements with data attr */
 const updateAll = () =>
   document.querySelectorAll("[data-tooltip]").forEach(update);
 
+/** update element tolltip */
 const update = (element: Element & { _tippy?: Instance }) => {
   if (!element.isConnected) return element._tippy?.destroy();
 

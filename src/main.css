@@ -59,6 +59,7 @@ button {
   min-width: 30px;
   min-height: 30px;
   padding: 5px 10px;
+  gap: 10px;
   border: none;
   border-radius: var(--rounded);
   background: var(--primary);
@@ -70,7 +71,7 @@ button {
     background var(--fast);
 }
 
-button:has(> :only-child) {
+button:has(> svg:only-child) {
   padding: 0;
 }
 
@@ -162,6 +163,21 @@ label:hover:has(select)::after {
 .tippy-content {
   max-width: 200px;
   padding: 0;
+}
+
+[disabled] {
+  pointer-events: none;
+  filter: saturate(0);
+}
+
+.spin {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 :not(html) ::-webkit-scrollbar {

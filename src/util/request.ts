@@ -1,6 +1,7 @@
+/** basic fetch and parse */
 export async function request<Response>(
   url: string | URL,
-  parse: "json" | "text" = "json"
+  parse: "json" | "text" = "json",
 ) {
   url = new URL(url);
   const request = new Request(url);

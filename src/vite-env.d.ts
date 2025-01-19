@@ -1,3 +1,2 @@
 /// <reference types="vite/client" />
-
-declare module "audiobuffer-to-wav";
+/// <reference types="vite-plugin-comlink/client" />

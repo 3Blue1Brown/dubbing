@@ -1,11 +1,9 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { createMp3Encoder } from "wasm-media-encoders";
 import { pauseVideo, playVideo, seekVideo } from "@/pages/lesson/Player";
 import test from "@/test.raw?url";
 import { toFloat } from "@/util/array";
 import { countdownAtom, getAtom, setAtom, subscribe } from "@/util/atoms";
-import { download, type Filename } from "@/util/download";
 import worklet from "./wave-processor.js?url";
 
 export const timeAtom = atom(0);
@@ -260,19 +258,4 @@ export const armRecording = () => {
 export const disarmRecording = () => {
   setAtom(recordingAtom, false);
   updatePlaybackBuffer();
-};
-
-export const save = async (filename: Filename) => {
-  const encoder = await createMp3Encoder();
-  encoder.configure({
-    sampleRate: getAtom(sampleRateAtom),
-    channels: 1,
-    bitrate: 192,
-  });
-  const frames = encoder.encode([toFloat(getAtom(waveformAtom))]);
-  const lastFrames = encoder.finalize();
-  const blob = new Blob([frames, lastFrames], { type: "audio/mpeg" });
-  const url = window.URL.createObjectURL(blob);
-  download(url, filename, "mp3");
-  window.URL.revokeObjectURL(url);
 };
