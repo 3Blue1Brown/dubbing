@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Matrix4, Quaternion, Vector3 } from "three";
-import { useDeepCompareMemo } from "use-deep-compare";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { clamp } from "lodash";
+import { proxy, useSnapshot } from "valtio";
 import {
   useElementBounding,
   useEventListener,
@@ -88,69 +88,74 @@ const Waveform = ({
     ctxRef.current?.scale(oversample, oversample);
   }, [width, height]);
 
-  /** current transform matrix for converting waveform to client coords (non-reactive)*/
-  const matrix = useRef(new Matrix4());
-  /** signal that transform matrix has been updated (reactive) */
-  const [transform, setTransform] = useState(0);
+  /** mutable transform */
+  const transform = useRef(
+    proxy({
+      translate: { x: 0, y: 0 },
+      scale: { x: 0, y: 1 },
+    }),
+  );
+
+  /** re-render anytime transform changes */
+  const transformChanged = useSnapshot(transform.current);
 
   /** convert waveform to client coords */
-  const waveformToClient = useCallback(
-    (x: number, y: number) =>
-      new Vector3(x, y, 0).applyMatrix4(matrix.current.clone()),
-    [],
-  );
-
-  /** convert client coords to waveform coords */
-  const clientToWaveform = useCallback(
-    (x: number, y: number) =>
-      new Vector3(x, y, 0).applyMatrix4(matrix.current.clone().invert()),
-    [],
-  );
-
-  /** decompose transform matrix into constituent components */
-  const decompose = useCallback(() => {
-    const translate = new Vector3();
-    const scale = new Vector3();
-    matrix.current.decompose(translate, new Quaternion(), scale);
-    return { translate, scale };
+  const waveformToClient = useCallback((x: number, y: number) => {
+    x *= transform.current.scale.x;
+    y *= transform.current.scale.y;
+    x += transform.current.translate.x;
+    y += transform.current.translate.y;
+    return { x, y };
   }, []);
 
-  /** call after any change to transform matrix to re-render */
-  const updateTransform = useCallback(() => {
-    /** max length */
-    const length = waveform.length || sampleRate;
-    const { translate, scale } = decompose();
-    /** limit zoom */
-    scale.max(new Vector3(width / length, 1 * (height / 2), 1));
-    scale.min(new Vector3(length / (100 * sampleRate), 100 * (height / 2), 1));
-    /** limit pan */
-    translate.max(new Vector3(width - scale.x * length, height / 2, 0));
-    translate.min(new Vector3(0, height / 2, 0));
-    /** re-assemble matrix */
-    matrix.current.compose(translate, new Quaternion(), scale);
-    /** trigger re-render */
-    setTransform((transform) => transform + 1);
-  }, [decompose, waveform, width, height, sampleRate]);
+  /** convert client coords to waveform coords */
+  const clientToWaveform = useCallback((x: number, y: number) => {
+    x -= transform.current.translate.x;
+    y -= transform.current.translate.y;
+    x /= transform.current.scale.x;
+    y /= transform.current.scale.y;
+    return { x, y };
+  }, []);
 
-  useEffect(() => {
-    /** initialize zoom */
-    matrix.current.scale(new Vector3(0, 1, 1));
-    updateTransform();
-  }, [updateTransform]);
+  /** limit transform  */
+  const limitTransform = useCallback(() => {
+    const length = waveform.length || sampleRate;
+    /** limit zoom */
+    transform.current.scale.x = clamp(
+      transform.current.scale.x,
+      width / length,
+      length / (100 * sampleRate),
+    );
+    transform.current.scale.y = clamp(
+      transform.current.scale.y,
+      1 * (height / 2),
+      100 * (height / 2),
+    );
+    /** limit pan */
+    transform.current.translate.x = clamp(
+      transform.current.translate.x,
+      width - transform.current.scale.x * length,
+      0,
+    );
+    transform.current.translate.y = clamp(
+      transform.current.translate.y,
+      height / 2,
+      height / 2,
+    );
+  }, [width, height, sampleRate, waveform.length]);
+
+  limitTransform();
 
   /** center current time in waveform view */
   const scroll = useCallback(
     (time: number) => {
       /** current time sample # */
       const currentSample = time * sampleRate;
-      const { scale } = decompose();
       /** center */
-      matrix.current.setPosition(
-        new Vector3(width / 2 - currentSample * scale.x, 0, 0),
-      );
-      updateTransform();
+      transform.current.translate.x =
+        width / 2 - currentSample * transform.current.scale.x;
     },
-    [width, decompose, updateTransform, sampleRate],
+    [width, sampleRate],
   );
 
   useEffect(() => {
@@ -159,12 +164,14 @@ const Waveform = ({
   }, [scroll, playing, autoScroll, time]);
 
   /** waveform points to draw */
-  const points = useDeepCompareMemo(
+  const points = useMemo(
     () =>
       /** client x from 0 (left side of waveform viewport) to width (right side) */
       Array(Math.floor(width) + 1)
         .fill(0)
         .map((_, clientX) => {
+          /** silence eslint react-hooks warning */
+          void transformChanged;
           /** left-most sample within pixel */
           const leftSample = Math.floor(clientToWaveform(clientX, 0).x);
           /** right-most sample within pixel */
@@ -173,12 +180,12 @@ const Waveform = ({
           const { min, max } = range(waveform, leftSample, rightSample);
           return { clientX, leftSample, rightSample, minAmp: min, maxAmp: max };
         }),
-    [playing, transform, width, waveform, clientToWaveform],
+    [width, waveform, clientToWaveform, transformChanged],
   );
 
   /** mouse coords */
   const _mouse = useMouse(canvasRef);
-  const mouseClient = { x: _mouse.elementX, y: _mouse.elementY };
+  const mouseClient = { x: _mouse.elementX || 0, y: _mouse.elementY || 0 };
   const mouseWaveform = clientToWaveform(mouseClient.x, mouseClient.y);
 
   useEffect(() => {
@@ -272,24 +279,21 @@ const Waveform = ({
     ctx.lineTo(factor * waveformRight.x, height - ctx.lineWidth / 2);
     ctx.stroke();
   }, [
-    transform,
     waveform,
-    waveformToClient,
     clientToWaveform,
-    mouseWaveform,
-    mouseClient.x,
+    waveformToClient,
     width,
     height,
     points,
     time,
     sampleRate,
+    mouseWaveform,
+    mouseClient.x,
   ]);
 
   /** handle zoom/pan */
   const wheel = useCallback(
     (event: WheelEvent) => {
-      if (!matrix.current) return;
-
       /** prevent page scroll */
       event.preventDefault();
 
@@ -306,44 +310,35 @@ const Waveform = ({
       const y = clientY - top;
 
       /** whether user is trying to scroll mostly vertically */
-      const vertical = Math.abs(deltaY) / Math.abs(deltaX) > 3;
+      const vertical = Math.abs(deltaY) / Math.abs(deltaX) > 1;
       /** whether user is trying to scroll mostly horizontally (usually means trackpad) */
-      const horizontal = Math.abs(deltaX) / Math.abs(deltaY) > 3;
+      const horizontal = Math.abs(deltaX) / Math.abs(deltaY) > 1;
 
       if (vertical) {
         if (ctrlKey) {
           /** zoom amplitude */
-          matrix.current.scale(new Vector3(1, scrollYPower ** -deltaY, 1));
-          updateTransform();
+          transform.current.scale.y *= scrollYPower ** -deltaY;
         } else if (shiftKey) {
           /** pan left/right */
-          const { translate } = decompose();
-          translate.add(new Vector3(deltaY * scrollXPower, 0, 0));
-          matrix.current.setPosition(translate);
-          updateTransform();
+          transform.current.translate.x += deltaY * scrollXPower;
         } else {
           /** zoom in/out */
           const mouseWaveform = clientToWaveform(x, y);
-          matrix.current.scale(new Vector3(scrollYPower ** -deltaY, 1, 1));
-          updateTransform();
+          transform.current.scale.x *= scrollYPower ** -deltaY;
+          limitTransform();
           /** offset left/right pan so mouse stays over same spot in waveform */
           const newMouse = clientToWaveform(x, y);
-          const { translate, scale } = decompose();
-          translate.add(
-            new Vector3((newMouse.x - mouseWaveform.x) * scale.x, 0, 0),
-          );
-          matrix.current.setPosition(translate);
-          updateTransform();
+          transform.current.translate.x +=
+            (newMouse.x - mouseWaveform.x) * transform.current.scale.x;
         }
       } else if (horizontal) {
         /** pan left/right */
-        const { translate } = decompose();
-        translate.add(new Vector3(deltaX * scrollXPower, 0, 0));
-        matrix.current.setPosition(translate);
-        updateTransform();
+        transform.current.translate.x += deltaX * scrollXPower;
       }
+
+      limitTransform();
     },
-    [left, top, clientToWaveform, decompose, updateTransform],
+    [left, top, clientToWaveform, limitTransform],
   );
 
   /** on mouse wheel or track pad scroll */

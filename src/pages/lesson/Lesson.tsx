@@ -5,6 +5,7 @@ import Waveform from "@/components/Waveform";
 import {
   autoScrollAtom,
   init,
+  lengthAtom,
   playingAtom,
   sampleRateAtom,
   save,
@@ -13,6 +14,7 @@ import {
   waveformAtom,
   waveformUpdatedAtom,
 } from "@/pages/lesson/audio";
+import { setAtom } from "@/util/atoms";
 import Controls from "./Controls";
 import { getData, type Sentence } from "./data";
 import classes from "./Lesson.module.css";
@@ -54,6 +56,8 @@ const Lesson = () => {
         setVideo(video);
         setSentences(sentences);
         setLength(length);
+        /** temporary */
+        setAtom(lengthAtom, length);
       })
       .catch(console.error);
 

@@ -154,7 +154,7 @@ const updateGain = () => {
     micPlaythroughGain.gain.value = getAtom(playthroughAtom) ? gain : 0;
 };
 
-const lengthAtom = atom(100);
+export const lengthAtom = atom(100);
 
 const updateTime = async () => {
   const length = getAtom(lengthAtom);
