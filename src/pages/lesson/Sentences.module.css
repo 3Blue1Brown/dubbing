@@ -1,13 +1,3 @@
-.container {
-  position: relative;
-}
-
-.button {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
 .sentences {
   display: grid;
   grid-template-columns: 1fr;

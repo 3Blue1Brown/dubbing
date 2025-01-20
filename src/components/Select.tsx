@@ -1,4 +1,5 @@
 import type { ComponentProps, ReactNode } from "react";
+import classes from "./Select.module.css";
 
 type Props = {
   label: ReactNode;
@@ -7,9 +8,13 @@ type Props = {
 } & Omit<ComponentProps<"select">, "onChange">;
 
 const Select = ({ label, options, onChange, ...props }: Props) => (
-  <label>
+  <label className={classes.label}>
     {label}
-    <select {...props} onChange={(event) => onChange?.(event.target.value)}>
+    <select
+      className={classes.select}
+      {...props}
+      onChange={(event) => onChange?.(event.target.value)}
+    >
       {options.map(({ value, label }, index) => (
         <option key={index} value={value}>
           {label}

@@ -1,0 +1,43 @@
+.select {
+  display: inline-flex;
+  appearance: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  max-width: 100px;
+  min-height: 30px;
+  padding: 5px 10px;
+  gap: 10px;
+  border: none;
+  border-radius: var(--rounded);
+  background: var(--light-gray);
+  color: currentColor;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background var(--fast),
+    color var(--fast);
+}
+
+.select:hover {
+  background: var(--dark-gray);
+  color: var(--white);
+}
+
+.label:has(.select) .select {
+  padding-right: 30px;
+}
+
+.label:has(.select)::after {
+  position: absolute;
+  right: 10px;
+  translate: 0 -2px;
+  content: "▾";
+  opacity: 0.5;
+  pointer-events: none;
+  transition: color var(--fast);
+}
+
+.label:hover:has(.select)::after {
+  color: var(--white);
+}

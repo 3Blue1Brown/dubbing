@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import {
   FaCircle,
   FaHeadphonesSimple,
@@ -119,6 +120,7 @@ const Controls = ({
             )}
             <CheckButton
               ref={recordButtonRef}
+              style={{ "--accent": "var(--secondary)" } as CSSProperties}
               label={recording ? "Disarm recording (R)" : "Arm recording (R)"}
               checked={recording}
               onClick={() => (recording ? disarmRecording() : armRecording())}

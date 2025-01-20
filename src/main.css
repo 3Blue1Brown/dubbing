@@ -1,6 +1,9 @@
 :root {
   --primary: #00ade6;
   --secondary: #ff1493;
+  --primary-light: color-mix(in srgb, var(--primary), var(--white) 50%);
+  --secondary-light: color-mix(in hsl, var(--secondary), var(--white) 50%);
+
   --white: #ffffff;
   --off-white: #f8fafa;
   --light-gray: #e8f0f0;
@@ -9,9 +12,10 @@
   --off-black: #485050;
   --black: #000000;
   --shadow: #00000040;
+
   --warning: rgb(255, 200, 0);
   --box-shadow: 0 0 2px var(--shadow), 1px 2px 3px -2px var(--shadow);
-  --rounded: 5px;
+  --rounded: 3px;
   --fast: 0.2s ease;
 }
 
@@ -47,40 +51,7 @@ label {
   position: relative;
   align-items: center;
   gap: 5px;
-  accent-color: var(--primary);
   cursor: pointer;
-}
-
-button {
-  display: inline-flex;
-  appearance: none;
-  align-items: center;
-  justify-content: center;
-  min-width: 30px;
-  min-height: 30px;
-  padding: 5px 10px;
-  gap: 10px;
-  border: none;
-  border-radius: var(--rounded);
-  background: var(--primary);
-  color: var(--white);
-  font: inherit;
-  cursor: pointer;
-  transition:
-    color var(--fast),
-    background var(--fast);
-}
-
-button:has(> svg:only-child) {
-  padding: 0;
-}
-
-button:hover {
-  background: var(--off-black);
-}
-
-button.checked {
-  background: var(--secondary);
 }
 
 input {
@@ -102,49 +73,9 @@ input[type="range"]:hover {
   accent-color: var(--off-black);
 }
 
-select {
-  display: inline-flex;
-  appearance: none;
-  align-items: center;
-  justify-content: center;
-  min-width: 30px;
-  max-width: 95px;
-  min-height: 30px;
-  padding: 5px 10px;
-  gap: 10px;
-  border: none;
-  border-radius: var(--rounded);
-  background: var(--light-gray);
-  color: currentColor;
-  font: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background var(--fast),
-    color var(--fast);
-}
-
-select:hover {
-  background: var(--dark-gray);
-  color: var(--white);
-}
-
-label:has(select) select {
-  padding-right: 30px;
-}
-
-label:has(select)::after {
-  position: absolute;
-  right: 10px;
-  translate: 0 -2px;
-  content: "▾";
-  opacity: 0.5;
+[disabled] {
+  filter: saturate(0);
   pointer-events: none;
-  transition: color var(--fast);
-}
-
-label:hover:has(select)::after {
-  color: var(--white);
 }
 
 .tippy-box {
@@ -163,11 +94,6 @@ label:hover:has(select)::after {
 .tippy-content {
   max-width: 200px;
   padding: 0;
-}
-
-[disabled] {
-  pointer-events: none;
-  filter: saturate(0);
 }
 
 .spin {

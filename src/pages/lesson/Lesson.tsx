@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { CgSpinnerTwoAlt } from "react-icons/cg";
+import { LuDownload } from "react-icons/lu";
 import { useParams } from "react-router";
 import { useAtomValue } from "jotai";
+import Button from "@/components/Button";
 import type { PlayerRef } from "@/components/Player";
 import Player from "@/components/Player";
 import Waveform from "@/components/Waveform";
@@ -112,8 +114,8 @@ const Lesson = () => {
           onSeek={seek}
         />
       </div>
-      <button
-        className="accent"
+      <Button
+        accent
         disabled={saving}
         onClick={() => {
           setSaving(true);
@@ -130,9 +132,9 @@ const Lesson = () => {
             .finally(() => setSaving(false));
         }}
       >
-        {saving && <CgSpinnerTwoAlt className="spin" />}
         <span>{saving ? "Saving" : "Save"}</span>
-      </button>
+        {saving ? <CgSpinnerTwoAlt className="spin" /> : <LuDownload />}
+      </Button>
     </>
   );
 };

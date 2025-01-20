@@ -1,0 +1,38 @@
+.button {
+  --accent: var(--white);
+  display: inline-flex;
+  appearance: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 5px 10px;
+  gap: 10px;
+  border: none;
+  border-radius: var(--rounded);
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    color var(--fast),
+    background var(--fast);
+}
+
+.button:hover {
+  background: var(--light-gray);
+}
+
+.accent {
+  --accent: var(--primary);
+  background: var(--accent);
+  color: var(--white);
+}
+
+.accent:hover {
+  background: color-mix(in srgb, var(--accent), var(--white) 50%);
+}
+
+.square {
+  padding: 0;
+}
