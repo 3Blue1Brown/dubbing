@@ -9,7 +9,6 @@ export const timeAtom = atom(0);
 export const playingAtom = atom(false);
 export const recordingAtom = atom(false);
 export const volumeAtom = atom(1);
-export const autoScrollAtom = atom(true);
 export const playthroughAtom = atom(false);
 
 export const micStreamAtom = atom<MediaStream>();

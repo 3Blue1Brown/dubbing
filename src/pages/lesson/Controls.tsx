@@ -14,7 +14,6 @@ import CheckButton from "@/components/CheckButton";
 import Monitor from "@/components/Monitor";
 import Select from "@/components/Select";
 import {
-  autoScrollAtom,
   deviceAtom,
   devicesAtom,
   micFreqAtom,
@@ -27,7 +26,6 @@ import {
   volumeAtom,
 } from "@/pages/lesson/audio";
 import type { Length } from "@/pages/lesson/data";
-import { showOriginalAtom } from "@/pages/lesson/Sentences";
 import { useShortcutClick } from "@/util/hooks";
 import { formatMs, formatTime } from "@/util/string";
 import {
@@ -44,10 +42,20 @@ import classes from "./Controls.module.css";
 
 type Props = {
   length: Length;
+  showOriginal: boolean;
+  setShowOriginal: (value: boolean) => void;
+  autoScroll: boolean;
+  setAutoScroll: (value: boolean) => void;
 };
 
 /** play, pause, seek bar, etc. */
-const Controls = ({ length }: Props) => {
+const Controls = ({
+  length,
+  showOriginal,
+  setShowOriginal,
+  autoScroll,
+  setAutoScroll,
+}: Props) => {
   const devices = useAtomValue(devicesAtom);
   const [device, setDevice] = useAtom(deviceAtom);
   const micStream = useAtomValue(micStreamAtom);
@@ -61,8 +69,6 @@ const Controls = ({ length }: Props) => {
   const sampleRate = useAtomValue(sampleRateAtom);
   const [volume, setVolume] = useAtom(volumeAtom);
   const [playthrough, setPlaythrough] = useAtom(playthroughAtom);
-  const [showOriginal, setShowOriginal] = useAtom(showOriginalAtom);
-  const [autoScroll, setautoScroll] = useAtom(autoScrollAtom);
 
   const playButtonRef = useShortcutClick<HTMLButtonElement>(" ");
   const playthroughButtonRef = useShortcutClick<HTMLButtonElement>("p");
@@ -180,7 +186,7 @@ const Controls = ({ length }: Props) => {
           role="checkbox"
           checked={autoScroll}
           label="Auto-scroll text and waveform"
-          onClick={() => setautoScroll(!autoScroll)}
+          onClick={() => setAutoScroll(!autoScroll)}
         >
           <PiMouseScrollBold />
         </CheckButton>

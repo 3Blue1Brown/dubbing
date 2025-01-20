@@ -6,7 +6,6 @@ import type { PlayerRef } from "@/components/Player";
 import Player from "@/components/Player";
 import Waveform from "@/components/Waveform";
 import {
-  autoScrollAtom,
   init,
   lengthAtom,
   playingAtom,
@@ -27,16 +26,26 @@ import Sentences from "./Sentences";
 const Lesson = () => {
   const playerRef = useRef<PlayerRef>(null);
 
+  /** video url */
   const [video, setVideo] = useState<string>();
+  /** sentence text and timings */
   const [sentences, setSentences] = useState<Sentence[]>();
+  /** video length, in seconds */
   const [length, setLength] = useState<number>(1);
+
+  /** should auto-scroll */
+  const [autoScroll, setAutoScroll] = useState(true);
+  /** show original (english) text */
+  const [showOriginal, setShowOriginal] = useState(false);
+
+  /** is currently saving output */
   const [saving, setSaving] = useState(false);
 
   const waveform = useAtomValue(waveformAtom);
   const playing = useAtomValue(playingAtom);
   const time = useAtomValue(timeAtom);
   const sampleRate = useAtomValue(sampleRateAtom);
-  const autoScroll = useAtomValue(autoScrollAtom);
+
   useAtomValue(waveformUpdatedAtom);
 
   /** get url params */
@@ -81,8 +90,19 @@ const Lesson = () => {
     <>
       <div className={classes.lesson}>
         <Player ref={playerRef} video={video} />
-        <Sentences video={video} sentences={sentences} />
-        <Controls length={length} />
+        <Sentences
+          video={video}
+          sentences={sentences}
+          showOriginal={showOriginal}
+          autoScroll={autoScroll}
+        />
+        <Controls
+          length={length}
+          showOriginal={showOriginal}
+          setShowOriginal={setShowOriginal}
+          autoScroll={autoScroll}
+          setAutoScroll={setAutoScroll}
+        />
         <Waveform
           waveform={waveform}
           playing={playing}

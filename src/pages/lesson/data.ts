@@ -97,14 +97,16 @@ type _TranslationSentences = {
 /** raw word timings */
 type _WordTimings = [string, number, number][];
 
+/** video url */
 export type Video = string;
 
-/** converted sentences format */
+/** sentences text and timings */
 export type Sentence = {
   original: { text: string; start: number; end: number }[];
   translation: { text: string; start: number; end: number }[];
 };
 
+/** video length, in seconds */
 export type Length = number;
 
 export type Data = { video: Video; sentences: Sentence[]; length: Length };

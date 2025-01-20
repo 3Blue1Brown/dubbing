@@ -1,23 +1,21 @@
 import { Fragment } from "react";
 import clsx from "clsx";
-import { atom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import type { Sentence, Video } from "@/pages/lesson/data";
-import { autoScrollAtom, playingAtom, seek, timeAtom } from "./audio";
+import { playingAtom, seek, timeAtom } from "./audio";
 import classes from "./Sentences.module.css";
-
-export const showOriginalAtom = atom(false);
 
 type Props = {
   video: Video;
   sentences: Sentence[];
+  showOriginal: boolean;
+  autoScroll: boolean;
 };
 
 /** translation sentences */
-const Sentences = ({ sentences, video }: Props) => {
+const Sentences = ({ video, sentences, showOriginal, autoScroll }: Props) => {
   const playing = useAtomValue(playingAtom);
   const time = useAtomValue(timeAtom);
-  const showOriginal = useAtomValue(showOriginalAtom);
-  const autoScroll = useAtomValue(autoScrollAtom);
 
   if (!video || !sentences) return <></>;
 
