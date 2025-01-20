@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CgSpinnerTwoAlt } from "react-icons/cg";
 import { useParams } from "react-router";
 import { useAtomValue } from "jotai";
+import type { PlayerRef } from "@/components/Player";
+import Player from "@/components/Player";
 import Waveform from "@/components/Waveform";
 import {
   autoScrollAtom,
@@ -19,11 +21,12 @@ import { saveMp3 } from "@/util/download";
 import Controls from "./Controls";
 import { getData, type Sentence } from "./data";
 import classes from "./Lesson.module.css";
-import Player from "./Player";
 import Sentences from "./Sentences";
 
 /** lesson page root */
 const Lesson = () => {
+  const playerRef = useRef<PlayerRef>(null);
+
   const [video, setVideo] = useState<string>();
   const [sentences, setSentences] = useState<Sentence[]>();
   const [length, setLength] = useState<number>(1);
@@ -77,7 +80,7 @@ const Lesson = () => {
   return (
     <>
       <div className={classes.lesson}>
-        <Player video={video} />
+        <Player ref={playerRef} video={video} />
         <Sentences video={video} sentences={sentences} />
         <Controls length={length} />
         <Waveform

@@ -1,6 +1,5 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { pauseVideo, playVideo, seekVideo } from "@/pages/lesson/Player";
 import test from "@/test.raw?url";
 import { toFloat } from "@/util/array";
 import { countdownAtom, getAtom, setAtom, subscribe } from "@/util/atoms";
@@ -225,7 +224,7 @@ const timerMark = (time?: number) => {
 export const play = async () => {
   timerMark();
   playPlayback(getAtom(timeAtom));
-  await playVideo();
+  // await playVideo();
   setAtom(playingAtom, true);
   timeTimer = window.setInterval(
     () =>
@@ -239,7 +238,7 @@ export const play = async () => {
 
 export const stop = async () => {
   stopPlayback();
-  await pauseVideo();
+  // await pauseVideo();
   setAtom(playingAtom, false);
   window.clearInterval(timeTimer);
 };
@@ -247,7 +246,7 @@ export const stop = async () => {
 export const seek = async (time: number) => {
   timerMark(time);
   if (getAtom(playingAtom)) playPlayback(time);
-  await seekVideo(time);
+  // await seekVideo(time);
   setAtom(timeAtom, time);
 };
 
