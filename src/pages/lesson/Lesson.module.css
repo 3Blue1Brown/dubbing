@@ -1,23 +1,20 @@
-.lesson {
-  display: grid;
-  grid-template-columns: min(400px, 50%) 4fr;
+.top {
+  display: flex;
   align-items: center;
-  max-width: 100%;
-  gap: 20px;
+  justify-content: center;
+  gap: 40px;
+}
+
+.top > :first-child {
+  max-width: 300px;
+}
+
+.top > :last-child {
+  flex-grow: 1;
 }
 
 @media (max-width: 600px) {
-  .lesson {
-    grid-template-columns: 1fr;
+  .top {
+    flex-direction: column;
   }
-}
-
-.lesson > * {
-  border-radius: var(--rounded);
-  border: solid 1px var(--light-gray);
-}
-
-.lesson > :nth-child(3),
-.lesson > :nth-child(4) {
-  grid-column: 1 / -1;
 }

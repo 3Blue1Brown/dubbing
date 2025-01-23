@@ -1,3 +1,5 @@
+import { bitPeak } from "@/audio";
+
 /** get min/max values in audio buffer */
 export const peaks = (
   /** raw samples */
@@ -11,9 +13,6 @@ export const peaks = (
   /** skip every this many samples to increase performance */
   step = 1,
 ) => {
-  /** max 16 bit value */
-  const peak = 2 ** (16 - 1);
-
   /** number of samples in each division */
   const size = (end - start) / divisions;
 
@@ -38,6 +37,6 @@ export const peaks = (
       }
 
     /** normalize to -1 to-1 */
-    return { min: min / peak, max: max / peak };
+    return { min: min / bitPeak, max: max / bitPeak };
   });
 };

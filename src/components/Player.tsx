@@ -22,7 +22,7 @@ type Handle = {
 
 export type PlayerRef = ComponentRef<typeof Player>;
 
-/** video player (singleton) */
+/** video player */
 const Player = forwardRef<Handle, Props>(({ video }: Props, ref) => {
   const player = useRef<YouTubePlayer>();
 

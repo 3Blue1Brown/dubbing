@@ -6,7 +6,7 @@ import {
   useMouse,
 } from "@reactuses/core";
 import { round } from "@/util/math";
-import { peaks } from "@/util/peaks";
+import { peaks } from "@/audio/peaks";
 import { formatMs, formatTime } from "@/util/string";
 import classes from "./Waveform.module.css";
 

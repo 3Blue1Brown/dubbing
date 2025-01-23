@@ -1,79 +1,52 @@
-import type { CSSProperties } from "react";
+import { useContext, type CSSProperties } from "react";
 import {
   FaCircle,
   FaHeadphonesSimple,
   FaMicrophone,
   FaPause,
   FaPlay,
-  FaTriangleExclamation,
   FaVolumeHigh,
 } from "react-icons/fa6";
 import { MdTranslate } from "react-icons/md";
 import { PiMouseScrollBold } from "react-icons/pi";
-import { useAtom, useAtomValue } from "jotai";
 import CheckButton from "@/components/CheckButton";
 import Monitor from "@/components/Monitor";
 import Select from "@/components/Select";
-import {
-  deviceAtom,
-  devicesAtom,
-  micFreqAtom,
-  micSignalAtom,
-  micStreamAtom,
-  micTimeAtom,
-  playthroughAtom,
-  recorderUpdatingAtom,
-  sampleRateAtom,
-  volumeAtom,
-} from "@/pages/lesson/audio";
-import type { Length } from "@/pages/lesson/data";
+import { LessonContext } from "@/pages/lesson";
 import { useShortcutClick } from "@/util/hooks";
 import { formatMs, formatTime } from "@/util/string";
-import {
-  armRecording,
-  disarmRecording,
-  play,
-  playingAtom,
-  recordingAtom,
-  seek,
-  stop,
-  timeAtom,
-} from "./audio";
 import classes from "./Controls.module.css";
 
-type Props = {
-  length: Length;
-  showOriginal: boolean;
-  setShowOriginal: (value: boolean) => void;
-  autoScroll: boolean;
-  setAutoScroll: (value: boolean) => void;
-};
-
 /** play, pause, seek bar, etc. */
-const Controls = ({
-  length,
-  showOriginal,
-  setShowOriginal,
-  autoScroll,
-  setAutoScroll,
-}: Props) => {
-  const devices = useAtomValue(devicesAtom);
-  const [device, setDevice] = useAtom(deviceAtom);
-  const micStream = useAtomValue(micStreamAtom);
-  const recording = useAtomValue(recordingAtom);
-  const playing = useAtomValue(playingAtom);
-  const micTime = useAtomValue(micTimeAtom);
-  const micFreq = useAtomValue(micFreqAtom);
-  const micSignal = useAtomValue(micSignalAtom.atom);
-  const recorderUpdating = useAtomValue(recorderUpdatingAtom.atom);
-  const time = useAtomValue(timeAtom);
-  const sampleRate = useAtomValue(sampleRateAtom);
-  const [volume, setVolume] = useAtom(volumeAtom);
-  const [playthrough, setPlaythrough] = useAtom(playthroughAtom);
-
+const Controls = () => {
   const playButtonRef = useShortcutClick<HTMLButtonElement>(" ");
   const playthroughButtonRef = useShortcutClick<HTMLButtonElement>("p");
   const recordButtonRef = useShortcutClick<HTMLButtonElement>("r");
+
+  const {
+    sampleRate,
+    devices,
+    device,
+    micStream,
+    setDevice,
+    playthrough,
+    setPlaythrough,
+    micTimeAnal,
+    micFreqAnal,
+    recording,
+    setRecording,
+    playing,
+    setPlaying,
+    volume,
+    setVolume,
+    time,
+    setTime,
+    length,
+    showOriginal,
+    setShowOriginal,
+    autoScroll,
+    setAutoScroll,
+  } = useContext(LessonContext);
 
   return (
     <div className={classes.controls}>
@@ -110,20 +83,14 @@ const Controls = ({
               <FaHeadphonesSimple />
             </CheckButton>
 
-            <Monitor time={micTime} freq={micFreq} hasSignal={micSignal} />
+            <Monitor time={micTimeAnal} freq={micFreqAnal} />
 
-            {!recorderUpdating && (
-              <FaTriangleExclamation
-                style={{ color: "var(--warning)" }}
-                data-tooltip="Mic recording not working"
-              />
-            )}
             <CheckButton
               ref={recordButtonRef}
               style={{ "--accent": "var(--secondary)" } as CSSProperties}
               label={recording ? "Disarm recording (R)" : "Arm recording (R)"}
               checked={recording}
-              onClick={() => (recording ? disarmRecording() : armRecording())}
+              onClick={() => setRecording(!recording)}
             >
               <FaCircle />
             </CheckButton>
@@ -136,7 +103,7 @@ const Controls = ({
           ref={playButtonRef}
           label={playing ? "Pause (Space)" : "Play (Space)"}
           checked={playing}
-          onClick={() => (playing ? stop() : play())}
+          onClick={() => setPlaying(!playing)}
         >
           {playing ? <FaPause /> : <FaPlay />}
         </CheckButton>
@@ -168,7 +135,7 @@ const Controls = ({
           min={0}
           max={length}
           step={0.001}
-          onChange={(event) => seek(Number(event.target.value))}
+          onChange={(event) => setTime(Number(event.target.value))}
           data-tooltip="Timeline"
         />
         <span className={classes.small}>{formatTime(length)}</span>

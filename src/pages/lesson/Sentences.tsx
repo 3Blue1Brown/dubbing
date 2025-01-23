@@ -1,21 +1,12 @@
-import { Fragment } from "react";
+import { Fragment, useContext } from "react";
 import clsx from "clsx";
-import { useAtomValue } from "jotai";
-import type { Sentence, Video } from "@/pages/lesson/data";
-import { playingAtom, seek, timeAtom } from "./audio";
+import { LessonContext } from "@/pages/lesson";
 import classes from "./Sentences.module.css";
 
-type Props = {
-  video: Video;
-  sentences: Sentence[];
-  showOriginal: boolean;
-  autoScroll: boolean;
-};
-
 /** translation sentences */
-const Sentences = ({ video, sentences, showOriginal, autoScroll }: Props) => {
-  const playing = useAtomValue(playingAtom);
-  const time = useAtomValue(timeAtom);
+const Sentences = () => {
+  const { video, sentences, playing, time, setTime, showOriginal, autoScroll } =
+    useContext(LessonContext);
 
   if (!video || !sentences) return <></>;
 
@@ -52,7 +43,7 @@ const Sentences = ({ video, sentences, showOriginal, autoScroll }: Props) => {
                         ? 0.25 + 1.25 ** -Math.abs(time - (end + start) / 2)
                         : 1,
                     }}
-                    onClick={() => seek(start)}
+                    onClick={() => setTime(start)}
                   >
                     {text}
                   </span>{" "}

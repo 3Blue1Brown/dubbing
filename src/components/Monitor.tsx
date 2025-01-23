@@ -7,14 +7,13 @@ import classes from "./Monitor.module.css";
 type Props = {
   time: number[];
   freq: number[];
-  hasSignal: boolean;
 } & ComponentProps<"canvas">;
 
 /** extra draw resolution */
 const oversample = window.devicePixelRatio * 2;
 
 /** graph time or frequency data */
-const Monitor = ({ time, freq, hasSignal, ...props }: Props) => {
+const Monitor = ({ time, freq, ...props }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>();
 
@@ -39,8 +38,8 @@ const Monitor = ({ time, freq, hasSignal, ...props }: Props) => {
   /** whether to display frequency or time data */
   const [byFreq, setByFreq] = useState(true);
 
-/** max 16-bit value */
-  const peak = max(time) ?? 0;
+  /** max absolute value */
+  const maxAbs = max(time.map(Math.abs)) ?? 0;
 
   /** draw data */
   let monitor: number[] = [];
@@ -58,6 +57,13 @@ const Monitor = ({ time, freq, hasSignal, ...props }: Props) => {
       .map((value) => Math.abs(value));
   }
 
+  /** whether there is any signal */
+  const hasSignal = monitor.some((value) => value !== 0);
+
+  /** keep track of last time we had signal */
+  const lastSignal = useRef(0);
+  if (hasSignal) lastSignal.current = window.performance.now();
+
   useEffect(() => {
     const ctx = ctxRef.current;
     if (!ctx) return;
@@ -65,7 +71,7 @@ const Monitor = ({ time, freq, hasSignal, ...props }: Props) => {
     /** clear previous canvas contents */
     ctx.clearRect(0, 0, width, height);
 
-    if (hasSignal) {
+    if (hasSignal && window.performance.now() - lastSignal.current < 1000) {
       /** draw graph */
       ctx.save();
       ctx.translate(0, height / 2);
@@ -77,7 +83,7 @@ const Monitor = ({ time, freq, hasSignal, ...props }: Props) => {
       });
       ctx.restore();
       ctx.lineWidth = 1;
-      ctx.strokeStyle = peak > 0.9 ? "#ff1493" : "#00bfff";
+      ctx.strokeStyle = maxAbs > 0.9 ? "#ff1493" : "#00bfff";
       ctx.stroke();
     } else {
       /** draw no signal */
