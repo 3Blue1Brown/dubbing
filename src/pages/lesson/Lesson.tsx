@@ -24,18 +24,19 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let latest = true;
 
-    getData({
-      year,
-      title,
-      language,
-    })
-      .then(({ video, sentences, length }) => {
-        if (!latest) return;
-        lesson.setVideo(video);
-        lesson.setSentences(sentences);
-        lesson.setLength(length);
+    if (!lesson.sentences)
+      getData({
+        year,
+        title,
+        language,
       })
-      .catch(console.error);
+        .then(({ video, sentences, length }) => {
+          if (!latest) return;
+          lesson.setVideo(video);
+          lesson.setSentences(sentences);
+          lesson.setLength(length);
+        })
+        .catch(console.error);
 
     return () => {
       latest = false;
