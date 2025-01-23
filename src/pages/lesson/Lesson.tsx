@@ -9,6 +9,27 @@ import Player from "./Player";
 import Sentences from "./Sentences";
 import Waveform from "./Waveform";
 
+/** lesson page */
+const Lesson = () => {
+  return (
+    <LessonProvider>
+      <div className={classes.top}>
+        <Player />
+        <Sentences />
+      </div>
+      <Controls />
+      <Waveform />
+      <Actions />
+    </LessonProvider>
+  );
+};
+
+export default Lesson;
+
+/**
+ * wrap root in provider with children slot to avoid cascade-rendering entire
+ * page every time lesson state provider value changes
+ */
 const LessonProvider = ({ children }: { children: ReactNode }) => {
   const lesson = useLesson();
 
@@ -47,20 +68,3 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
     <LessonContext.Provider value={lesson}>{children}</LessonContext.Provider>
   );
 };
-
-/** lesson page root */
-const Lesson = () => {
-  return (
-    <LessonProvider>
-      <div className={classes.top}>
-        <Player />
-        <Sentences />
-      </div>
-      <Controls />
-      <Waveform />
-      <Actions />
-    </LessonProvider>
-  );
-};
-
-export default Lesson;

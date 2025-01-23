@@ -10,7 +10,6 @@ const options: Partial<Props> = {
   // onHide: () => false,
 };
 
-
 const init = () => {
   updateAll();
   /** watch for any data attr changes in document */

@@ -1,7 +1,7 @@
 import { wrap } from "comlink";
+import EncodeWorker from "@/audio/encode.worker?worker";
 import type { MP3Params } from "@/audio/encode.worker.ts";
 import * as encodeWorkerAPI from "@/audio/encode.worker.ts";
-import EncodeWorker from "@/audio/encode.worker?worker";
 
 export type Filename = string | string[];
 

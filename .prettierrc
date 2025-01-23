@@ -1,6 +1,7 @@
 {
   "plugins": [
     "@ianvs/prettier-plugin-sort-imports",
+    "./node_modules/prettier-plugin-jsdoc/dist/index.js",
     "prettier-plugin-css-order"
   ],
   "importOrder": [

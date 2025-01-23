@@ -5,8 +5,8 @@ import {
   useEventListener,
   useMouse,
 } from "@reactuses/core";
-import { round } from "@/util/math";
 import { peaks } from "@/audio/peaks";
+import { round } from "@/util/math";
 import { formatMs, formatTime } from "@/util/string";
 import classes from "./Waveform.module.css";
 
@@ -26,13 +26,12 @@ type Props = {
 };
 
 /**
- * "amplitude"/"amp" = [-1, 1]
- * "sample" = audio sample #
- * "time" = seconds
- * "tick" = time label on waveform
+ * "amplitude"/"amp" = [-1, 1] "sample" = audio sample # "time" = seconds "tick"
+ * = time label on waveform
  *
  * "client" = coord in terms of canvas element, i.e. in pixels (sort-of)
- * "waveform" = coord in terms of waveform, where x = sample # and y = sample amp
+ * "waveform" = coord in terms of waveform, where x = sample # and y = sample
+ * amp
  */
 
 /** colors */
@@ -91,7 +90,7 @@ const Waveform = ({
     scale: { x: 0, y: 1 },
   });
 
-  /** limit transform  */
+  /** limit transform */
   const limitTransform = useCallback(
     ({ translate, scale }: Transform) => {
       const length = waveform.length || sampleRate;
@@ -186,7 +185,7 @@ const Waveform = ({
     const minTickTime =
       (clientToWaveform(transform, tickDist, 0).x - waveformLeft.x) /
       sampleRate;
-    /** find min tick time interval that satisfies min tick dist  */
+    /** find min tick time interval that satisfies min tick dist */
     const tickTime =
       tickTimes.find((tickTime) => tickTime > minTickTime) || tickTimes.at(-1)!;
 
@@ -288,7 +287,10 @@ const Waveform = ({
 
       /** whether user is trying to scroll mostly vertically */
       const vertical = Math.abs(deltaY) / Math.abs(deltaX) > 1.5;
-      /** whether user is trying to scroll mostly horizontally (usually means trackpad) */
+      /**
+       * whether user is trying to scroll mostly horizontally (usually means
+       * trackpad)
+       */
       const horizontal = Math.abs(deltaX) / Math.abs(deltaY) > 1.5;
 
       /** copy transform */

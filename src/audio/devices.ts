@@ -29,7 +29,10 @@ export const useMicrophone = ({ sampleRate = 44100, bitDepth = 16 }) => {
 
   /** init */
   useEffect(() => {
-    /** some browsers (which ?) error on enumerateDevices if mic permissions not requested first */
+    /**
+     * some browsers (which ?) error on enumerateDevices if mic permissions not
+     * requested first
+     */
     request()
       .then(() => refresh().catch(console.error))
       .catch(console.error);

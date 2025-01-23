@@ -4,8 +4,7 @@ import { useMicrophone } from "@/audio/devices";
 import type { PlayerRef } from "@/components/Player";
 import type { Sentence } from "@/pages/lesson/data";
 
-const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
-
+/** all lesson state */
 export const useLesson = () => {
   /** player control */
   const playerRef = useRef<PlayerRef>(null);
@@ -92,6 +91,9 @@ export const useLesson = () => {
   };
 };
 
-export type LessonState = ReturnType<typeof useLesson>;
+type LessonState = ReturnType<typeof useLesson>;
 
 export const LessonContext = createContext<LessonState>({} as LessonState);
+
+/** crudely detect firefox browser */
+const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
