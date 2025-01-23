@@ -2,6 +2,7 @@ import { useContext } from "react";
 import WaveformComponent from "@/components/Waveform";
 import { LessonContext } from "@/pages/lesson";
 
+/** waveform section */
 const Waveform = () => {
   const { waveform, playing, time, sampleRate, autoScroll, setTime } =
     useContext(LessonContext);

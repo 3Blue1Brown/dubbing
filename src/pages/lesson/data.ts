@@ -1,21 +1,22 @@
 import { request } from "@/util/request";
 
-type Lesson = {
+/** lesson id */
+type LessonId = {
   year: string;
   title: string;
   language: string;
 };
 
 /** video file url template */
-const videoFile = ({ year, title }: Lesson) =>
+const videoFile = ({ year, title }: LessonId) =>
   `https://raw.githubusercontent.com/3b1b/captions/refs/heads/main/${year}/${title}/video_url.txt`;
 
 /** sentence translation file url template */
-const sentenceTranslationsFile = ({ year, title, language }: Lesson) =>
+const sentenceTranslationsFile = ({ year, title, language }: LessonId) =>
   `https://raw.githubusercontent.com/3b1b/captions/refs/heads/main/${year}/${title}/${language}/sentence_translations.json`;
 
 /** word timings file url template */
-const wordTimingsFile = ({ year, title }: Lesson) =>
+const wordTimingsFile = ({ year, title }: LessonId) =>
   `https://raw.githubusercontent.com/3b1b/captions/refs/heads/main/${year}/${title}/english/word_timings.json`;
 
 /** if more than this amount of time between timings, add "pause" characters */
@@ -24,7 +25,7 @@ const pauseGap = 2;
 const pauseChars = Array(10).fill("▪").join(" ");
 
 /** get lesson data */
-export const getData = async (lesson: Lesson): Promise<Data> => {
+export const getData = async (lesson: LessonId): Promise<Data> => {
   /** get video url */
   const video =
     (await request<string>(videoFile(lesson), "text")).split(/\/|=/).pop() ??
@@ -109,4 +110,5 @@ export type Sentence = {
 /** video length, in seconds */
 export type Length = number;
 
+/** lesson data */
 export type Data = { video: Video; sentences: Sentence[]; length: Length };

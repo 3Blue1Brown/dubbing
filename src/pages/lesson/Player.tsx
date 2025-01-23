@@ -2,6 +2,7 @@ import { useContext } from "react";
 import PlayerComponent from "@/components/Player";
 import { LessonContext } from "@/pages/lesson";
 
+/** player section */
 const Player = () => {
   const { playerRef, video } = useContext(LessonContext);
 

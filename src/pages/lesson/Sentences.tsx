@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { LessonContext } from "@/pages/lesson";
 import classes from "./Sentences.module.css";
 
-/** translation sentences */
+/** sentences section */
 const Sentences = () => {
   const { video, sentences, playing, time, setTime, showOriginal, autoScroll } =
     useContext(LessonContext);

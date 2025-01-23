@@ -17,7 +17,7 @@ import { useShortcutClick } from "@/util/hooks";
 import { formatMs, formatTime } from "@/util/string";
 import classes from "./Controls.module.css";
 
-/** play, pause, seek bar, etc. */
+/** controls section */
 const Controls = () => {
   const playButtonRef = useShortcutClick<HTMLButtonElement>(" ");
   const playthroughButtonRef = useShortcutClick<HTMLButtonElement>("p");
