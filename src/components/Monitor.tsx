@@ -39,7 +39,7 @@ const Monitor = ({ time, freq, hasSignal, ...props }: Props) => {
   /** whether to display frequency or time data */
   const [byFreq, setByFreq] = useState(true);
 
-  /** max value */
+/** max 16-bit value */
   const peak = max(time) ?? 0;
 
   /** draw data */

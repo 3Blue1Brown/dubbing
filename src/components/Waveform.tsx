@@ -5,8 +5,8 @@ import {
   useEventListener,
   useMouse,
 } from "@reactuses/core";
-import { range } from "@/util/array";
 import { round } from "@/util/math";
+import { peaks } from "@/util/peaks";
 import { formatMs, formatTime } from "@/util/string";
 import classes from "./Waveform.module.css";
 
@@ -26,7 +26,7 @@ type Props = {
 };
 
 /**
- * "amplitude"/"amp" = -1 to 1
+ * "amplitude"/"amp" = [-1, 1]
  * "sample" = audio sample #
  * "time" = seconds
  * "tick" = time label on waveform
@@ -54,7 +54,7 @@ let maxDelta = 0;
 /** audio waveform with zoom, pan, etc */
 const Waveform = ({
   waveform,
-  playing,
+  // playing,
   time,
   sampleRate,
   autoScroll,
@@ -113,7 +113,7 @@ const Waveform = ({
 
   /** auto-scroll */
   useEffect(() => {
-    if (playing && autoScroll)
+    if (autoScroll)
       setTransform(({ translate, scale }) => {
         /** current time sample # */
         const currentSample = time * sampleRate;
@@ -121,29 +121,19 @@ const Waveform = ({
         translate.x = width / 2 - currentSample * scale.x;
         return limitTransform({ translate, scale });
       });
-  }, [sampleRate, width, playing, autoScroll, time, limitTransform]);
+  }, [sampleRate, width, autoScroll, time, limitTransform]);
 
   /** waveform points to draw */
-  const points = useMemo(
-    () =>
-      /** client x from 0 (left side of waveform viewport) to width (right side) */
-      Array(Math.floor(width) + 1)
-        .fill(0)
-        .map((_, clientX) => {
-          /** left-most sample within pixel */
-          const leftSample = Math.floor(
-            clientToWaveform(transform, clientX, 0).x,
-          );
-          /** right-most sample within pixel */
-          const rightSample = Math.floor(
-            clientToWaveform(transform, clientX + 1, 0).x,
-          );
-          /** get extent of samples within range */
-          const { min, max } = range(waveform, leftSample, rightSample);
-          return { clientX, leftSample, rightSample, minAmp: min, maxAmp: max };
-        }),
-    [width, waveform, transform],
-  );
+  const points = useMemo(() => {
+    /** left-most sample */
+    const start = Math.floor(clientToWaveform(transform, 0, 0).x);
+    /** right-most sample */
+    const end = Math.ceil(clientToWaveform(transform, width, 0).x);
+    /** skip some samples */
+    const skip = clamp(Math.floor((end - start) / 1000), 1, 10);
+    /** client x from 0 (left side of waveform viewport) to width (right side) */
+    return peaks(waveform, start, end, width, skip);
+  }, [width, waveform, transform]);
 
   /** mouse coords */
   const _mouse = useMouse(canvasRef);
@@ -175,11 +165,15 @@ const Waveform = ({
     ctx.lineWidth = 1;
 
     /** draw waveform */
-    for (const { leftSample, minAmp, maxAmp, clientX } of points) {
+    for (let clientX = 0; clientX < width; clientX++) {
+      const { min = 0, max = 0 } = points[clientX] ?? {};
       ctx.beginPath();
-      ctx.strokeStyle = leftSample > currentSample ? futureColor : pastColor;
-      ctx.moveTo(clientX, waveformToClient(transform, 0, minAmp).y - 0.5);
-      ctx.lineTo(clientX, waveformToClient(transform, 0, maxAmp).y + 0.5);
+      ctx.strokeStyle =
+        clientToWaveform(transform, clientX, 0).x > currentSample
+          ? futureColor
+          : pastColor;
+      ctx.moveTo(clientX, waveformToClient(transform, 0, min).y - 0.5);
+      ctx.lineTo(clientX, waveformToClient(transform, 0, max).y + 0.5);
       ctx.stroke();
     }
 
@@ -212,7 +206,7 @@ const Waveform = ({
       /** draw tick line mark */
       ctx.beginPath();
       ctx.moveTo(clientX, 0);
-      ctx.lineTo(clientX, (2 * height) / tickDist);
+      ctx.lineTo(clientX, height / 20);
       ctx.stroke();
 
       /** draw text label every other tick */
@@ -293,9 +287,9 @@ const Waveform = ({
       const y = clientY - top;
 
       /** whether user is trying to scroll mostly vertically */
-      const vertical = Math.abs(deltaY) / Math.abs(deltaX) > 1;
+      const vertical = Math.abs(deltaY) / Math.abs(deltaX) > 1.5;
       /** whether user is trying to scroll mostly horizontally (usually means trackpad) */
-      const horizontal = Math.abs(deltaX) / Math.abs(deltaY) > 1;
+      const horizontal = Math.abs(deltaX) / Math.abs(deltaY) > 1.5;
 
       /** copy transform */
       let newTransform = { ...transform };
@@ -319,7 +313,7 @@ const Waveform = ({
         }
       } else if (horizontal) {
         /** pan left/right */
-        newTransform.translate.x += deltaX * scrollXPower;
+        // newTransform.translate.x += deltaX * scrollXPower;
       }
 
       /** update transform */

@@ -14,7 +14,7 @@
 
 .lesson > * {
   border-radius: var(--rounded);
-  box-shadow: var(--box-shadow);
+  border: solid 1px var(--light-gray);
 }
 
 .lesson > :nth-child(3),

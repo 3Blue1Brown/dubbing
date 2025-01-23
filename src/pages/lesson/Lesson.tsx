@@ -18,7 +18,7 @@ import {
   waveformUpdatedAtom,
 } from "@/pages/lesson/audio";
 import { setAtom } from "@/util/atoms";
-import { saveMp3 } from "@/util/download";
+import { downloadMp3 } from "@/util/download";
 import Controls from "./Controls";
 import { getData, type Sentence } from "./data";
 import classes from "./Lesson.module.css";
@@ -119,7 +119,7 @@ const Lesson = () => {
         disabled={saving}
         onClick={() => {
           setSaving(true);
-          saveMp3(
+          downloadMp3(
             waveform,
             {
               channels: 1,

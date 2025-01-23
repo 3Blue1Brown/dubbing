@@ -1,6 +1,7 @@
 import { wrap } from "comlink";
-import type { MP3Params } from "@/util/encode.ts";
-import Worker from "./encode?worker";
+import EncodeWorker from "./encode.worker?worker";
+import type { MP3Params } from "./encode.worker.ts";
+import * as encodeWorkerAPI from "./encode.worker.ts";
 
 export type Filename = string | string[];
 
@@ -22,16 +23,16 @@ export const download = (url: string, filename: Filename, ext: string) => {
   link.click();
 };
 
-type Encode = typeof import("./encode.ts");
-const worker = wrap<Encode>(new Worker());
+/** create worker */
+const encodeWorker = wrap<typeof encodeWorkerAPI>(new EncodeWorker());
 
 /** encode and save mp3 */
-export const saveMp3 = async (
+export const downloadMp3 = async (
   data: Int16Array,
   params: MP3Params,
   filename: Filename,
 ) => {
-  const blob = await worker.encodeMp3(data, params);
+  const blob = await encodeWorker.encodeMp3(data, params);
   const url = window.URL.createObjectURL(blob);
   download(url, filename, "mp3");
   window.URL.revokeObjectURL(url);
