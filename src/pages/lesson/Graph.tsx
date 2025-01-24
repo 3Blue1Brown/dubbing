@@ -28,7 +28,15 @@ const Graph = () => {
   const freqAnalBuffer = useRef(new Uint8Array(fftSize / 2));
 
   /** audio nodes */
-  const graph = useGraph(sampleRate);
+  const graph = useGraph(
+    sampleRate,
+    /**
+     * make sure mic permissions have been successfully requested before
+     * creating audio context
+     * https://github.com/benji6/virtual-audio-graph/issues/265
+     */
+    !!micStream,
+  );
 
   useEffect(() => {
     if (!graph) return;
@@ -38,9 +46,8 @@ const Graph = () => {
     graph.update({});
     /** update audio graph */
     graph.update({
-      noDest: mediaStreamDestination(),
       stream: mediaStreamSource("analyzer", { mediaStream: micStream }),
-      analyzer: analyser("noDest", { fftSize }),
+      analyzer: analyser("playthrough", { fftSize }),
       playthrough: gain("gain", { gain: playthrough ? 1 : 0 }),
       gain: gain("output", { gain: volume }),
     });

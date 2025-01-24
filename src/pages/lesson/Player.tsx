@@ -9,24 +9,18 @@ const Player = () => {
 
   /** update time */
   useEffect(() => {
-    (async () => {
-      await playerRef.current?.seek(time);
-    })().catch(console.error);
+    playerRef.current?.seek(time).catch(console.error);
   }, [playerRef, time]);
 
   /** update playing state */
   useEffect(() => {
-    (async () => {
-      if (playing) await playerRef.current?.play();
-      else await playerRef.current?.pause();
-    })().catch(console.error);
+    if (playing) playerRef.current?.play().catch(console.error);
+    else playerRef.current?.pause().catch(console.error);
   }, [playerRef, playing]);
 
   /** update volume */
   useEffect(() => {
-    (async () => {
-      await playerRef.current?.volume(volume);
-    })().catch(console.error);
+    playerRef.current?.volume(volume).catch(console.error);
   }, [playerRef, volume]);
 
   if (!video) return <div />;

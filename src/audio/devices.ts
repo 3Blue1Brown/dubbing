@@ -29,33 +29,46 @@ export const useMicrophone = ({ sampleRate = 44100, bitDepth = 16 }) => {
 
   /** init */
   useEffect(() => {
+    let latest = true;
     /**
      * some browsers (which ?) error on enumerateDevices if mic permissions not
      * requested first
      */
     request()
-      .then(() => refresh().catch(console.error))
+      .then(() => {
+        if (latest) refresh().catch(console.error);
+      })
       .catch(console.error);
+
+    return () => {
+      latest = false;
+    };
   }, [request, refresh]);
 
   /** update mic stream */
   useEffect(() => {
-    if (device === null) return;
-    navigator.mediaDevices
-      .getUserMedia({
-        video: false,
-        audio: {
-          deviceId: device,
-          sampleRate,
-          sampleSize: bitDepth,
-          channelCount: 1,
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-        },
-      })
-      .then(setMicStream)
-      .catch(console.error);
+    let latest = true;
+    if (device !== null)
+      navigator.mediaDevices
+        .getUserMedia({
+          video: false,
+          audio: {
+            deviceId: device,
+            sampleRate,
+            sampleSize: bitDepth,
+            channelCount: 1,
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+          },
+        })
+        .then((stream) => {
+          if (latest) setMicStream(stream);
+        })
+        .catch(console.error);
+    return () => {
+      latest = false;
+    };
   }, [device, sampleRate, bitDepth]);
 
   return { devices, device, setDevice, micStream, refresh };

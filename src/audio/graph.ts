@@ -1,13 +1,12 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import createVirtualAudioGraph from "virtual-audio-graph";
 import type VirtualAudioGraph from "virtual-audio-graph/dist/VirtualAudioGraph";
-import { useEventListener } from "@reactuses/core";
 
 /** use audio graph */
-export const useGraph = (sampleRate: number) => {
+export const useGraph = (sampleRate: number, shouldInit: boolean) => {
   const [graph, setGraph] = useState<VirtualAudioGraph>();
 
-  /** create */
+  /** create audio context and virtual audio graph */
   const init = useCallback(() => {
     const context = new AudioContext({ sampleRate });
     setGraph(
@@ -18,11 +17,16 @@ export const useGraph = (sampleRate: number) => {
     );
   }, [sampleRate]);
 
+  /** init when ready */
+  useEffect(() => {
+    if (shouldInit) init();
+  }, [shouldInit, init]);
+
   /** init on user gesture */
-  useEventListener("click", init);
-  useEventListener("mousedown", init);
-  useEventListener("touchstart", init);
-  useEventListener("keydown", init);
+  // useEventListener("click", resume);
+  // useEventListener("mousedown", resume);
+  // useEventListener("touchstart", resume);
+  // useEventListener("keydown", resume);
 
   return graph;
 };
