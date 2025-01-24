@@ -4,6 +4,7 @@ import { LessonContext } from "@/pages/lesson";
 
 /** waveform section */
 const Waveform = () => {
+  /** use lesson state */
   const { waveform, playing, time, sampleRate, autoScroll, setTime } =
     useContext(LessonContext);
 

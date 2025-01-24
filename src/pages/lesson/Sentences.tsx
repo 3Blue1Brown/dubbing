@@ -5,6 +5,7 @@ import classes from "./Sentences.module.css";
 
 /** sentences section */
 const Sentences = () => {
+  /** use lesson state */
   const { video, sentences, playing, time, setTime, showOriginal, autoScroll } =
     useContext(LessonContext);
 

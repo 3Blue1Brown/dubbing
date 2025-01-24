@@ -8,9 +8,10 @@ import { downloadMp3 } from "@/util/download";
 
 /** actions section */
 const Actions = () => {
-  /** get url params */
+  /** use url params */
   const { year = "", title = "", language = "" } = useParams();
 
+  /** use lesson state */
   const { saving, setSaving, waveform } = useContext(LessonContext);
 
   return (
