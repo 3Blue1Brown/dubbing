@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { max } from "lodash";
 import { useElementBounding } from "@reactuses/core";
-import { tension } from "@/util/math";
+import { peaks } from "@/audio/peaks";
+import { power, sigmoid } from "@/util/math";
 import classes from "./Monitor.module.css";
 
 type Props = {
@@ -42,23 +43,27 @@ const Monitor = ({ time, freq, ...props }: Props) => {
   const maxAbs = max(time.map(Math.abs)) ?? 0;
 
   /** draw data */
-  let monitor: number[] = [];
+  let monitor: ReturnType<typeof peaks> = [];
 
   /** frequency data */
-  if (byFreq)
-    monitor = freq.map(
-      (value, index) => value * tension(index / freq.length, 0.1),
+  if (byFreq) {
+    monitor = peaks(
+      freq,
+      0,
+      freq.length,
+      width,
+      1,
+      (value, index) => value * sigmoid(index / width, 0.1),
     );
-  else {
+    monitor.forEach((d) => (d.min = -d.max));
+  } else
     /** time data */
-    const skip = Math.floor(time.length / width);
-    monitor = time
-      .filter((_, index) => index % skip === 0)
-      .map((value) => Math.abs(value));
-  }
+    monitor = peaks(time, 0, time.length, width, 1, (value) =>
+      power(value, 0.5),
+    );
 
   /** whether there is any signal */
-  const hasSignal = monitor.some((value) => value !== 0);
+  const hasSignal = monitor.some(({ min, max }) => min !== 0 || max !== 0);
 
   /** keep track of last time we had signal */
   const lastSignal = useRef(0);
@@ -75,11 +80,11 @@ const Monitor = ({ time, freq, ...props }: Props) => {
       /** draw graph */
       ctx.save();
       ctx.translate(0, height / 2);
-      ctx.scale(width / monitor.length, height / 2);
+      ctx.scale(1, height / 2);
       ctx.beginPath();
-      monitor.forEach((y, x) => {
-        ctx.moveTo(x, -y || -0.5 / (height / 2));
-        ctx.lineTo(x, y || 0.5 / (height / 2));
+      monitor.forEach(({ min, max }, x) => {
+        ctx.moveTo(x, min || -0.5 / (height / 2));
+        ctx.lineTo(x, max || 0.5 / (height / 2));
       });
       ctx.restore();
       ctx.lineWidth = 1;

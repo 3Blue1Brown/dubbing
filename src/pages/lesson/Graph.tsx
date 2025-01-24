@@ -1,47 +1,63 @@
-import { useContext, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import {
-  RAnalyser,
-  RAudioContext,
-  RGain,
-  RMediaStreamSource,
-  RPipeline,
-} from "r-audio";
+  analyser,
+  gain,
+  mediaStreamDestination,
+  mediaStreamSource,
+} from "virtual-audio-graph";
 import { useInterval } from "@reactuses/core";
+import { useGraph } from "@/audio/graph";
 import { LessonContext } from "@/pages/lesson";
 
 const fftSize = 2 ** 10;
 
 /** audio graph */
 const Graph = () => {
-  const analyzer = useRef<AnalyserNode>();
-  const micTimeBuffer = useRef(new Uint8Array(fftSize));
-  const micFreqBuffer = useRef(new Uint8Array(fftSize / 2));
-
   /** use lesson state */
-  const { volume, micStream, setMicTimeAnal, setMicFreqAnal, playthrough } =
-    useContext(LessonContext);
+  const {
+    volume,
+    micStream,
+    setTimeAnal,
+    setFreqAnal,
+    playthrough,
+    sampleRate,
+  } = useContext(LessonContext);
 
-  /** update analyzer data */
+  /** analyzer buffers */
+  const timeAnalBuffer = useRef(new Uint8Array(fftSize));
+  const freqAnalBuffer = useRef(new Uint8Array(fftSize / 2));
+
+  /** audio nodes */
+  const graph = useGraph(sampleRate);
+
+  useEffect(() => {
+    if (!graph) return;
+    if (!micStream) return;
+
+    /** reset audio graph */
+    graph.update({});
+    /** update audio graph */
+    graph.update({
+      noDest: mediaStreamDestination(),
+      stream: mediaStreamSource("analyzer", { mediaStream: micStream }),
+      analyzer: analyser("noDest", { fftSize }),
+      playthrough: gain("gain", { gain: playthrough ? 1 : 0 }),
+      gain: gain("output", { gain: volume }),
+    });
+  }, [graph, playthrough, micStream, volume]);
+
+  /** periodically get analyzer data */
   useInterval(() => {
-    analyzer.current?.getByteTimeDomainData(micTimeBuffer.current);
-    analyzer.current?.getByteFrequencyData(micFreqBuffer.current);
-    setMicTimeAnal(Array.from(micTimeBuffer.current).map((v) => 1 - v / 128));
-    setMicFreqAnal(Array.from(micFreqBuffer.current).map((v) => v / 128));
-  }, 1000 / 30);
+    if (!graph) return;
+    const analyzer = graph.getAudioNodeById("analyzer");
+    if (!(analyzer instanceof AnalyserNode)) return;
+    analyzer.getByteTimeDomainData(timeAnalBuffer.current);
+    analyzer.getByteFrequencyData(freqAnalBuffer.current);
+    setTimeAnal(Array.from(timeAnalBuffer.current).map((v) => 1 - v / 128));
+    setFreqAnal(Array.from(freqAnalBuffer.current).map((v) => v / 128));
+  }, 1000 / 60);
 
-  if (!micStream) return <></>;
-
-  return (
-    <RAudioContext>
-      <RPipeline>
-        <RMediaStreamSource stream={micStream} />
-        <RAnalyser fftSize={2048}>
-          {(proxy: AnalyserNode) => (analyzer.current = proxy)}
-        </RAnalyser>
-        <RGain gain={playthrough ? volume : 0} />
-      </RPipeline>
-    </RAudioContext>
-  );
+  return <></>;
 };
 
 export default Graph;

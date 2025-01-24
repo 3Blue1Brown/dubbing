@@ -1,9 +1,7 @@
-import { bitPeak } from "@/audio";
-
 /** get min/max values in audio buffer */
 export const peaks = (
   /** raw samples */
-  array: Int16Array,
+  array: ArrayLike<number>,
   /** start sample index */
   start: number,
   /** end sample index */
@@ -12,6 +10,8 @@ export const peaks = (
   divisions: number,
   /** skip every this many samples to increase performance */
   step = 1,
+  /** func to apply at end */
+  apply: (value: number, index: number) => number = (value) => value,
 ) => {
   /** number of samples in each division */
   const size = (end - start) / divisions;
@@ -36,7 +36,6 @@ export const peaks = (
         if (array[index]! > max) max = array[index]!;
       }
 
-    /** normalize to -1 to-1 */
-    return { min: min / bitPeak, max: max / bitPeak };
+    return { min: apply(min, index), max: apply(max, index) };
   });
 };

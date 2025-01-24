@@ -6,6 +6,7 @@ import {
   useMouse,
   usePrevious,
 } from "@reactuses/core";
+import { bitPeak } from "@/audio";
 import { peaks } from "@/audio/peaks";
 import { round } from "@/util/math";
 import { formatMs, formatTime } from "@/util/string";
@@ -142,7 +143,7 @@ const Waveform = ({
     /** skip some samples */
     const skip = clamp(Math.floor((end - start) / 1000), 1, 10);
     /** client x from 0 (left side of waveform viewport) to width (right side) */
-    return peaks(waveform, start, end, width, skip);
+    return peaks(waveform, start, end, width, skip, (value) => value / bitPeak);
   }, [width, waveform, transform]);
 
   /** mouse coords */
