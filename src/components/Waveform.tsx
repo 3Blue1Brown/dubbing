@@ -4,6 +4,7 @@ import {
   useElementBounding,
   useEventListener,
   useMouse,
+  usePrevious,
 } from "@reactuses/core";
 import { peaks } from "@/audio/peaks";
 import { round } from "@/util/math";
@@ -110,17 +111,27 @@ const Waveform = ({
     setTransform(limitTransform);
   }, [limitTransform]);
 
+  const previousTime = usePrevious(time);
+
   /** auto-scroll */
   useEffect(() => {
-    if (autoScroll)
-      setTransform(({ translate, scale }) => {
+    if (autoScroll && time !== previousTime)
+      setTransform((transform) => {
         /** current time sample # */
         const currentSample = time * sampleRate;
         /** center horizontally */
-        translate.x = width / 2 - currentSample * scale.x;
-        return limitTransform({ translate, scale });
+        transform.translate.x = width / 2 - currentSample * transform.scale.x;
+        return limitTransform(transform);
       });
-  }, [sampleRate, width, autoScroll, time, limitTransform]);
+  }, [sampleRate, width, autoScroll, time, previousTime, limitTransform]);
+
+  /** on vertical resize */
+  useEffect(() => {
+    setTransform((transform) => {
+      transform.scale.y = height / 2;
+      return limitTransform(transform);
+    });
+  }, [height, limitTransform]);
 
   /** waveform points to draw */
   const points = useMemo(() => {
@@ -329,13 +340,15 @@ const Waveform = ({
   useEventListener("wheel", wheel, canvasRef);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={classes.waveform}
-      onClick={({ clientX }) =>
-        onSeek(clientToWaveform(transform, clientX - left, 0).x / sampleRate)
-      }
-    />
+    <div className={classes.container}>
+      <canvas
+        ref={canvasRef}
+        className={classes.waveform}
+        onClick={({ clientX }) =>
+          onSeek(clientToWaveform(transform, clientX - left, 0).x / sampleRate)
+        }
+      />
+    </div>
   );
 };
 

@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 import { LessonContext, useLesson } from "@/pages/lesson";
 import Actions from "@/pages/lesson/Actions";
 import Graph from "@/pages/lesson/Graph";
+import test from "@/test.raw?url";
 import Controls from "./Controls";
 import { getData } from "./data";
 import classes from "./Lesson.module.css";
@@ -59,6 +60,12 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
         lesson.setSentences(sentences);
         lesson.setLength(length);
       })
+      .catch(console.error);
+
+    /** load test waveform */
+    fetch(test)
+      .then((response) => response.arrayBuffer())
+      .then((buffer) => lesson.setWaveform(new Int16Array(buffer)))
       .catch(console.error);
   }
 

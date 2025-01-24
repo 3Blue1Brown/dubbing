@@ -1,7 +1,14 @@
-.waveform {
+.container {
   width: 100%;
   height: 100px;
+  overflow: hidden;
   border-radius: var(--rounded);
   box-shadow: var(--box-shadow);
+  resize: vertical;
+}
+
+.waveform {
+  width: 100%;
+  height: 100%;
   cursor: pointer;
 }

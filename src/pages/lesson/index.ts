@@ -27,8 +27,8 @@ export const useLesson = () => {
     bitDepth,
   });
   /** mic analyzer data */
-  const [micTimeAnal, setMicTimeAnal] = useState([0]);
-  const [micFreqAnal, setMicFreqAnal] = useState([0]);
+  const [micTimeAnal, setMicTimeAnal] = useState<number[]>([]);
+  const [micFreqAnal, setMicFreqAnal] = useState<number[]>([]);
   /** mic play-through */
   const [playthrough, setPlaythrough] = useState(false);
   /** mic recording armed */
