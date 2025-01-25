@@ -83,7 +83,7 @@ const Waveform = ({
   const tickColor = getCSSVar("--gray");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const ctxRef = useRef<CanvasRenderingContext2D | null>();
+  const ctxRef = useRef<CanvasRenderingContext2D>(null);
 
   /** get draw context */
   if (!ctxRef.current && canvasRef.current)

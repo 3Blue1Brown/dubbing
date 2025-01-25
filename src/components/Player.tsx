@@ -1,30 +1,24 @@
-import {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  type ComponentRef,
-} from "react";
+import { useImperativeHandle, useRef, type Ref } from "react";
 import YouTube, { type YouTubePlayer } from "react-youtube";
 import PlayerStates from "youtube-player/dist/constants/PlayerStates";
 import classes from "./Player.module.css";
 
 type Props = {
+  ref?: Ref<PlayerRef>;
   /** video id */
   video: string;
 };
 
-type Handle = {
+export type PlayerRef = {
   play: () => Promise<void>;
   pause: () => Promise<void>;
   seek: (time: number) => Promise<void>;
   volume: (volume: number) => Promise<void>;
 };
 
-export type PlayerRef = ComponentRef<typeof Player>;
-
 /** video player */
-const Player = forwardRef<Handle, Props>(({ video }: Props, ref) => {
-  const playerRef = useRef<YouTubePlayer>();
+const Player = ({ ref, video }: Props) => {
+  const playerRef = useRef<YouTubePlayer>(null);
 
   /** expose methods */
   useImperativeHandle(
@@ -58,6 +52,6 @@ const Player = forwardRef<Handle, Props>(({ video }: Props, ref) => {
       iframeClassName={classes.iframe}
     />
   );
-});
+};
 
 export default Player;

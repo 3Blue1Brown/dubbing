@@ -19,12 +19,11 @@ const oversample = window.devicePixelRatio * 2;
 /** graph time or frequency data */
 const Monitor = ({ time, freq, ...props }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const ctxRef = useRef<CanvasRenderingContext2D | null>();
+  const ctxRef = useRef<CanvasRenderingContext2D>(null);
 
   /** get draw context */
-  useEffect(() => {
-    ctxRef.current = canvasRef.current?.getContext("2d");
-  }, []);
+  if (!ctxRef.current && canvasRef.current)
+    ctxRef.current = canvasRef.current.getContext("2d");
 
   /** element size */
   const { width, height } = useElementBounding(canvasRef);
@@ -73,10 +72,8 @@ const Monitor = ({ time, freq, ...props }: Props) => {
   const lastSignal = useRef(0);
   if (hasSignal) lastSignal.current = window.performance.now();
 
-  useEffect(() => {
-    const ctx = ctxRef.current;
-    if (!ctx) return;
-
+  const ctx = ctxRef.current;
+  if (ctx) {
     /** clear previous canvas contents */
     ctx.clearRect(0, 0, width, height);
 
@@ -100,7 +97,7 @@ const Monitor = ({ time, freq, ...props }: Props) => {
       ctx.font = "10px Open Sans";
       ctx.fillText("No signal", width / 2, height / 2);
     }
-  });
+  }
 
   return (
     <canvas
