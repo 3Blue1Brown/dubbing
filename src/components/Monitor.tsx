@@ -72,6 +72,9 @@ const Monitor = ({ time, freq, ...props }: Props) => {
   const lastSignal = useRef(0);
   if (hasSignal) lastSignal.current = window.performance.now();
 
+  /** if we haven't had signal in a while, consider no signal */
+  const noSignal = window.performance.now() - lastSignal.current > 1000;
+
   const ctx = ctxRef.current;
   if (ctx) {
     /** clear previous canvas contents */
@@ -80,17 +83,17 @@ const Monitor = ({ time, freq, ...props }: Props) => {
     /** set styles */
     ctx.lineWidth = lineWidth;
 
-    if (hasSignal && window.performance.now() - lastSignal.current < 1000) {
-      /** draw waveform */
-      ctx.strokeStyle = maxAbs > 0.9 ? "#ff1493" : "#00bfff";
-      ctx.beginPath();
-      monitor.forEach(({ min, max }, x) => {
-        ctx.moveTo(x, halfHeight + min * halfHeight);
-        ctx.lineTo(x, halfHeight + max * halfHeight);
-      });
-      ctx.stroke();
-    } else {
-      /** draw no signal */
+    /** draw waveform */
+    ctx.strokeStyle = maxAbs > 0.9 ? "#ff1493" : "#00bfff";
+    ctx.beginPath();
+    monitor.forEach(({ min, max }, x) => {
+      ctx.moveTo(x, halfHeight + min * halfHeight);
+      ctx.lineTo(x, halfHeight + max * halfHeight);
+    });
+    ctx.stroke();
+
+    /** draw no signal */
+    if (noSignal) {
       ctx.fillStyle = "gray";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -100,17 +103,20 @@ const Monitor = ({ time, freq, ...props }: Props) => {
   }
 
   return (
-    <canvas
-      {...props}
-      ref={canvasRef}
-      className={classes.monitor}
-      onClick={() => setByFreq(!byFreq)}
-      data-tooltip={
-        byFreq
-          ? "Switch to oscilloscope view"
-          : "Switch to frequency spectrum view"
-      }
-    />
+    <>
+      {monitor.length}
+      <canvas
+        {...props}
+        ref={canvasRef}
+        className={classes.monitor}
+        onClick={() => setByFreq(!byFreq)}
+        data-tooltip={
+          byFreq
+            ? "Switch to oscilloscope view"
+            : "Switch to frequency spectrum view"
+        }
+      />
+    </>
   );
 };
 

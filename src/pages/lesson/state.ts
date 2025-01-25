@@ -1,10 +1,11 @@
-import { createContext, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useMicrophone } from "@/audio/devices";
 import type { PlayerRef } from "@/components/Player";
 import type { Sentence } from "@/pages/lesson/data";
+import { createContextWithSelectors, useContextSelector } from "@/util/state";
 
 /** all lesson state */
-export const useLesson = () => {
+export const useLessonAll = () => {
   /** player control */
   const playerRef = useRef<PlayerRef>(null);
 
@@ -89,9 +90,13 @@ export const useLesson = () => {
   };
 };
 
-type LessonState = ReturnType<typeof useLesson>;
+type Lesson = ReturnType<typeof useLessonAll>;
 
-export const LessonContext = createContext<LessonState>({} as LessonState);
+export const LessonContext = createContextWithSelectors<Lesson>({} as Lesson);
 
 /** crudely detect firefox browser */
 const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
+
+/** use piece of lesson data */
+export const useLesson = <Key extends keyof Lesson>(key: Key) =>
+  useContextSelector(LessonContext, (state) => state[key]);

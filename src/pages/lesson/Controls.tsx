@@ -1,4 +1,4 @@
-import { useContext, type CSSProperties } from "react";
+import { type CSSProperties } from "react";
 import {
   FaCircle,
   FaHeadphonesSimple,
@@ -12,7 +12,7 @@ import { PiMouseScrollBold } from "react-icons/pi";
 import CheckButton from "@/components/CheckButton";
 import Monitor from "@/components/Monitor";
 import Select from "@/components/Select";
-import { LessonContext } from "@/pages/lesson/state";
+import { useLesson } from "@/pages/lesson/state";
 import { useShortcutClick } from "@/util/hooks";
 import { formatTime } from "@/util/string";
 import classes from "./Controls.module.css";
@@ -23,30 +23,28 @@ const Controls = () => {
   const playthroughButtonRef = useShortcutClick<HTMLButtonElement>("p");
   const recordButtonRef = useShortcutClick<HTMLButtonElement>("r");
 
-  const {
-    sampleRate,
-    devices,
-    device,
-    micStream,
-    setDevice,
-    playthrough,
-    setPlaythrough,
-    micTimeAnal,
-    micFreqAnal,
-    recording,
-    setRecording,
-    playing,
-    setPlaying,
-    volume,
-    setVolume,
-    time,
-    setTime,
-    length,
-    showOriginal,
-    setShowOriginal,
-    autoScroll,
-    setAutoScroll,
-  } = useContext(LessonContext);
+  const sampleRate = useLesson("sampleRate");
+  const devices = useLesson("devices");
+  const device = useLesson("device");
+  const micStream = useLesson("micStream");
+  const setDevice = useLesson("setDevice");
+  const playthrough = useLesson("playthrough");
+  const setPlaythrough = useLesson("setPlaythrough");
+  const micTimeAnal = useLesson("micTimeAnal");
+  const micFreqAnal = useLesson("micFreqAnal");
+  const recording = useLesson("recording");
+  const setRecording = useLesson("setRecording");
+  const playing = useLesson("playing");
+  const setPlaying = useLesson("setPlaying");
+  const volume = useLesson("volume");
+  const setVolume = useLesson("setVolume");
+  const time = useLesson("time");
+  const setTime = useLesson("setTime");
+  const length = useLesson("length");
+  const showOriginal = useLesson("showOriginal");
+  const setShowOriginal = useLesson("setShowOriginal");
+  const autoScroll = useLesson("autoScroll");
+  const setAutoScroll = useLesson("setAutoScroll");
 
   return (
     <div className={classes.controls}>

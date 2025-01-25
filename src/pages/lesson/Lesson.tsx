@@ -3,7 +3,7 @@ import { useParams } from "react-router";
 import { intToFloat } from "@/audio";
 import Actions from "@/pages/lesson/Actions";
 import Graph from "@/pages/lesson/Graph";
-import { LessonContext, useLesson } from "@/pages/lesson/state";
+import { LessonContext, useLessonAll } from "@/pages/lesson/state";
 import test1 from "@/test1.raw?url";
 import test2 from "@/test2.raw?url";
 import Controls from "./Controls";
@@ -36,8 +36,8 @@ export default Lesson;
  * page every time lesson state provider value changes
  */
 const LessonProvider = ({ children }: { children: ReactNode }) => {
-  /** use full lesson state */
-  const lesson = useLesson();
+  /** use all lesson state */
+  const lesson = useLessonAll();
 
   /** get use params */
   const { year = "", title = "", language = "" } = useParams();

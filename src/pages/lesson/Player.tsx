@@ -1,11 +1,15 @@
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import PlayerComponent from "@/components/Player";
-import { LessonContext } from "@/pages/lesson/state";
+import { useLesson } from "@/pages/lesson/state";
 
 /** player section */
 const Player = () => {
   /** use lesson state */
-  const { playerRef, video, time, playing, volume } = useContext(LessonContext);
+  const playerRef = useLesson("playerRef");
+  const video = useLesson("video");
+  const time = useLesson("time");
+  const playing = useLesson("playing");
+  const volume = useLesson("volume");
 
   /** update time */
   useEffect(() => {

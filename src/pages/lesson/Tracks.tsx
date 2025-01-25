@@ -1,14 +1,18 @@
-import { useContext, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTransform } from "@/components/transform";
 import WaveformComponent from "@/components/Waveform";
-import { LessonContext } from "@/pages/lesson/state";
+import { useLesson } from "@/pages/lesson/state";
 import classes from "./Tracks.module.css";
 
 /** tracks section */
 const Tracks = () => {
   /** use lesson state */
-  const { tracks, length, time, sampleRate, autoScroll, setTime } =
-    useContext(LessonContext);
+  const tracks = useLesson("tracks");
+  const length = useLesson("length");
+  const time = useLesson("time");
+  const sampleRate = useLesson("sampleRate");
+  const autoScroll = useLesson("autoScroll");
+  const setTime = useLesson("setTime");
 
   /** sync transform across waveforms */
   const { transform, onWheel, center } = useTransform({

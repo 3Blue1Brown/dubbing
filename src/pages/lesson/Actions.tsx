@@ -1,9 +1,8 @@
-import { useContext } from "react";
 import { CgSpinnerTwoAlt } from "react-icons/cg";
 import { LuDownload } from "react-icons/lu";
 import { useParams } from "react-router";
 import Button from "@/components/Button";
-import { LessonContext } from "@/pages/lesson/state";
+import { useLesson } from "@/pages/lesson/state";
 import { downloadZip, getMp3 } from "@/util/download";
 
 /** actions section */
@@ -12,7 +11,9 @@ const Actions = () => {
   const { year = "", title = "", language = "" } = useParams();
 
   /** use lesson state */
-  const { saving, setSaving, tracks, sampleRate } = useContext(LessonContext);
+  const saving = useLesson("saving");
+  const setSaving = useLesson("setSaving");
+  const tracks = useLesson("tracks");
 
   return (
     <Button

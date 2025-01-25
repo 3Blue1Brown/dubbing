@@ -1,4 +1,5 @@
-import { useContext, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import { uniqueId } from "lodash";
 import {
   analyser,
   bufferSource,
@@ -8,24 +9,22 @@ import {
 import { useInterval } from "@reactuses/core";
 import { floatToAudio } from "@/audio";
 import { useGraph } from "@/audio/graph";
-import { LessonContext } from "@/pages/lesson/state";
+import { useLesson } from "@/pages/lesson/state";
 
 const fftSize = 2 ** 10;
 
 /** audio graph */
 const Graph = () => {
   /** use lesson state */
-  const {
-    tracks,
-    volume,
-    micStream,
-    setTimeAnal,
-    setFreqAnal,
-    playthrough,
-    sampleRate,
-    time,
-    playing,
-  } = useContext(LessonContext);
+  const tracks = useLesson("tracks");
+  const volume = useLesson("volume");
+  const micStream = useLesson("micStream");
+  const setTimeAnal = useLesson("setTimeAnal");
+  const setFreqAnal = useLesson("setFreqAnal");
+  const playthrough = useLesson("playthrough");
+  const sampleRate = useLesson("sampleRate");
+  const time = useLesson("time");
+  const playing = useLesson("playing");
 
   /** analyzer buffers */
   const timeAnalBuffer = useRef(new Uint8Array(fftSize));
@@ -58,11 +57,9 @@ const Graph = () => {
         )
       : {};
 
-    /** reset audio graph */
-    graph.update({});
     /** update audio graph */
     graph.update({
-      stream: mediaStreamSource("analyzer", { mediaStream: micStream }),
+      [uniqueId()]: mediaStreamSource("analyzer", { mediaStream: micStream }),
       analyzer: analyser("playthrough", { fftSize }),
       ...trackNodes,
       playthrough: gain("gain", { gain: playthrough ? 1 : 0 }),

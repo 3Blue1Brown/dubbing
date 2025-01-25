@@ -1,13 +1,18 @@
-import { Fragment, useContext } from "react";
+import { Fragment } from "react";
 import clsx from "clsx";
-import { LessonContext } from "@/pages/lesson/state";
+import { useLesson } from "@/pages/lesson/state";
 import classes from "./Sentences.module.css";
 
 /** sentences section */
 const Sentences = () => {
   /** use lesson state */
-  const { video, sentences, playing, time, setTime, showOriginal, autoScroll } =
-    useContext(LessonContext);
+  const video = useLesson("video");
+  const sentences = useLesson("sentences");
+  const playing = useLesson("playing");
+  const time = useLesson("time");
+  const setTime = useLesson("setTime");
+  const showOriginal = useLesson("showOriginal");
+  const autoScroll = useLesson("autoScroll");
 
   if (!video || !sentences) return <></>;
 
