@@ -4,7 +4,7 @@ import { LuDownload } from "react-icons/lu";
 import { useParams } from "react-router";
 import Button from "@/components/Button";
 import { LessonContext } from "@/pages/lesson";
-import { downloadMp3 } from "@/util/download";
+import { downloadZip, getMp3 } from "@/util/download";
 
 /** actions section */
 const Actions = () => {
@@ -12,26 +12,35 @@ const Actions = () => {
   const { year = "", title = "", language = "" } = useParams();
 
   /** use lesson state */
-  const { saving, setSaving, tracks } = useContext(LessonContext);
+  const { saving, setSaving, tracks, sampleRate } = useContext(LessonContext);
 
   return (
     <Button
       accent
       disabled={saving}
-      onClick={() => {
+      onClick={async () => {
         setSaving(true);
-        Promise.all([
-          tracks.map((track) =>
-            downloadMp3(track, { channels: 1, sampleRate, bitrate: 192 }, [
-              year,
-              title,
-              language,
-              "dub",
-            ]),
-          ),
-        ])
-          .catch(console.error)
-          .finally(() => setSaving(false));
+        const filename = [year, title, language, "dub"];
+        try {
+          /** get mp3 file blobs */
+          const blobs = await Promise.all(
+            tracks.map((track) =>
+              getMp3(track, { channels: 1, sampleRate, bitrate: 192 }),
+            ),
+          );
+          /** make full files with names */
+          const files = blobs.map((blob, index) => ({
+            blob,
+            filename: `Track ${index + 1}`,
+            ext: "mp3",
+          }));
+          /** zip together and download */
+          await downloadZip(files, filename);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setSaving(false);
+        }
       }}
     >
       <span>{saving ? "Saving" : "Save"}</span>

@@ -1,6 +1,12 @@
 import { useContext, useEffect, useRef } from "react";
-import { analyser, gain, mediaStreamSource } from "virtual-audio-graph";
+import {
+  analyser,
+  bufferSource,
+  gain,
+  mediaStreamSource,
+} from "virtual-audio-graph";
 import { useInterval } from "@reactuses/core";
+import { floatToAudio } from "@/audio";
 import { useGraph } from "@/audio/graph";
 import { LessonContext } from "@/pages/lesson";
 
@@ -10,12 +16,15 @@ const fftSize = 2 ** 10;
 const Graph = () => {
   /** use lesson state */
   const {
+    tracks,
     volume,
     micStream,
     setTimeAnal,
     setFreqAnal,
     playthrough,
     sampleRate,
+    time,
+    playing,
   } = useContext(LessonContext);
 
   /** analyzer buffers */
@@ -37,16 +46,38 @@ const Graph = () => {
     if (!graph) return;
     if (!micStream) return;
 
+    const trackNodes = playing
+      ? Object.fromEntries(
+          tracks.map((track, index) => [
+            "track" + index,
+            bufferSource("gain", {
+              buffer: floatToAudio(track, sampleRate),
+              offsetTime: time,
+            }),
+          ]),
+        )
+      : {};
+
     /** reset audio graph */
     graph.update({});
     /** update audio graph */
     graph.update({
       stream: mediaStreamSource("analyzer", { mediaStream: micStream }),
       analyzer: analyser("playthrough", { fftSize }),
+      ...trackNodes,
       playthrough: gain("gain", { gain: playthrough ? 1 : 0 }),
       gain: gain("output", { gain: volume }),
     });
-  }, [graph, playthrough, micStream, volume]);
+  }, [
+    graph,
+    tracks,
+    playthrough,
+    micStream,
+    volume,
+    sampleRate,
+    time,
+    playing,
+  ]);
 
   /** periodically get analyzer data */
   useInterval(() => {
