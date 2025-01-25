@@ -1,5 +1,4 @@
 import { createContext, useRef, useState } from "react";
-import { bitDepth } from "@/audio";
 import { useMicrophone } from "@/audio/devices";
 import type { PlayerRef } from "@/components/Player";
 import type { Sentence } from "@/pages/lesson/data";
@@ -14,7 +13,7 @@ export const useLesson = () => {
   /** sentence text and timings */
   const [sentences, setSentences] = useState<Sentence[]>();
   /** video length, in seconds */
-  const [length, setLength] = useState<number>(300);
+  const [length, setLength] = useState<number>(10);
 
   /** audio sample rate */
   const [sampleRate] = useState(
@@ -24,7 +23,6 @@ export const useLesson = () => {
   /** mic props */
   const { devices, device, setDevice, micStream, refresh } = useMicrophone({
     sampleRate,
-    bitDepth,
   });
   /** mic analyzer data */
   const [micTimeAnal, setTimeAnal] = useState<number[]>([]);
@@ -42,7 +40,7 @@ export const useLesson = () => {
   const [time, setTime] = useState(0);
 
   /** raw audio data */
-  const [waveform, setWaveform] = useState(new Int16Array(length * sampleRate));
+  const [tracks, setTracks] = useState<Float32Array[]>([]);
 
   /** should auto-scroll */
   const [autoScroll, setAutoScroll] = useState(true);
@@ -80,8 +78,8 @@ export const useLesson = () => {
     setVolume,
     time,
     setTime,
-    waveform,
-    setWaveform,
+    tracks,
+    setTracks,
     autoScroll,
     setAutoScroll,
     showOriginal,

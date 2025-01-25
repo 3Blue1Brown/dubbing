@@ -10,6 +10,9 @@ type Props = {
   freq: number[];
 } & ComponentProps<"canvas">;
 
+/** waveform line stroke width, in px */
+const lineWidth = 1;
+
 /** extra draw resolution */
 const oversample = window.devicePixelRatio * 2;
 
@@ -25,6 +28,7 @@ const Monitor = ({ time, freq, ...props }: Props) => {
 
   /** element size */
   const { width, height } = useElementBounding(canvasRef);
+  const halfHeight = height / 2;
 
   /** when size changes */
   useEffect(() => {
@@ -76,19 +80,17 @@ const Monitor = ({ time, freq, ...props }: Props) => {
     /** clear previous canvas contents */
     ctx.clearRect(0, 0, width, height);
 
+    /** set styles */
+    ctx.lineWidth = lineWidth;
+
     if (hasSignal && window.performance.now() - lastSignal.current < 1000) {
-      /** draw graph */
-      ctx.save();
-      ctx.translate(0, height / 2);
-      ctx.scale(1, height / 2);
+      /** draw waveform */
+      ctx.strokeStyle = maxAbs > 0.9 ? "#ff1493" : "#00bfff";
       ctx.beginPath();
       monitor.forEach(({ min, max }, x) => {
-        ctx.moveTo(x, min || -0.5 / (height / 2));
-        ctx.lineTo(x, max || 0.5 / (height / 2));
+        ctx.moveTo(x, halfHeight + min * halfHeight);
+        ctx.lineTo(x, halfHeight + max * halfHeight);
       });
-      ctx.restore();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = maxAbs > 0.9 ? "#ff1493" : "#00bfff";
       ctx.stroke();
     } else {
       /** draw no signal */

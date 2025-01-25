@@ -1,9 +1,11 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useParams } from "react-router";
+import { intToFloat } from "@/audio";
 import { LessonContext, useLesson } from "@/pages/lesson";
 import Actions from "@/pages/lesson/Actions";
 import Graph from "@/pages/lesson/Graph";
-import test from "@/test.raw?url";
+import test1 from "@/test1.raw?url";
+import test2 from "@/test2.raw?url";
 import Controls from "./Controls";
 import { getData } from "./data";
 import classes from "./Lesson.module.css";
@@ -62,11 +64,18 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
       })
       .catch(console.error);
 
-    /** load test waveform */
-    fetch(test)
-      .then((response) => response.arrayBuffer())
-      .then((buffer) => lesson.setWaveform(new Int16Array(buffer)))
-      .catch(console.error);
+    /** load test waveforms */
+    [test1, test2].forEach((file) =>
+      fetch(file)
+        .then((response) => response.arrayBuffer())
+        .then((buffer) => {
+          lesson.setTracks((tracks) => [
+            ...tracks,
+            intToFloat(new Int16Array(buffer)),
+          ]);
+        })
+        .catch(console.error),
+    );
   }
 
   return (

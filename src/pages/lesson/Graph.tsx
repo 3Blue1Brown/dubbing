@@ -1,10 +1,5 @@
 import { useContext, useEffect, useRef } from "react";
-import {
-  analyser,
-  gain,
-  mediaStreamDestination,
-  mediaStreamSource,
-} from "virtual-audio-graph";
+import { analyser, gain, mediaStreamSource } from "virtual-audio-graph";
 import { useInterval } from "@reactuses/core";
 import { useGraph } from "@/audio/graph";
 import { LessonContext } from "@/pages/lesson";

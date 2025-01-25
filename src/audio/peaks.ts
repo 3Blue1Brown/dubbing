@@ -1,3 +1,5 @@
+import { clamp } from "lodash";
+
 /** get min/max values in audio buffer */
 export const peaks = (
   /** raw samples */
@@ -13,11 +15,14 @@ export const peaks = (
   /** func to apply at end */
   apply: (value: number, index: number) => number = (value) => value,
 ) => {
+  /** swap if needed */
+  if (start > end) [start, end] = [end, start];
+
   /** number of samples in each division */
   const size = (end - start) / divisions;
 
-  /** swap if needed */
-  if (start > end) [start, end] = [end, start];
+  /** bound step */
+  step = clamp(Math.floor(Math.abs(step)), 1, 20);
 
   /** return array exact size of number of divisions */
   return new Array(Math.ceil(divisions)).fill(0).map((_, index) => {
@@ -25,10 +30,9 @@ export const peaks = (
     const startSample = Math.round(start + index * size);
     const endSample = Math.round(start + (index + 1) * size);
 
+    /** find min/max values */
     let min = 0;
     let max = 0;
-
-    /** find min/max values */
     if (endSample > 0 && startSample < array.length - 1)
       for (let index = startSample; index <= endSample; index += step) {
         if (!array[index]) continue;
@@ -36,6 +40,15 @@ export const peaks = (
         if (array[index]! > max) max = array[index]!;
       }
 
-    return { min: apply(min, index), max: apply(max, index) };
+    return {
+      /** min/negative sample amplitude in range */
+      min: apply(min, index),
+      /** max/positive sample amplitude in range */
+      max: apply(max, index),
+      /** start sample # of in range */
+      start: startSample,
+      /** end sample # of in range */
+      end: endSample,
+    };
   });
 };

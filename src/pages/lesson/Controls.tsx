@@ -14,7 +14,7 @@ import Monitor from "@/components/Monitor";
 import Select from "@/components/Select";
 import { LessonContext } from "@/pages/lesson";
 import { useShortcutClick } from "@/util/hooks";
-import { formatMs, formatTime } from "@/util/string";
+import { formatTime } from "@/util/string";
 import classes from "./Controls.module.css";
 
 /** controls section */
@@ -124,10 +124,7 @@ const Controls = () => {
       </div>
 
       <div className={classes.row} style={{ flexGrow: 1 }}>
-        <span>
-          {formatTime(time)}
-          <span className={classes.small}>.{formatMs(time)}</span>
-        </span>
+        <span>{formatTime(time)}</span>
         <input
           style={{ flexGrow: 1 }}
           type="range"

@@ -12,7 +12,7 @@ const Actions = () => {
   const { year = "", title = "", language = "" } = useParams();
 
   /** use lesson state */
-  const { saving, setSaving, waveform } = useContext(LessonContext);
+  const { saving, setSaving, tracks } = useContext(LessonContext);
 
   return (
     <Button
@@ -20,15 +20,16 @@ const Actions = () => {
       disabled={saving}
       onClick={() => {
         setSaving(true);
-        downloadMp3(
-          waveform,
-          {
-            channels: 1,
-            sampleRate,
-            bitrate: 192,
-          },
-          [year, title, language, "dub"],
-        )
+        Promise.all([
+          tracks.map((track) =>
+            downloadMp3(track, { channels: 1, sampleRate, bitrate: 192 }, [
+              year,
+              title,
+              language,
+              "dub",
+            ]),
+          ),
+        ])
           .catch(console.error)
           .finally(() => setSaving(false));
       }}

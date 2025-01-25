@@ -28,7 +28,7 @@ const encodeWorker = wrap<typeof encodeWorkerAPI>(new EncodeWorker());
 
 /** encode and save mp3 */
 export const downloadMp3 = async (
-  data: Int16Array,
+  data: Float32Array,
   params: MP3Params,
   filename: Filename,
 ) => {
