@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import {
   useElementBounding,
   useEventListener,
+  useHover,
   useMouse,
 } from "@reactuses/core";
 import { peaks } from "@/audio/peaks";
@@ -138,6 +139,7 @@ const Waveform = ({
 
   /** mouse coords */
   const mouseClient = useMouse(canvasRef);
+  const hovered = useHover(canvasRef);
 
   const ctx = ctxRef.current;
   if (ctx) {
@@ -204,7 +206,7 @@ const Waveform = ({
     }
 
     /** draw mouse position line */
-    {
+    if (hovered) {
       ctx.strokeStyle = futureColor;
       ctx.lineWidth = 2;
       ctx.beginPath();

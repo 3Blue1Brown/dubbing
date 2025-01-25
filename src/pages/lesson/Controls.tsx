@@ -75,7 +75,7 @@ const Controls = () => {
               label={
                 playthrough
                   ? "Stop playthrough"
-                  : "Microphone playthrough (USE HEADPHONES TO AVOID FEEDBACK)"
+                  : "Enable microphone playthrough<br/>(USE HEADPHONES)"
               }
               checked={playthrough}
               onClick={() => setPlaythrough(!playthrough)}
