@@ -3,7 +3,7 @@ import { CgSpinnerTwoAlt } from "react-icons/cg";
 import { LuDownload } from "react-icons/lu";
 import { useParams } from "react-router";
 import Button from "@/components/Button";
-import { LessonContext } from "@/pages/lesson";
+import { LessonContext } from "@/pages/lesson/state";
 import { downloadZip, getMp3 } from "@/util/download";
 
 /** actions section */

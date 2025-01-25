@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import PlayerComponent from "@/components/Player";
-import { LessonContext } from "@/pages/lesson";
+import { LessonContext } from "@/pages/lesson/state";
 
 /** player section */
 const Player = () => {

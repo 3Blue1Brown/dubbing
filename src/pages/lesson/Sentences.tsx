@@ -1,6 +1,6 @@
 import { Fragment, useContext } from "react";
 import clsx from "clsx";
-import { LessonContext } from "@/pages/lesson";
+import { LessonContext } from "@/pages/lesson/state";
 import classes from "./Sentences.module.css";
 
 /** sentences section */

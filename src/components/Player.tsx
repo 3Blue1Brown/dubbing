@@ -24,23 +24,25 @@ export type PlayerRef = ComponentRef<typeof Player>;
 
 /** video player */
 const Player = forwardRef<Handle, Props>(({ video }: Props, ref) => {
-  const player = useRef<YouTubePlayer>();
+  const playerRef = useRef<YouTubePlayer>();
 
   /** expose methods */
   useImperativeHandle(
     ref,
     () => ({
       /** control methods */
-      play: async () => await player.current?.playVideo(),
-      pause: async () => await player.current?.pauseVideo(),
+      play: async () => await playerRef.current?.playVideo(),
+      pause: async () => await playerRef.current?.pauseVideo(),
       seek: async (time: number) => {
-        if (!player.current) return;
-        await player.current.seekTo(time, true);
-        if ((await player.current?.getPlayerState()) === PlayerStates.PLAYING)
-          await player.current?.playVideo();
-        else await player.current?.pauseVideo();
+        if (!playerRef.current) return;
+        await playerRef.current.seekTo(time, true);
+        if (
+          (await playerRef.current?.getPlayerState()) === PlayerStates.PLAYING
+        )
+          await playerRef.current?.playVideo();
+        else await playerRef.current?.pauseVideo();
       },
-      volume: async (volume: number) => player.current?.setVolume(volume),
+      volume: async (volume: number) => playerRef.current?.setVolume(volume),
     }),
     [],
   );
@@ -49,10 +51,10 @@ const Player = forwardRef<Handle, Props>(({ video }: Props, ref) => {
     <YouTube
       videoId={video}
       onReady={async (event) => {
-        player.current = event.target;
-        await player.current?.mute();
+        playerRef.current = event.target;
+        await playerRef.current?.mute();
       }}
-      className={classes.player}
+      className={classes.container}
       iframeClassName={classes.iframe}
     />
   );

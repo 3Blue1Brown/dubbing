@@ -5,16 +5,15 @@
   --secondary-light: color-mix(in hsl, var(--secondary), var(--white) 50%);
 
   --white: #ffffff;
-  --off-white: #f8fafa;
   --light-gray: #e8f0f0;
   --gray: #a8b0b0;
   --dark-gray: #687070;
   --off-black: #485050;
   --black: #000000;
-  --shadow: #00000040;
+  --shadow: #00000020;
 
   --warning: rgb(255, 200, 0);
-  --box-shadow: 0 0 2px var(--shadow), 1px 2px 3px -2px var(--shadow);
+  --border: solid 1px var(--light-gray);
   --rounded: 3px;
   --fast: 0.2s ease;
 }
@@ -114,7 +113,7 @@ input[type="range"]:hover {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background-color: var(--off-white);
+  background-color: var(--light-gray);
 }
 
 :not(html) ::-webkit-scrollbar-thumb {

@@ -1,10 +1,11 @@
 import { useContext, useEffect, useRef } from "react";
 import { useTransform } from "@/components/transform";
 import WaveformComponent from "@/components/Waveform";
-import { LessonContext } from "@/pages/lesson";
+import { LessonContext } from "@/pages/lesson/state";
+import classes from "./Tracks.module.css";
 
-/** waveform section */
-const Waveform = () => {
+/** tracks section */
+const Tracks = () => {
   /** use lesson state */
   const { tracks, length, time, sampleRate, autoScroll, setTime } =
     useContext(LessonContext);
@@ -29,20 +30,30 @@ const Waveform = () => {
     justSeeked.current = false;
   }, [center, time, autoScroll]);
 
-  return tracks.map((track, index) => (
-    <WaveformComponent
-      key={index}
-      waveform={track}
-      transform={transform}
-      onWheel={onWheel}
-      sampleRate={sampleRate}
-      time={time}
-      onSeek={(time) => {
-        justSeeked.current = true;
-        setTime(time);
-      }}
-    />
-  ));
+  return (
+    <div className={classes.tracks}>
+      {tracks.map((track, index) => (
+        <div
+          key={index}
+          className={classes.track}
+          onDoubleClick={(event) => (event.currentTarget.style.height = "")}
+        >
+          <WaveformComponent
+            waveform={track}
+            transform={transform}
+            onWheel={onWheel}
+            sampleRate={sampleRate}
+            time={time}
+            showTicks={index === 0}
+            onSeek={(time) => {
+              justSeeked.current = true;
+              setTime(time);
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
 };
 
-export default Waveform;
+export default Tracks;

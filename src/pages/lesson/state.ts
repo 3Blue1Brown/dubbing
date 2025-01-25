@@ -13,7 +13,7 @@ export const useLesson = () => {
   /** sentence text and timings */
   const [sentences, setSentences] = useState<Sentence[]>();
   /** video length, in seconds */
-  const [length, setLength] = useState<number>(10);
+  const [length, setLength] = useState<number>(60 * 60);
 
   /** audio sample rate */
   const [sampleRate] = useState(
@@ -43,7 +43,7 @@ export const useLesson = () => {
   const [tracks, setTracks] = useState<Float32Array[]>([]);
 
   /** should auto-scroll */
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [autoScroll, setAutoScroll] = useState(false);
   /** show original (english) text */
   const [showOriginal, setShowOriginal] = useState(false);
 

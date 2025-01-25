@@ -12,7 +12,7 @@ import { PiMouseScrollBold } from "react-icons/pi";
 import CheckButton from "@/components/CheckButton";
 import Monitor from "@/components/Monitor";
 import Select from "@/components/Select";
-import { LessonContext } from "@/pages/lesson";
+import { LessonContext } from "@/pages/lesson/state";
 import { useShortcutClick } from "@/util/hooks";
 import { formatTime } from "@/util/string";
 import classes from "./Controls.module.css";

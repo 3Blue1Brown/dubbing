@@ -12,6 +12,7 @@ import {
   sampleToPercent,
   type Transform,
 } from "@/components/transform";
+import { getCSSVar } from "@/util/dom";
 import { round } from "@/util/math";
 import { formatTime } from "@/util/string";
 import classes from "./Waveform.module.css";
@@ -27,20 +28,11 @@ type Props = {
   time: number;
   /** sample rate, in hz */
   sampleRate: number;
+  /** whether to show time ticks */
+  showTicks: boolean;
   /** current time change */
   onSeek: (time: number) => void;
 };
-
-/** colors */
-
-/** waveform before current time, "active" */
-const pastColor = "#00bfff";
-/** waveform after current time, "inactive" */
-const futureColor = "#c0c0c0";
-/** current time marker */
-const timeColor = "#ff1493";
-/** other markings */
-const tickColor = "#a0a0a0";
 
 /** min dist between ticks, in px */
 const minTickDist = 100;
@@ -78,8 +70,18 @@ const Waveform = ({
   onWheel,
   time,
   sampleRate,
+  showTicks,
   onSeek,
 }: Props) => {
+  /** waveform before current time, "active" */
+  const pastColor = getCSSVar("--primary");
+  /** waveform after current time, "inactive" */
+  const futureColor = getCSSVar("--gray");
+  /** current time marker */
+  const timeColor = getCSSVar("--secondary");
+  /** other markings */
+  const tickColor = getCSSVar("--gray");
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>();
 
@@ -146,11 +148,6 @@ const Waveform = ({
     /** clear previous canvas contents */
     ctx.clearRect(0, 0, width, height);
 
-    /** set text styles */
-    ctx.textBaseline = "hanging";
-    ctx.textAlign = "center";
-    ctx.font = "14px Open Sans";
-
     /** draw waveform */
     {
       ctx.fillStyle = futureColor;
@@ -175,10 +172,13 @@ const Waveform = ({
     }
 
     /** draw ticks (time labels) */
-    {
+    if (showTicks) {
       ctx.fillStyle = tickColor;
       ctx.strokeStyle = tickColor;
       ctx.lineWidth = 1;
+      ctx.textBaseline = "hanging";
+      ctx.textAlign = "center";
+      ctx.font = "14px Open Sans";
 
       /** whether to draw label on tick */
       let text = "";
@@ -207,18 +207,27 @@ const Waveform = ({
 
     /** draw mouse position line */
     if (hovered) {
+      ctx.textBaseline = "bottom";
+      ctx.textAlign = "left";
+      ctx.font = "14px Open Sans";
+      ctx.fillStyle = futureColor;
       ctx.strokeStyle = futureColor;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(mouseClient.elementX, 0);
       ctx.lineTo(mouseClient.elementX, height);
       ctx.stroke();
+      ctx.fillText(
+        formatTime(time),
+        mouseClient.elementX + ctx.lineWidth * 2,
+        height,
+      );
     }
 
     /** draw current time line */
     {
       ctx.strokeStyle = timeColor;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
       ctx.beginPath();
       const x =
         width * sampleToPercent(transform, { x: time * sampleRate, y: 0 }).x;
@@ -232,17 +241,15 @@ const Waveform = ({
   useEventListener("wheel", onWheel, canvasRef);
 
   return (
-    <div className={classes.container}>
-      <canvas
-        ref={canvasRef}
-        className={classes.waveform}
-        onClick={({ clientX }) => {
-          const percent = clientToPercent(clientBbox, { x: clientX, y: 0 });
-          const sample = percentToSample(transform, percent);
-          onSeek(sample.x / sampleRate);
-        }}
-      />
-    </div>
+    <canvas
+      ref={canvasRef}
+      className={classes.waveform}
+      onClick={({ clientX }) => {
+        const percent = clientToPercent(clientBbox, { x: clientX, y: 0 });
+        const sample = percentToSample(transform, percent);
+        onSeek(sample.x / sampleRate);
+      }}
+    />
   );
 };
 

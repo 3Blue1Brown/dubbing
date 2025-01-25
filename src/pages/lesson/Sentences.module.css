@@ -1,11 +1,7 @@
 .sentences {
-  display: grid;
-  grid-template-columns: 1fr;
-  height: 140px;
+  display: flex;
+  flex-direction: column;
   padding: 10px;
-  overflow-y: auto;
-  border-radius: var(--rounded);
-  box-shadow: var(--box-shadow);
   resize: vertical;
 }
 

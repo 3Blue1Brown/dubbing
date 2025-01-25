@@ -1,16 +1,15 @@
 .top {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: 40px;
 }
 
-.top > :first-child {
-  max-width: 300px;
-}
-
-.top > :last-child {
-  flex-grow: 1;
+.top > * {
+  height: 180px;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: var(--rounded);
 }
 
 @media (max-width: 600px) {

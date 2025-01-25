@@ -6,8 +6,8 @@
   width: 100%;
   padding: 10px 20px;
   gap: 20px;
+  border: var(--border);
   border-radius: var(--rounded);
-  box-shadow: var(--box-shadow);
   font-variant-numeric: tabular-nums;
 }
 

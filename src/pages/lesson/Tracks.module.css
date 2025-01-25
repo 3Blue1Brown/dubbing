@@ -1,0 +1,19 @@
+.tracks {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  border: var(--border);
+  border-radius: var(--rounded);
+}
+
+.track {
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  resize: vertical;
+}
+
+.track:not(:last-child) {
+  border-bottom: var(--border);
+}

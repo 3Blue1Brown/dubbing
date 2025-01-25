@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { clamp } from "lodash";
 
 /** speed/strength of waveform scrolling */
@@ -80,7 +80,7 @@ export const useTransform = ({ length, sampleRate }: Props) => {
   /** transform state */
   const [transform, setTransform] = useState<Transform>({
     translate: { x: 0, y: 0 },
-    scale: { x: 0.0001, y: 1 },
+    scale: { x: 0, y: 1 },
   });
 
   /** limit transform */
@@ -96,6 +96,11 @@ export const useTransform = ({ length, sampleRate }: Props) => {
     },
     [length, sampleRate],
   );
+
+  /** run limit when it changes */
+  useEffect(() => {
+    setTransform((transform) => limit(transform));
+  }, [limit]);
 
   /** center transform around time, in seconds */
   const center = useCallback(

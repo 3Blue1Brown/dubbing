@@ -1,9 +1,9 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useParams } from "react-router";
 import { intToFloat } from "@/audio";
-import { LessonContext, useLesson } from "@/pages/lesson";
 import Actions from "@/pages/lesson/Actions";
 import Graph from "@/pages/lesson/Graph";
+import { LessonContext, useLesson } from "@/pages/lesson/state";
 import test1 from "@/test1.raw?url";
 import test2 from "@/test2.raw?url";
 import Controls from "./Controls";
@@ -11,7 +11,7 @@ import { getData } from "./data";
 import classes from "./Lesson.module.css";
 import Player from "./Player";
 import Sentences from "./Sentences";
-import Waveform from "./Waveform";
+import Tracks from "./Tracks";
 
 /** lesson page */
 const Lesson = () => {
@@ -22,7 +22,7 @@ const Lesson = () => {
         <Sentences />
       </div>
       <Controls />
-      <Waveform />
+      <Tracks />
       <Actions />
       <Graph />
     </LessonProvider>

@@ -8,7 +8,7 @@ import {
 import { useInterval } from "@reactuses/core";
 import { floatToAudio } from "@/audio";
 import { useGraph } from "@/audio/graph";
-import { LessonContext } from "@/pages/lesson";
+import { LessonContext } from "@/pages/lesson/state";
 
 const fftSize = 2 ** 10;
 
