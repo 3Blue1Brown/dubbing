@@ -6,7 +6,6 @@ import {
   mediaStreamDestination,
   mediaStreamSource,
 } from "virtual-audio-graph";
-import type { IVirtualAudioNodeGraph } from "virtual-audio-graph/dist/types";
 import { useInterval } from "@reactuses/core";
 import { floatToAudio } from "@/audio";
 import { useGraph } from "@/audio/graph";
@@ -33,6 +32,9 @@ const Graph = () => {
   const timeAnalBuffer = useRef(new Uint8Array(fftSize));
   const freqAnalBuffer = useRef(new Uint8Array(fftSize / 2));
 
+  /** buffer to dump raw recorded audio data to */
+  const recordingBuffer = useRef(new Float32Array());
+
   const { graph, worklets } = useGraph(
     sampleRate,
     /**
@@ -44,44 +46,50 @@ const Graph = () => {
   );
 
   /** https://github.com/benji6/virtual-audio-graph/issues/265 */
-  const noOutputNode = useMemo<IVirtualAudioNodeGraph>(
+  const noOutputNode = useMemo(
     () => ({ "no-output": mediaStreamDestination() }),
     [],
   );
 
+  /** node to capture raw mic audio data */
+  const recorderNode = useMemo(() => {
+    if (!playing || !recording) return null;
+    const recorder = worklets.recorder?.("no-output");
+    return recorder ? { recorder } : null;
+  }, [worklets, playing, recording]);
+
   /** mic stream */
-  const micNode = useMemo<IVirtualAudioNodeGraph>(
-    () => ({
-      mic: mediaStreamSource(["recorder", "analyzer", "playthrough"], {
-        mediaStream: micStream,
-      }),
-    }),
-    [micStream],
+  const micNode = useMemo(
+    () =>
+      micStream
+        ? {
+            mic: mediaStreamSource(
+              [
+                ...(recorderNode ? ["recorder"] : []),
+                "analyzer",
+                "playthrough",
+              ],
+              { mediaStream: micStream },
+            ),
+          }
+        : null,
+    [micStream, recorderNode],
   );
 
   /** mic analyzer/monitor */
-  const analyzerNode = useMemo<IVirtualAudioNodeGraph>(
+  const analyzerNode = useMemo(
     () => ({ analyzer: analyser("no-output", { fftSize }) }),
     [],
   );
 
-  /** node to capture raw mic audio data */
-  const recorderNode = useMemo<IVirtualAudioNodeGraph>(
-    () =>
-      recording && worklets.recorder
-        ? { recorder: worklets.recorder("no-output") }
-        : ({} as IVirtualAudioNodeGraph),
-    [worklets, recording],
-  );
-
   /** whether to play-through mic audio to speakers */
-  const playthroughNode = useMemo<IVirtualAudioNodeGraph>(
+  const playthroughNode = useMemo(
     () => ({ playthrough: gain("volume", { gain: playthrough ? 1 : 0 }) }),
     [playthrough],
   );
 
   /** existing audio tracks */
-  const trackNodes = useMemo<IVirtualAudioNodeGraph>(
+  const trackNodes = useMemo(
     () =>
       playing
         ? Object.fromEntries(
@@ -134,6 +142,16 @@ const Graph = () => {
     playthroughNode,
     volumeNode,
   ]);
+
+  /** keep this after graph.update call so node id is defined */
+  useEffect(() => {
+    const node = graph?.getAudioNodeById("recorder") as AudioWorkletNode;
+    if (!node) return;
+    node.port.onmessage = ({ data }: MessageEvent<Float32Array>) => {
+      /** process recorded data */
+      // console.log(data);
+    };
+  }, [graph, recorderNode]);
 
   /** periodically get analyzer data */
   useInterval(() => {
