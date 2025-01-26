@@ -103,20 +103,17 @@ const Monitor = ({ time, freq, ...props }: Props) => {
   }
 
   return (
-    <>
-      {monitor.length}
-      <canvas
-        {...props}
-        ref={canvasRef}
-        className={classes.monitor}
-        onClick={() => setByFreq(!byFreq)}
-        data-tooltip={
-          byFreq
-            ? "Switch to oscilloscope view"
-            : "Switch to frequency spectrum view"
-        }
-      />
-    </>
+    <canvas
+      {...props}
+      ref={canvasRef}
+      className={classes.monitor}
+      onClick={() => setByFreq(!byFreq)}
+      data-tooltip={
+        byFreq
+          ? "Switch to oscilloscope view"
+          : "Switch to frequency spectrum view"
+      }
+    />
   );
 };
 

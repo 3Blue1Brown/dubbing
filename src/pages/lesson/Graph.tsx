@@ -45,10 +45,11 @@ const Graph = () => {
     if (!graph) return;
     if (!micStream) return;
 
+    /** track buffer sources */
     const trackNodes = playing
       ? Object.fromEntries(
-          tracks.map((track, index) => [
-            "track" + index,
+          tracks.map((track) => [
+            uniqueId(),
             bufferSource("gain", {
               buffer: floatToAudio(track, sampleRate),
               offsetTime: time,

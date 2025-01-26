@@ -1,10 +1,12 @@
-import { Fragment } from "react";
+import { Fragment, useRef } from "react";
 import clsx from "clsx";
 import { useLesson } from "@/pages/lesson/state";
 import classes from "./Sentences.module.css";
 
 /** sentences section */
 const Sentences = () => {
+  const ref = useRef<HTMLDivElement>(null);
+
   /** use lesson state */
   const video = useLesson("video");
   const sentences = useLesson("sentences");
@@ -17,7 +19,7 @@ const Sentences = () => {
   if (!video || !sentences) return <></>;
 
   return (
-    <div className={classes.sentences}>
+    <div ref={ref} className={classes.sentences}>
       {sentences.map(({ translation, original }, index) => (
         <div key={index} className={classes.words}>
           {(showOriginal ? original : translation).map(
@@ -32,11 +34,13 @@ const Sentences = () => {
                 <Fragment key={index}>
                   <span
                     ref={(el) => {
-                      if (el && state === "present" && autoScroll)
-                        el.scrollIntoView({
-                          block: "center",
+                      /** auto-scroll */
+                      if (el && state === "present" && autoScroll) {
+                        ref.current?.scrollTo({
+                          top: el.offsetTop - ref.current.clientHeight / 2,
                           behavior: playing ? "smooth" : "instant",
                         });
+                      }
                     }}
                     className={clsx(
                       classes.word,

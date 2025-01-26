@@ -3,6 +3,7 @@
   flex-direction: column;
   padding: 10px;
   resize: vertical;
+  overflow-y: auto;
 }
 
 .words {

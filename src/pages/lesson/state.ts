@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { useInterval } from "@reactuses/core";
 import { useMicrophone } from "@/audio/devices";
 import type { PlayerRef } from "@/components/Player";
 import type { Sentence } from "@/pages/lesson/data";
@@ -28,28 +29,63 @@ export const useLessonAll = () => {
   /** mic analyzer data */
   const [micTimeAnal, setTimeAnal] = useState<number[]>([]);
   const [micFreqAnal, setFreqAnal] = useState<number[]>([]);
-  /** mic play-through */
+  /** is mic play-through enabled */
   const [playthrough, setPlaythrough] = useState(false);
-  /** mic recording armed */
+  /** is mic recording armed */
   const [recording, setRecording] = useState(false);
-  /** audio playing */
-  const [playing, setPlaying] = useState(false);
+  /** is timeline playing */
+  const [playing, _setPlaying] = useState(false);
   /** main volume, [0,1] */
   const [volume, setVolume] = useState(0.5);
 
   /** current time, in seconds */
-  const [time, setTime] = useState(0);
+  const [time, _setTime] = useState(0);
+
+  /** show original (english) text */
+  const [showOriginal, setShowOriginal] = useState(false);
+
+  /** should auto-scroll */
+  const [autoScroll, setAutoScroll] = useState(false);
 
   /** raw audio data */
   const [tracks, setTracks] = useState<Float32Array[]>([]);
 
-  /** should auto-scroll */
-  const [autoScroll, setAutoScroll] = useState(false);
-  /** show original (english) text */
-  const [showOriginal, setShowOriginal] = useState(false);
-
   /** is currently saving output */
   const [saving, setSaving] = useState(false);
+
+  /** mark when playing started or time jumped */
+  const [mark, _setMark] = useState({ time: 0, timestamp: now() });
+
+  /** mark set wrapper */
+  const setMark = useCallback((time: number) => {
+    _setMark({ time, timestamp: now() });
+  }, []);
+
+  /** time set wrapper */
+  const setTime = useCallback(
+    (time: number) => {
+      setMark(time);
+      _setTime(time);
+    },
+    [setMark],
+  );
+
+  /** playing set wrapper */
+  const setPlaying = useCallback(
+    (playing: boolean) => {
+      _setPlaying(playing);
+      setMark(time);
+    },
+    [setMark, time],
+  );
+
+  /** tick time */
+  useInterval(
+    () => {
+      _setTime(mark.time + (now() - mark.timestamp) / 1000);
+    },
+    playing ? 20 : null,
+  );
 
   return {
     playerRef,
@@ -79,6 +115,7 @@ export const useLessonAll = () => {
     setVolume,
     time,
     setTime,
+    mark,
     tracks,
     setTracks,
     autoScroll,
@@ -100,3 +137,6 @@ const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
 /** use piece of lesson data */
 export const useLesson = <Key extends keyof Lesson>(key: Key) =>
   useContextSelector(LessonContext, (state) => state[key]);
+
+/** shorthand */
+const now = () => window.performance.now();
