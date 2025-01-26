@@ -66,6 +66,7 @@ export const useLessonAll = () => {
     (time: number) => {
       setMark(time);
       _setTime(time);
+      playerRef.current?.seek(time).catch(console.error);
     },
     [setMark],
   );
@@ -75,6 +76,8 @@ export const useLessonAll = () => {
     (playing: boolean) => {
       _setPlaying(playing);
       setMark(time);
+      if (playing) playerRef.current?.play().catch(console.error);
+      else playerRef.current?.pause().catch(console.error);
     },
     [setMark, time],
   );
