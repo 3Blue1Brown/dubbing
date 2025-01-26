@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { uniqueId } from "lodash";
 import {
   analyser,
   bufferSource,
@@ -10,6 +9,7 @@ import { useInterval } from "@reactuses/core";
 import { floatToAudio } from "@/audio";
 import { useGraph } from "@/audio/graph";
 import { useLesson } from "@/pages/lesson/state";
+import { power } from "@/util/math";
 
 const fftSize = 2 ** 10;
 
@@ -23,7 +23,7 @@ const Graph = () => {
   const setFreqAnal = useLesson("setFreqAnal");
   const playthrough = useLesson("playthrough");
   const sampleRate = useLesson("sampleRate");
-  const time = useLesson("time");
+  const mark = useLesson("mark");
   const playing = useLesson("playing");
 
   /** analyzer buffers */
@@ -45,14 +45,20 @@ const Graph = () => {
     if (!graph) return;
     if (!micStream) return;
 
-    /** track buffer sources */
+    /** audio track nodes */
     const trackNodes = playing
       ? Object.fromEntries(
-          tracks.map((track) => [
-            uniqueId(),
+          tracks.map((track, index) => [
+            /**
+             * tie node id to track # and time that playback started, such that
+             * subsequent calls to graph.update (e.g. volume change) while
+             * playing doesn't mess with already playing audio
+             */
+            `track-${index}-${mark.timestamp}`,
+            /** node contents */
             bufferSource("gain", {
               buffer: floatToAudio(track, sampleRate),
-              offsetTime: time,
+              offsetTime: mark.time,
             }),
           ]),
         )
@@ -60,11 +66,15 @@ const Graph = () => {
 
     /** update audio graph */
     graph.update({
-      [uniqueId()]: mediaStreamSource("analyzer", { mediaStream: micStream }),
+      /** mic node */
+      mic: mediaStreamSource("analyzer", { mediaStream: micStream }),
+      /** analyzer node */
       analyzer: analyser("playthrough", { fftSize }),
       ...trackNodes,
+      /** playthrough toggle node */
       playthrough: gain("gain", { gain: playthrough ? 1 : 0 }),
-      gain: gain("output", { gain: volume }),
+      /** gain node */
+      gain: gain("output", { gain: power(volume, 2) }),
     });
   }, [
     graph,
@@ -73,7 +83,7 @@ const Graph = () => {
     micStream,
     volume,
     sampleRate,
-    time,
+    mark,
     playing,
   ]);
 

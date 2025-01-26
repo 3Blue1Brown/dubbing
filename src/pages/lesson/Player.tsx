@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import PlayerComponent from "@/components/Player";
 import { useLesson } from "@/pages/lesson/state";
 
