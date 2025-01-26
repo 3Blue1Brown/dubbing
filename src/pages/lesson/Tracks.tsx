@@ -13,6 +13,8 @@ const Tracks = () => {
   const sampleRate = useLesson("sampleRate");
   const autoScroll = useLesson("autoScroll");
   const setTime = useLesson("setTime");
+  const recording = useLesson("recording");
+  const recordTrack = useLesson("recordTrack");
 
   /** sync transform across waveforms */
   const { transform, onWheel, center } = useTransform({
@@ -36,7 +38,7 @@ const Tracks = () => {
 
   return (
     <div className={classes.tracks}>
-      {tracks.map((track, index) => (
+      {tracks.concat(recording ? recordTrack : []).map((track, index) => (
         <div
           key={index}
           className={classes.track}

@@ -1,11 +1,27 @@
-/** https://www.reddit.com/r/learnjavascript/comments/1buqjr3/solution_web_audio_replacing/ */
+/**
+ * references:
+ * https://www.reddit.com/r/learnjavascript/comments/1buqjr3/solution_web_audio_replacing/
+ * https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process
+ */
+
+/**
+ * max # of audio samples worklet buffer can hold. allocate large enough # such
+ * that one call to process should never exceed it (resulting in loss of data).
+ */
+const maxSamples = 100000;
+/**
+ * once collected samples exceeds this amount, "flush" buffer (send message to
+ * parent audio graph with collected sample data). lower -> more frequent
+ * updates in parent.
+ */
+const flushSamples = 1000;
 
 /** custom audio node to capture raw samples from graph */
 class Recorder extends AudioWorkletProcessor {
   constructor() {
     super();
-    /** buffer to fill up and periodically "flush" to audio graph */
-    this.buffer = new Float32Array(128 * 100);
+    /** buffer to accumulate raw audio samples in */
+    this.samples = new Float32Array(maxSamples);
     /** track current position in buffer */
     this.offset = 0;
   }
@@ -18,16 +34,15 @@ class Recorder extends AudioWorkletProcessor {
     if (!input) return true;
 
     /** write new input to buffer */
-    for (let index = 0; index < input.length; index++)
-      this.buffer[index + this.offset] = input[index];
+    this.samples.set(input, this.offset);
 
     /** increment sample offset */
     this.offset += input.length;
 
     /** "flush" buffer */
-    if (this.offset >= this.buffer.length - 1) {
+    if (this.offset >= flushSamples) {
       /** send buffer to audio graph */
-      this.port.postMessage(this.buffer);
+      this.port.postMessage(this.samples.slice(0, this.offset));
       /** start over */
       this.offset = 0;
     }

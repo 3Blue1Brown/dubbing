@@ -18,6 +18,7 @@ const fftSize = 2 ** 10;
 const Graph = () => {
   /** use lesson state */
   const tracks = useLesson("tracks");
+  const setRecordTrack = useLesson("setRecordTrack");
   const volume = useLesson("volume");
   const micStream = useLesson("micStream");
   const setTimeAnal = useLesson("setTimeAnal");
@@ -32,9 +33,7 @@ const Graph = () => {
   const timeAnalBuffer = useRef(new Uint8Array(fftSize));
   const freqAnalBuffer = useRef(new Uint8Array(fftSize / 2));
 
-  /** buffer to dump raw recorded audio data to */
-  const recordingBuffer = useRef(new Float32Array());
-
+  /** virtual audio graph */
   const { graph, worklets } = useGraph(
     sampleRate,
     /**
@@ -51,7 +50,7 @@ const Graph = () => {
     [],
   );
 
-  /** node to capture raw mic audio data */
+  /** capture raw mic audio data */
   const recorderNode = useMemo(() => {
     if (!playing || !recording) return null;
     const recorder = worklets.recorder?.("no-output");
@@ -145,13 +144,20 @@ const Graph = () => {
 
   /** keep this after graph.update call so node id is defined */
   useEffect(() => {
-    const node = graph?.getAudioNodeById("recorder") as AudioWorkletNode;
-    if (!node) return;
-    node.port.onmessage = ({ data }: MessageEvent<Float32Array>) => {
+    const recorder = graph?.getAudioNodeById("recorder") as AudioWorkletNode;
+    if (!recorder) return;
+
+    /** what sample # in timeline to record to */
+    let sampleOffset = mark.time * sampleRate;
+
+    /** listen for audio worklet messages */
+    recorder.port.onmessage = ({ data }: MessageEvent<Float32Array>) => {
       /** process recorded data */
-      // console.log(data);
+      setRecordTrack(data, sampleOffset);
+      /** increment offset based on length of data returned */
+      sampleOffset += data.length;
     };
-  }, [graph, recorderNode]);
+  }, [graph, recorderNode, setRecordTrack, mark.time, sampleRate]);
 
   /** periodically get analyzer data */
   useInterval(() => {

@@ -3,6 +3,7 @@ import { useInterval } from "@reactuses/core";
 import { useMicrophone } from "@/audio/devices";
 import type { PlayerRef } from "@/components/Player";
 import type { Sentence } from "@/pages/lesson/data";
+import { useTypedArray } from "@/util/hooks";
 import { createContextWithSelectors, useContextSelector } from "@/util/state";
 
 /** all lesson state */
@@ -32,7 +33,7 @@ export const useLessonAll = () => {
   /** is mic play-through enabled */
   const [playthrough, setPlaythrough] = useState(false);
   /** is mic recording armed */
-  const [recording, setRecording] = useState(false);
+  const [recording, _setRecording] = useState(false);
   /** is timeline playing */
   const [playing, _setPlaying] = useState(false);
   /** main volume, [0,1] */
@@ -47,8 +48,11 @@ export const useLessonAll = () => {
   /** should auto-scroll */
   const [autoScroll, setAutoScroll] = useState(true);
 
-  /** raw audio data */
+  /** recorded raw audio data */
   const [tracks, setTracks] = useState<Float32Array[]>([]);
+  const [recordTrack, setRecordTrack, resetRecordTrack] = useTypedArray(
+    length * sampleRate,
+  );
 
   /** is currently saving output */
   const [saving, setSaving] = useState(false);
@@ -61,14 +65,22 @@ export const useLessonAll = () => {
     _setMark({ time, timestamp: now() });
   }, []);
 
-  /** time set wrapper */
-  const setTime = useCallback(
-    (time: number) => {
+  /** "commit" recorded audio to new track */
+  const commitRecording = useCallback(() => {
+    /** add new track */
+    setTracks((tracks) => [...tracks, new Float32Array(recordTrack)]);
+    /** reset recording buffer */
+    resetRecordTrack();
+  }, [recordTrack, resetRecordTrack]);
+
+  /** recording set wrapper */
+  const setRecording = useCallback(
+    (recording: boolean) => {
+      _setRecording(recording);
       setMark(time);
-      _setTime(time);
-      playerRef.current?.seek(time).catch(console.error);
+      if (!recording) commitRecording();
     },
-    [setMark],
+    [setMark, time, commitRecording],
   );
 
   /** playing set wrapper */
@@ -78,8 +90,19 @@ export const useLessonAll = () => {
       setMark(time);
       if (playing) playerRef.current?.play().catch(console.error);
       else playerRef.current?.pause().catch(console.error);
+      if (recording && !playing) commitRecording();
     },
-    [setMark, time],
+    [setMark, time, recording, commitRecording],
+  );
+
+  /** time set wrapper */
+  const setTime = useCallback(
+    (time: number) => {
+      setMark(time);
+      _setTime(time);
+      playerRef.current?.seek(time).catch(console.error);
+    },
+    [setMark],
   );
 
   /** tick time */
@@ -121,6 +144,8 @@ export const useLessonAll = () => {
     mark,
     tracks,
     setTracks,
+    recordTrack,
+    setRecordTrack,
     autoScroll,
     setAutoScroll,
     showOriginal,
