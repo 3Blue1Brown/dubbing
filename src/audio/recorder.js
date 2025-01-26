@@ -1,14 +1,11 @@
 /** https://www.reddit.com/r/learnjavascript/comments/1buqjr3/solution_web_audio_replacing/ */
 
-/** max 16-bit value */
-const peak = 2 ** (16 - 1);
-
 /** custom audio node to capture raw samples from graph */
-class WaveProcessor extends AudioWorkletProcessor {
+class Recorder extends AudioWorkletProcessor {
   constructor() {
     super();
     /** buffer to fill up and periodically "flush" to audio graph */
-    this.buffer = new Int16Array(128 * 100);
+    this.buffer = new Float32Array(128 * 100);
     /** track current position in buffer */
     this.offset = 0;
   }
@@ -22,10 +19,7 @@ class WaveProcessor extends AudioWorkletProcessor {
 
     /** write new input to buffer */
     for (let index = 0; index < input.length; index++)
-      this.buffer[index + this.offset] =
-        input[index] *
-        /** convert float [-1, 1] to 16 bit int */
-        (input[index] < 0 ? peak : peak - 1);
+      this.buffer[index + this.offset] = input[index];
 
     /** increment sample offset */
     this.offset += input.length;
@@ -42,4 +36,4 @@ class WaveProcessor extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor("wave-processor", WaveProcessor);
+registerProcessor("recorder", Recorder);

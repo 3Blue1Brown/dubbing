@@ -1,32 +1,41 @@
 import { useCallback, useEffect, useState } from "react";
-import createVirtualAudioGraph from "virtual-audio-graph";
+import createVirtualAudioGraph, {
+  createWorkletNode,
+} from "virtual-audio-graph";
 import type VirtualAudioGraph from "virtual-audio-graph/dist/VirtualAudioGraph";
+import recorder from "@/audio/recorder.js?url";
 
 /** use audio graph */
 export const useGraph = (sampleRate: number, shouldInit: boolean) => {
   const [graph, setGraph] = useState<VirtualAudioGraph>();
+  const [worklets, setWorklets] = useState<
+    Record<string, ReturnType<typeof createWorkletNode>>
+  >({});
 
   /** create audio context and virtual audio graph */
-  const init = useCallback(() => {
+  const init = useCallback(async () => {
+    /** init audio context */
     const context = new AudioContext({ sampleRate });
-    setGraph(
-      createVirtualAudioGraph({
-        audioContext: context,
-        output: context.destination,
-      }),
-    );
+
+    /** init virtual audio graph */
+    const graph = createVirtualAudioGraph({
+      audioContext: context,
+      output: context.destination,
+    });
+
+    /** set up worklets */
+    await context.audioWorklet.addModule(recorder);
+    setWorklets({
+      recorder: createWorkletNode("recorder"),
+    });
+
+    setGraph(graph);
   }, [sampleRate]);
 
-  /** init when ready */
   useEffect(() => {
-    if (shouldInit) init();
-  }, [shouldInit, init]);
+    /** if ready, and not already init'ed */
+    if (shouldInit && !graph) init().catch(console.error);
+  }, [shouldInit, graph, init]);
 
-  /** init on user gesture */
-  // useEventListener("click", resume);
-  // useEventListener("mousedown", resume);
-  // useEventListener("touchstart", resume);
-  // useEventListener("keydown", resume);
-
-  return graph;
+  return { graph, worklets };
 };

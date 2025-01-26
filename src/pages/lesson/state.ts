@@ -45,7 +45,7 @@ export const useLessonAll = () => {
   const [showOriginal, setShowOriginal] = useState(false);
 
   /** should auto-scroll */
-  const [autoScroll, setAutoScroll] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
 
   /** raw audio data */
   const [tracks, setTracks] = useState<Float32Array[]>([]);
@@ -87,7 +87,7 @@ export const useLessonAll = () => {
     () => {
       _setTime(mark.time + (now() - mark.timestamp) / 1000);
     },
-    playing ? 20 : null,
+    playing ? updateInterval : null,
   );
 
   return {
@@ -141,5 +141,11 @@ const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
 export const useLesson = <Key extends keyof Lesson>(key: Key) =>
   useContextSelector(LessonContext, (state) => state[key]);
 
-/** shorthand */
+/** timestamp shorthand */
 const now = () => window.performance.now();
+
+/** update frequency of UI in ms, i.e. for current time, freq analyzer, etc. */
+export const updateInterval =
+  1000 /
+  /** fps */
+  30;
