@@ -4,8 +4,8 @@ import { intToFloat } from "@/audio";
 import Actions from "@/pages/lesson/Actions";
 import Graph from "@/pages/lesson/Graph";
 import { LessonContext, useLessonAll } from "@/pages/lesson/state";
-import test1 from "@/test1.raw?url";
-import test2 from "@/test2.raw?url";
+import test from "@/test.raw?url";
+import { request } from "@/util/request";
 import Controls from "./Controls";
 import { getData } from "./data";
 import classes from "./Lesson.module.css";
@@ -49,34 +49,30 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
 
   const dataLoaded = useRef(false);
 
-  /** load main lesson data, if not already loaded */
-  if (!dataLoaded.current) {
-    dataLoaded.current = true;
-    getData({
-      year,
-      title,
-      language,
-    })
-      .then(({ video, sentences, length }) => {
-        lesson.setVideo(video);
-        lesson.setSentences(sentences);
-        lesson.setLength(length);
-      })
-      .catch(console.error);
+  useEffect(() => {
+    if (dataLoaded.current) return;
 
-    /** load test waveforms */
-    [test1, test2].forEach((file) =>
-      fetch(file)
-        .then((response) => response.arrayBuffer())
-        .then((buffer) => {
-          lesson.setTracks((tracks) => [
-            ...tracks,
-            intToFloat(new Int16Array(buffer)),
-          ]);
-        })
-        .catch(console.error),
-    );
-  }
+    (async () => {
+      /** load main lesson data, if not already loaded */
+      const { video, sentences, length } = await getData({
+        year,
+        title,
+        language,
+      });
+
+      lesson.setVideo(video);
+      lesson.setSentences(sentences);
+      lesson.setLength(length);
+
+      /** load test waveforms */
+      const testTracks = (
+        await Promise.all([test].map((file) => request(file, "arrayBuffer")))
+      ).map((buffer) => intToFloat(new Int16Array(buffer)));
+      lesson.setTracks((tracks) => [...tracks, ...testTracks]);
+    })().catch(console.error);
+
+    dataLoaded.current = true;
+  }, [lesson, year, title, language]);
 
   return (
     <LessonContext.Provider value={lesson}>{children}</LessonContext.Provider>

@@ -1,20 +1,19 @@
 /** basic fetch and parse */
-export async function request<Response>(
-  url: string | URL,
-  parse: "json" | "text" = "json",
-) {
-  url = new URL(url);
+export function request<Response>(url: Url, parse?: "json"): Promise<Response>;
+export function request(url: Url, parse: "text"): Promise<string>;
+export function request(url: Url, parse: "arrayBuffer"): Promise<ArrayBuffer>;
+export async function request(url: Url, parse: Parse = "json") {
   const request = new Request(url);
   const response = await fetch(request);
   if (!response.ok) throw Error("Response not OK");
-  let parsed: Response;
   try {
-    parsed =
-      parse === "text"
-        ? await response.clone().text()
-        : await response.clone().json();
+    if (parse === "json") return await response.clone().json();
+    if (parse === "text") return await response.clone().text();
+    if (parse === "arrayBuffer") return await response.clone().arrayBuffer();
   } catch (error) {
     throw Error(`Couldn't parse response as ${parse}, ${error}`);
   }
-  return parsed;
 }
+
+type Url = string;
+type Parse = "json" | "text" | "arrayBuffer";

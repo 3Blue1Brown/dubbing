@@ -28,8 +28,7 @@ const pauseChars = Array(10).fill("▪").join(" ");
 export const getData = async (lesson: LessonId): Promise<Data> => {
   /** get video url */
   const video =
-    (await request<string>(videoFile(lesson), "text")).split(/\/|=/).pop() ??
-    "";
+    (await request(videoFile(lesson), "text")).split(/\/|=/).pop() ?? "";
 
   /** get raw translation sentences */
   const translationSentences = await request<_TranslationSentences>(

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { useTransform } from "@/components/transform";
 import WaveformComponent from "@/components/Waveform";
 import { useLesson } from "@/pages/lesson/state";
@@ -45,22 +45,25 @@ const Tracks = () => {
   return (
     <div className={classes.tracks}>
       {tracks.map((track, index) => (
-        <div
-          key={index}
-          className={classes.track}
-          onDoubleClick={(event) => (event.currentTarget.style.height = "")}
-        >
-          <WaveformComponent
-            waveform={track}
-            transform={transform}
-            onWheel={onWheel}
-            sampleRate={sampleRate}
-            time={time}
-            onSeek={onSeek}
-          />
-        </div>
+        <Fragment key={index}>
+          <div className={classes.label}>Track {index + 1}</div>
+          <div
+            className={classes.track}
+            onDoubleClick={(event) => (event.currentTarget.style.height = "")}
+          >
+            <WaveformComponent
+              waveform={track}
+              transform={transform}
+              onWheel={onWheel}
+              sampleRate={sampleRate}
+              time={time}
+              onSeek={onSeek}
+            />
+          </div>
+        </Fragment>
       ))}
 
+      <div className={classes.label}>Recording</div>
       <div className={classes.track} style={{ opacity: 0.5 }}>
         <WaveformComponent
           waveform={recordTrack}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { max } from "lodash";
 import { useElementBounding } from "@reactuses/core";
-import { peaks } from "@/audio/peaks";
+import { peaks } from "@/audio/peaks.worker";
 import { power, sigmoid } from "@/util/math";
 import classes from "./Monitor.module.css";
 
@@ -44,24 +44,23 @@ const Monitor = ({ time, freq, ...props }: Props) => {
   const maxAbs = max(time.map(Math.abs)) ?? 0;
 
   /** draw data */
-  let monitor: ReturnType<typeof peaks> = [];
-
-  /** frequency data */
+  const monitor = peaks({
+    array: byFreq ? freq : time,
+    start: 0,
+    end: byFreq ? freq.length : time.length,
+    divisions: width,
+  });
   if (byFreq) {
-    monitor = peaks(
-      freq,
-      0,
-      freq.length,
-      width,
-      1,
-      (value, index) => value * sigmoid(index / width, 0.1),
-    );
-    monitor.forEach((d) => (d.min = -d.max));
-  } else
-    /** time data */
-    monitor = peaks(time, 0, time.length, width, 1, (value) =>
-      power(value, 0.5),
-    );
+    monitor.forEach((value, index) => {
+      value.max = value.max * sigmoid(index / width, 0.1);
+      value.min = -value.max;
+    });
+  } else {
+    monitor.forEach((value) => {
+      value.min = power(value.min, 0.75);
+      value.max = power(value.max, 0.75);
+    });
+  }
 
   /** whether there is any signal */
   const hasSignal = monitor.some(({ min, max }) => min !== 0 || max !== 0);
@@ -87,8 +86,8 @@ const Monitor = ({ time, freq, ...props }: Props) => {
     ctx.strokeStyle = maxAbs > 0.9 ? "#ff1493" : "#00bfff";
     ctx.beginPath();
     monitor.forEach(({ min, max }, x) => {
-      ctx.moveTo(x, halfHeight + min * halfHeight);
-      ctx.lineTo(x, halfHeight + max * halfHeight);
+      ctx.moveTo(x, halfHeight + min * halfHeight - ctx.lineWidth / 2);
+      ctx.lineTo(x, halfHeight + max * halfHeight + ctx.lineWidth / 2);
     });
     ctx.stroke();
 
@@ -110,8 +109,8 @@ const Monitor = ({ time, freq, ...props }: Props) => {
       onClick={() => setByFreq(!byFreq)}
       data-tooltip={
         byFreq
-          ? "Switch to oscilloscope view"
-          : "Switch to frequency spectrum view"
+          ? "Switch to oscilloscope (time) view"
+          : "Switch to spectrum (frequency) view"
       }
     />
   );

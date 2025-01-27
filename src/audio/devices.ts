@@ -34,11 +34,11 @@ export const useMicrophone = ({ sampleRate = 44100, bitDepth = 16 }) => {
      * some browsers (which ?) error on enumerateDevices if mic permissions not
      * requested first
      */
-    request()
-      .then(() => {
-        if (latest) refresh().catch(console.error);
-      })
-      .catch(console.error);
+    (async () => {
+      await request();
+      if (!latest) return;
+      await refresh();
+    })().catch(console.error);
 
     return () => {
       latest = false;
@@ -49,8 +49,8 @@ export const useMicrophone = ({ sampleRate = 44100, bitDepth = 16 }) => {
   useEffect(() => {
     let latest = true;
     if (device !== null)
-      navigator.mediaDevices
-        .getUserMedia({
+      (async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({
           video: false,
           audio: {
             deviceId: device,
@@ -61,11 +61,10 @@ export const useMicrophone = ({ sampleRate = 44100, bitDepth = 16 }) => {
             noiseSuppression: false,
             autoGainControl: false,
           },
-        })
-        .then((stream) => {
-          if (latest) setMicStream(stream);
-        })
-        .catch(console.error);
+        });
+        if (!latest) return;
+        setMicStream(stream);
+      })().catch(console.error);
     return () => {
       latest = false;
     };

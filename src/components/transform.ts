@@ -46,7 +46,7 @@ export type Transform = {
 /** convert sample to percent coords */
 export const sampleToPercent = (
   { translate, scale }: Transform,
-  { x, y }: Vec2,
+  { x = 0, y = 0 }: Partial<Vec2>,
 ) => ({
   x: x * scale.x + translate.x,
   y: y * scale.y + translate.y,
@@ -55,7 +55,7 @@ export const sampleToPercent = (
 /** convert percent coords to sample coords */
 export const percentToSample = (
   { translate, scale }: Transform,
-  { x, y }: Vec2,
+  { x = 0, y = 0 }: Partial<Vec2>,
 ) => ({
   x: (x - translate.x) / scale.x,
   y: (y - translate.y) / scale.y,
@@ -64,12 +64,12 @@ export const percentToSample = (
 /** convert client coords to canvas coords */
 export const clientToPercent = (
   {
-    left,
-    top,
-    width,
-    height,
-  }: Pick<DOMRect, "left" | "top" | "width" | "height">,
-  { x, y }: Vec2,
+    left = 0,
+    top = 0,
+    width = 1,
+    height = 1,
+  }: Partial<Pick<DOMRect, "left" | "top" | "width" | "height">>,
+  { x = 0, y = 0 }: Partial<Vec2>,
 ) => ({
   x: clamp((x - left) / (width || 1), 0, 1),
   y: clamp(((y - top) / (height || 1) - 0.5) * 2, -1, 1),
@@ -77,17 +77,11 @@ export const clientToPercent = (
 
 /** waveform transform */
 export const useTransform = ({ length, sampleRate }: Props) => {
-  /** transform state */
-  const [transform, setTransform] = useState<Transform>({
-    translate: { x: 0, y: 0 },
-    scale: { x: 0, y: 1 },
-  });
-
   /** limit transform */
   const limit = useCallback(
     ({ translate, scale }: Transform) => {
       /** limit zoom */
-      scale.x = clamp(scale.x, 1 / (length * sampleRate), 0.01);
+      scale.x = clamp(scale.x, 1 / (length * sampleRate || 10e20), 0.01);
       scale.y = clamp(scale.y, 1, 10);
       /** limit pan */
       translate.x = clamp(translate.x, 1 - length * sampleRate * scale.x, 0);
@@ -95,6 +89,14 @@ export const useTransform = ({ length, sampleRate }: Props) => {
       return { translate, scale };
     },
     [length, sampleRate],
+  );
+
+  /** transform state */
+  const [transform, setTransform] = useState<Transform>(
+    limit({
+      translate: { x: 0, y: 0 },
+      scale: { x: 0, y: 1 },
+    }),
   );
 
   /** run limit when it changes */

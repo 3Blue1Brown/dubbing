@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   useElementBounding,
   useEventListener,
   useHover,
   useMouse,
 } from "@reactuses/core";
-import { peaks } from "@/audio/peaks";
+import { usePeaks } from "@/audio/peaks";
 import {
   clientToPercent,
   percentToSample,
@@ -89,8 +89,9 @@ const Waveform = ({
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
 
   /** element size */
-  const clientBbox = useElementBounding(canvasRef);
-  const { width, height } = clientBbox;
+  let { left, top, width, height } = useElementBounding(canvasRef);
+  width ||= 100;
+  height ||= 100;
   const halfHeight = height / 2;
 
   /** when size changes */
@@ -110,11 +111,11 @@ const Waveform = ({
   const currentSample = sampleRate * time;
 
   /** sample at left/right sides */
-  const startSample = Math.floor(percentToSample(transform, { x: 0, y: 0 }).x);
-  const endSample = Math.ceil(percentToSample(transform, { x: 1, y: 0 }).x);
+  const startSample = Math.floor(percentToSample(transform, { x: 0 }).x);
+  const endSample = Math.ceil(percentToSample(transform, { x: 1 }).x);
 
   /** convert min tick dist to time interval */
-  const minTickPercent = clientToPercent(clientBbox, { x: minTickDist, y: 0 });
+  const minTickPercent = clientToPercent({ width }, { x: minTickDist });
   const minTickSample = percentToSample(transform, minTickPercent);
   const minTickTime = (minTickSample.x - startSample) / sampleRate;
   /** find min tick time interval that satisfies min tick dist */
@@ -126,19 +127,16 @@ const Waveform = ({
   const endTime = round(endSample / sampleRate, tickInterval);
 
   /** waveform points to draw */
-  const points = useMemo(() => {
-    /** trick eslint */
-    void waveformUpdated;
-    return peaks(
-      waveform,
-      startSample,
-      endSample,
-      /** one point for each pixel of width */
-      width,
-      /** larger # of samples -> skip more */
-      (endSample - startSample) / 1000,
-    );
-  }, [waveform, waveformUpdated, startSample, endSample, width]);
+  const points = usePeaks({
+    updated: waveformUpdated,
+    array: waveform,
+    start: startSample,
+    end: endSample,
+    /** one point for each pixel of width */
+    divisions: width,
+    /** larger # of samples -> skip more */
+    step: (endSample - startSample) / 1000,
+  });
 
   /** mouse coords */
   const mouseClient = useMouse(canvasRef);
@@ -161,26 +159,21 @@ const Waveform = ({
         /** get point */
         const { min, max, start } = points[x]!;
 
-        ctx.strokeStyle = start > currentSample ? futureColor : pastColor;
         /** draw line */
-        if (!min && !max) {
-          ctx.beginPath();
-          ctx.moveTo(x, halfHeight - ctx.lineWidth / 2);
-          ctx.lineTo(x, halfHeight + ctx.lineWidth / 2);
-          ctx.stroke();
-        } else {
-          const top = sampleToPercent(transform, { x: 0, y: min }).y;
-          const bottom = sampleToPercent(transform, { x: 0, y: max }).y;
-          ctx.beginPath();
-          ctx.moveTo(x, halfHeight + top * halfHeight);
-          ctx.lineTo(x, halfHeight + bottom * halfHeight);
-          ctx.stroke();
-        }
+        ctx.strokeStyle = start > currentSample ? futureColor : pastColor;
+        const top = sampleToPercent(transform, { y: min }).y;
+        const bottom = sampleToPercent(transform, { y: max }).y;
+        ctx.beginPath();
+        ctx.moveTo(x, halfHeight + top * halfHeight - ctx.lineWidth / 2);
+        ctx.lineTo(x, halfHeight + bottom * halfHeight + ctx.lineWidth / 2);
+        ctx.stroke();
       }
     }
 
     /** draw ticks (time labels) */
-    if (showTicks) {
+    const ticks = (endTime - startTime) / tickInterval;
+    if (ticks > 100) console.warn(`Too many ticks to draw: ${ticks}`);
+    else if (showTicks) {
       ctx.fillStyle = tickColor;
       ctx.strokeStyle = tickColor;
       ctx.lineWidth = 1;
@@ -198,8 +191,7 @@ const Waveform = ({
       ) {
         /** client x coord */
         const x =
-          sampleToPercent(transform, { x: tickTime * sampleRate, y: 0 }).x *
-          width;
+          sampleToPercent(transform, { x: tickTime * sampleRate }).x * width;
 
         /** draw line */
         ctx.beginPath();
@@ -225,8 +217,16 @@ const Waveform = ({
       ctx.moveTo(mouseClient.elementX, 0);
       ctx.lineTo(mouseClient.elementX, height);
       ctx.stroke();
+      const mouseTime =
+        percentToSample(
+          transform,
+          clientToPercent(
+            { left, top, width, height },
+            { x: mouseClient.elementX },
+          ),
+        ).x / sampleRate;
       ctx.fillText(
-        formatTime(time),
+        formatTime(mouseTime),
         mouseClient.elementX + ctx.lineWidth * 2,
         height,
       );
@@ -237,8 +237,7 @@ const Waveform = ({
       ctx.strokeStyle = timeColor;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      const x =
-        width * sampleToPercent(transform, { x: time * sampleRate, y: 0 }).x;
+      const x = width * sampleToPercent(transform, { x: time * sampleRate }).x;
       ctx.moveTo(x, 0);
       ctx.lineTo(x, height);
       ctx.stroke();
@@ -253,7 +252,10 @@ const Waveform = ({
       ref={canvasRef}
       className={classes.waveform}
       onClick={({ clientX }) => {
-        const percent = clientToPercent(clientBbox, { x: clientX, y: 0 });
+        const percent = clientToPercent(
+          { left, top, width, height },
+          { x: clientX },
+        );
         const sample = percentToSample(transform, percent);
         onSeek?.(sample.x / sampleRate);
       }}

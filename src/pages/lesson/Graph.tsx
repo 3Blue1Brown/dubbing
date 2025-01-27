@@ -12,7 +12,9 @@ import { useGraph } from "@/audio/graph";
 import { updateInterval, useLesson } from "@/pages/lesson/state";
 import { power } from "@/util/math";
 
-const fftSize = 2 ** 10;
+/** higher -> slower oscilloscope */
+const fftSize = 2 ** 12;
+/** min/max: 2^5 / 2^15 */
 
 /** audio graph */
 const Graph = () => {
@@ -152,6 +154,8 @@ const Graph = () => {
 
     /** listen for audio worklet messages */
     recorder.port.onmessage = ({ data }: MessageEvent<Float32Array>) => {
+      /** prevent last message coming in after recording stopped */
+      if (!graph?.getAudioNodeById("recorder")) return;
       /** process recorded data */
       setRecordTrack(data, sampleOffset);
       /** increment offset based on length of data returned */
