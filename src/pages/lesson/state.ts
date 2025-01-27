@@ -50,9 +50,8 @@ export const useLessonAll = () => {
 
   /** recorded raw audio data */
   const [tracks, setTracks] = useState<Float32Array[]>([]);
-  const [recordTrack, setRecordTrack, resetRecordTrack] = useTypedArray(
-    length * sampleRate,
-  );
+  const [recordTrack, recordTrackUpdated, setRecordTrack, resetRecordTrack] =
+    useTypedArray(length * sampleRate);
 
   /** is currently saving output */
   const [saving, setSaving] = useState(false);
@@ -67,8 +66,9 @@ export const useLessonAll = () => {
 
   /** "commit" recorded audio to new track */
   const commitRecording = useCallback(() => {
+    const clone = new Float32Array(recordTrack);
     /** add new track */
-    setTracks((tracks) => [...tracks, new Float32Array(recordTrack)]);
+    setTracks((tracks) => [...tracks, clone]);
     /** reset recording buffer */
     resetRecordTrack();
   }, [recordTrack, resetRecordTrack]);
@@ -78,9 +78,9 @@ export const useLessonAll = () => {
     (recording: boolean) => {
       _setRecording(recording);
       setMark(time);
-      if (!recording) commitRecording();
+      if (!recording && playing) commitRecording();
     },
-    [setMark, time, commitRecording],
+    [setMark, time, playing, commitRecording],
   );
 
   /** playing set wrapper */
@@ -88,9 +88,9 @@ export const useLessonAll = () => {
     (playing: boolean) => {
       _setPlaying(playing);
       setMark(time);
+      if (recording && !playing) commitRecording();
       if (playing) playerRef.current?.play().catch(console.error);
       else playerRef.current?.pause().catch(console.error);
-      if (recording && !playing) commitRecording();
     },
     [setMark, time, recording, commitRecording],
   );
@@ -146,6 +146,7 @@ export const useLessonAll = () => {
     setTracks,
     recordTrack,
     setRecordTrack,
+    recordTrackUpdated,
     autoScroll,
     setAutoScroll,
     showOriginal,

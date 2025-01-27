@@ -14,6 +14,7 @@ const Actions = () => {
   const saving = useLesson("saving");
   const setSaving = useLesson("setSaving");
   const tracks = useLesson("tracks");
+  const sampleRate = useLesson("sampleRate");
 
   return (
     <Button

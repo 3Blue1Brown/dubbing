@@ -19,33 +19,34 @@ export const useShortcutClick = <Ref extends HTMLElement = HTMLElement>(
 
 /** reactive typed array */
 export const useTypedArray = (size = 0) => {
-  /** mutable non-reactive array */
   const array = useRef(new Float32Array(size));
-  /** force reactivity */
-  const [, setUpdate] = useState(0);
+  const [updated, setUpdated] = useState(0);
+
+  /** increment updated key */
+  const update = useCallback(() => setUpdated((update) => update + 1), []);
 
   /** resize array */
   useEffect(() => {
     const newArray = new Float32Array(size);
     newArray.set(array.current.slice(0, size));
     array.current = newArray;
-  }, [size]);
+    update();
+  }, [size, update]);
 
   /** wrapped setter */
-  const set = useCallback((newArray: Float32Array, offset = 0) => {
-    /** update actual array */
-    array.current.set(newArray, offset);
-    /** trigger reactivity */
-    setUpdate((update) => update + 1);
-  }, []);
+  const set = useCallback(
+    (newArray: Float32Array, offset = 0) => {
+      array.current.set(newArray, offset);
+      update();
+    },
+    [update],
+  );
 
   /** reset array back to 0s */
   const reset = useCallback(() => {
-    /** update actual array */
     array.current.fill(0);
-    /** trigger reactivity */
-    setUpdate((update) => update + 1);
-  }, []);
+    update();
+  }, [update]);
 
-  return [array.current, set, reset] as const;
+  return [array.current, updated, set, reset] as const;
 };

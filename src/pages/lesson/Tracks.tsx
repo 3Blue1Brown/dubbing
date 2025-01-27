@@ -13,8 +13,8 @@ const Tracks = () => {
   const sampleRate = useLesson("sampleRate");
   const autoScroll = useLesson("autoScroll");
   const setTime = useLesson("setTime");
-  const recording = useLesson("recording");
   const recordTrack = useLesson("recordTrack");
+  const recordTrackUpdated = useLesson("recordTrackUpdated");
 
   /** sync transform across waveforms */
   const { transform, onWheel, center } = useTransform({
@@ -36,9 +36,15 @@ const Tracks = () => {
     justSeeked.current = false;
   }, [center, time, autoScroll]);
 
+  /** on waveform seek */
+  const onSeek = (time: number) => {
+    justSeeked.current = true;
+    setTime(time);
+  };
+
   return (
     <div className={classes.tracks}>
-      {tracks.concat(recording ? recordTrack : []).map((track, index) => (
+      {tracks.map((track, index) => (
         <div
           key={index}
           className={classes.track}
@@ -50,14 +56,22 @@ const Tracks = () => {
             onWheel={onWheel}
             sampleRate={sampleRate}
             time={time}
-            showTicks={index === 0}
-            onSeek={(time) => {
-              justSeeked.current = true;
-              setTime(time);
-            }}
+            onSeek={onSeek}
           />
         </div>
       ))}
+
+      <div className={classes.track} style={{ opacity: 0.5 }}>
+        <WaveformComponent
+          waveform={recordTrack}
+          waveformUpdated={recordTrackUpdated}
+          transform={transform}
+          onWheel={onWheel}
+          sampleRate={sampleRate}
+          time={time}
+          onSeek={onSeek}
+        />
+      </div>
     </div>
   );
 };

@@ -23,8 +23,6 @@
     "noUncheckedSideEffectImports": true,
     "noUncheckedIndexedAccess": true,
 
-    "types": ["@types/audioworklet"],
-
     "paths": {
       "@/*": ["./src/*"]
     }

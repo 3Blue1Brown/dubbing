@@ -20,18 +20,20 @@ import classes from "./Waveform.module.css";
 type Props = {
   /** waveform data */
   waveform: Float32Array;
+  /** optional "signal" that waveform changed (passing fully new typedarray slow) */
+  waveformUpdated?: number;
   /** view transform */
   transform: Transform;
   /** on mouse/trackpad wheel */
-  onWheel: (event: WheelEvent) => void;
+  onWheel?: (event: WheelEvent) => void;
   /** current time, in seconds */
   time: number;
   /** sample rate, in hz */
   sampleRate: number;
   /** whether to show time ticks */
-  showTicks: boolean;
+  showTicks?: boolean;
   /** current time change */
-  onSeek: (time: number) => void;
+  onSeek?: (time: number) => void;
 };
 
 /** min dist between ticks, in px */
@@ -66,11 +68,12 @@ const oversample = window.devicePixelRatio * 2;
 /** audio waveform with zoom, pan, etc */
 const Waveform = ({
   waveform,
+  waveformUpdated = 0,
   transform,
   onWheel,
   time,
   sampleRate,
-  showTicks,
+  showTicks = true,
   onSeek,
 }: Props) => {
   /** waveform before current time, "active" */
@@ -85,10 +88,6 @@ const Waveform = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
 
-  /** get draw context */
-  if (!ctxRef.current && canvasRef.current)
-    ctxRef.current = canvasRef.current.getContext("2d");
-
   /** element size */
   const clientBbox = useElementBounding(canvasRef);
   const { width, height } = clientBbox;
@@ -97,12 +96,14 @@ const Waveform = ({
   /** when size changes */
   useEffect(() => {
     if (!canvasRef.current) return;
+    if (!width || !height) return;
     /** over-size canvas buffer */
     canvasRef.current.width = width * oversample;
     canvasRef.current.height = height * oversample;
-    if (!ctxRef.current) return;
+    /** get draw context */
+    ctxRef.current = canvasRef.current.getContext("2d");
     /** scale so that draw commands are is if canvas is regular size */
-    ctxRef.current.scale(oversample, oversample);
+    ctxRef.current?.scale(oversample, oversample);
   }, [width, height]);
 
   /** sample # of current time */
@@ -125,26 +126,28 @@ const Waveform = ({
   const endTime = round(endSample / sampleRate, tickInterval);
 
   /** waveform points to draw */
-  const points = useMemo(
-    () =>
-      peaks(
-        waveform,
-        startSample,
-        endSample,
-        /** one point for each pixel of width */
-        width,
-        /** larger # of samples -> skip more */
-        (endSample - startSample) / 1000,
-      ),
-    [waveform, startSample, endSample, width],
-  );
+  const points = useMemo(() => {
+    /** trick eslint */
+    void waveformUpdated;
+    return peaks(
+      waveform,
+      startSample,
+      endSample,
+      /** one point for each pixel of width */
+      width,
+      /** larger # of samples -> skip more */
+      (endSample - startSample) / 1000,
+    );
+  }, [waveform, waveformUpdated, startSample, endSample, width]);
 
   /** mouse coords */
   const mouseClient = useMouse(canvasRef);
   const hovered = useHover(canvasRef);
 
-  const ctx = ctxRef.current;
-  if (ctx) {
+  useEffect(() => {
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+
     /** clear previous canvas contents */
     ctx.clearRect(0, 0, width, height);
 
@@ -158,16 +161,21 @@ const Waveform = ({
         /** get point */
         const { min, max, start } = points[x]!;
 
-        if (!min && !max) continue;
-
-        /** draw line */
         ctx.strokeStyle = start > currentSample ? futureColor : pastColor;
-        const top = sampleToPercent(transform, { x: 0, y: min }).y;
-        const bottom = sampleToPercent(transform, { x: 0, y: max }).y;
-        ctx.beginPath();
-        ctx.moveTo(x, halfHeight + top * halfHeight);
-        ctx.lineTo(x, halfHeight + bottom * halfHeight);
-        ctx.stroke();
+        /** draw line */
+        if (!min && !max) {
+          ctx.beginPath();
+          ctx.moveTo(x, halfHeight - ctx.lineWidth / 2);
+          ctx.lineTo(x, halfHeight + ctx.lineWidth / 2);
+          ctx.stroke();
+        } else {
+          const top = sampleToPercent(transform, { x: 0, y: min }).y;
+          const bottom = sampleToPercent(transform, { x: 0, y: max }).y;
+          ctx.beginPath();
+          ctx.moveTo(x, halfHeight + top * halfHeight);
+          ctx.lineTo(x, halfHeight + bottom * halfHeight);
+          ctx.stroke();
+        }
       }
     }
 
@@ -235,10 +243,10 @@ const Waveform = ({
       ctx.lineTo(x, height);
       ctx.stroke();
     }
-  }
+  });
 
   /** on mouse wheel or track pad scroll */
-  useEventListener("wheel", onWheel, canvasRef);
+  useEventListener("wheel", onWheel ?? (() => null), canvasRef);
 
   return (
     <canvas
@@ -247,7 +255,7 @@ const Waveform = ({
       onClick={({ clientX }) => {
         const percent = clientToPercent(clientBbox, { x: clientX, y: 0 });
         const sample = percentToSample(transform, percent);
-        onSeek(sample.x / sampleRate);
+        onSeek?.(sample.x / sampleRate);
       }}
     />
   );

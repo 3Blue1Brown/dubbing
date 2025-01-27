@@ -21,10 +21,6 @@ const Monitor = ({ time, freq, ...props }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
 
-  /** get draw context */
-  if (!ctxRef.current && canvasRef.current)
-    ctxRef.current = canvasRef.current.getContext("2d");
-
   /** element size */
   const { width, height } = useElementBounding(canvasRef);
   const halfHeight = height / 2;
@@ -35,6 +31,8 @@ const Monitor = ({ time, freq, ...props }: Props) => {
     /** over-size canvas buffer */
     canvasRef.current.width = width * oversample;
     canvasRef.current.height = height * oversample;
+    /** get draw context */
+    ctxRef.current = canvasRef.current.getContext("2d");
     /** scale so that draw commands are is if canvas is regular size */
     ctxRef.current?.scale(oversample, oversample);
   }, [width, height]);
@@ -75,8 +73,10 @@ const Monitor = ({ time, freq, ...props }: Props) => {
   /** if we haven't had signal in a while, consider no signal */
   const noSignal = window.performance.now() - lastSignal.current > 1000;
 
-  const ctx = ctxRef.current;
-  if (ctx) {
+  useEffect(() => {
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+
     /** clear previous canvas contents */
     ctx.clearRect(0, 0, width, height);
 
@@ -100,7 +100,7 @@ const Monitor = ({ time, freq, ...props }: Props) => {
       ctx.font = "10px Open Sans";
       ctx.fillText("No signal", width / 2, height / 2);
     }
-  }
+  });
 
   return (
     <canvas
