@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { max } from "lodash";
 import { useElementBounding } from "@reactuses/core";
 import { peaks } from "@/audio/peaks.worker";
-import { power, sigmoid } from "@/util/math";
+import { power } from "@/util/math";
 import classes from "./Monitor.module.css";
 
 type Props = {
@@ -51,8 +51,7 @@ const Monitor = ({ time, freq, ...props }: Props) => {
     divisions: width,
   });
   if (byFreq) {
-    monitor.forEach((value, index) => {
-      value.max = value.max * sigmoid(index / width, 0.1);
+    monitor.forEach((value) => {
       value.min = -value.max;
     });
   } else {

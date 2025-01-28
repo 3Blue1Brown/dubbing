@@ -10,7 +10,7 @@ import { useInterval } from "@reactuses/core";
 import { floatToAudio } from "@/audio";
 import { useGraph } from "@/audio/graph";
 import { updateInterval, useLesson } from "@/pages/lesson/state";
-import { power } from "@/util/math";
+import { logSpace, power } from "@/util/math";
 
 /** higher -> slower oscilloscope */
 const fftSize = 2 ** 12;
@@ -166,12 +166,41 @@ const Graph = () => {
   /** periodically get analyzer data */
   useInterval(() => {
     if (!graph) return;
+
     const analyzer = graph.getAudioNodeById("analyzer");
     if (!(analyzer instanceof AnalyserNode)) return;
+    /** fill analyzer buffers */
     analyzer.getByteTimeDomainData(timeAnalBuffer.current);
     analyzer.getByteFrequencyData(freqAnalBuffer.current);
-    setTimeAnal(Array.from(timeAnalBuffer.current).map((v) => 1 - v / 128));
-    setFreqAnal(Array.from(freqAnalBuffer.current).map((v) => v / 128));
+
+    setTimeAnal(
+      Array.from(timeAnalBuffer.current).map(
+        (value) =>
+          /** int to float */
+          1 - value / 128,
+      ),
+    );
+
+    const nyquist = analyzer.context.sampleRate / 2;
+    setFreqAnal(
+      /** linearly-spaced values to logarithmically-spaced values */
+      logSpace(
+        Array.from(freqAnalBuffer.current).map(
+          (value, index, array) =>
+            /**
+             * reduce power of lower frequencies
+             * https://en.wikipedia.org/wiki/Equal-loudness_contour
+             */
+            (index / array.length) ** 0.5 *
+            /** int to float */
+            (value / 128),
+        ),
+        0,
+        nyquist,
+        20,
+        nyquist,
+      ),
+    );
   }, updateInterval);
 
   return <></>;
