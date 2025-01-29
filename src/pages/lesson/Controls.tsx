@@ -12,6 +12,7 @@ import { PiMouseScrollBold } from "react-icons/pi";
 import Analyzer from "@/components/Analyzer";
 import CheckButton from "@/components/CheckButton";
 import Select from "@/components/Select";
+import Slider from "@/components/Slider";
 import { useLesson } from "@/pages/lesson/state";
 import { useShortcutClick } from "@/util/hooks";
 import { formatTime } from "@/util/string";
@@ -77,7 +78,7 @@ const Controls = () => {
                   : "Enable microphone playthrough<br/>(USE HEADPHONES)"
               }
               checked={playthrough}
-              onClick={() => setPlaythrough(!playthrough)}
+              onChange={setPlaythrough}
             >
               <FaHeadphonesSimple />
             </CheckButton>
@@ -98,7 +99,7 @@ const Controls = () => {
               style={{ "--accent": "var(--secondary)" } as CSSProperties}
               label={recording ? "Disarm recording (R)" : "Arm recording (R)"}
               checked={recording}
-              onClick={() => setRecording(!recording)}
+              onChange={() => setRecording(!recording)}
             >
               <FaCircle />
             </CheckButton>
@@ -111,7 +112,7 @@ const Controls = () => {
           ref={playButtonRef}
           label={playing ? "Pause (Space)" : "Play (Space)"}
           checked={playing}
-          onClick={() => setPlaying(!playing)}
+          onChange={() => setPlaying(!playing)}
         >
           {playing ? <FaPause /> : <FaPlay />}
         </CheckButton>
@@ -119,28 +120,26 @@ const Controls = () => {
 
       <div className={classes.row}>
         <FaVolumeHigh className={classes.small} />
-        <input
-          type="range"
+        <Slider
           value={volume}
+          onChange={setVolume}
           min={0}
           max={1}
           step={0.1}
           style={{ width: 50 }}
-          onChange={(event) => setVolume(Number(event.target.value))}
           data-tooltip="Playback and mic playthrough volume"
         />
       </div>
 
       <div className={classes.row} style={{ flexGrow: 1 }}>
         <span>{formatTime(time)}</span>
-        <input
-          style={{ flexGrow: 1 }}
-          type="range"
+        <Slider
           value={time}
+          onChange={setTime}
           min={0}
           max={length}
           step={0.001}
-          onChange={(event) => setTime(Number(event.target.value))}
+          style={{ flexGrow: 1 }}
           data-tooltip="Timeline"
         />
         <span className={classes.small}>{formatTime(length)}</span>
@@ -150,17 +149,17 @@ const Controls = () => {
         <CheckButton
           role="checkbox"
           checked={showOriginal}
+          onChange={setShowOriginal}
           label="Show original text"
-          onClick={() => setShowOriginal(!showOriginal)}
         >
           <MdTranslate />
         </CheckButton>
 
         <CheckButton
           role="checkbox"
-          checked={autoScroll}
           label="Auto-scroll text and waveform"
-          onClick={() => setAutoScroll(!autoScroll)}
+          checked={autoScroll}
+          onChange={setAutoScroll}
         >
           <PiMouseScrollBold />
         </CheckButton>

@@ -61,7 +61,7 @@ export const usePeaks = ({
       /** calc detailed peaks */
       const result = await peaksPool
         .exec<Peaks>("peaks", [{ array, start, end, divisions }])
-        .timeout(100);
+        .timeout(1000);
 
       if (!latest) return;
 

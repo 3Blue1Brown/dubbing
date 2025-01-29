@@ -36,7 +36,11 @@ const encoderPool = pool(EncodeWorker, {
 
 /** encode mp3 to blob */
 export const getMp3 = (data: Float32Array, params: Mp3Params) =>
-  encoderPool.exec<EncodeMp3>("encodeMp3", [data, params]);
+  encoderPool.exec<EncodeMp3>("encodeMp3", [
+    data,
+    params,
+    /** https://github.com/josdejong/workerpool/issues/485 */
+  ]) as unknown as Promise<Blob>;
 
 /** download zip of multiple files */
 export const downloadZip = async (

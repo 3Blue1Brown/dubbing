@@ -50,10 +50,38 @@ export const useLessonAll = () => {
   /** should auto-scroll */
   const [autoScroll, setAutoScroll] = useState(true);
 
-  /** recorded raw audio data */
-  const [tracks, setTracks] = useState<Float32Array[]>([]);
+  /** audio tracks */
+  const [tracks, setTracks] = useState<
+    { name: string; muted: boolean; audio: Float32Array }[]
+  >([]);
+
+  /** track specifically to hold recording */
   const [recordTrack, recordTrackUpdated, setRecordTrack, resetRecordTrack] =
     useTypedArray(length * sampleRate);
+
+  /** update props of a track or all tracks */
+  const updateTrack = useCallback(
+    (index: number, props: Partial<(typeof tracks)[number]>) => {
+      setTracks((tracks) => {
+        /** set all tracks */
+        if (index < 0) return tracks.map((track) => ({ ...track, ...props }));
+        else {
+          /** set one track */
+          if (tracks[index]) tracks[index] = { ...tracks[index], ...props };
+          return [...tracks];
+        }
+      });
+    },
+    [],
+  );
+
+  /** delete track */
+  const deleteTrack = useCallback((index: number) => {
+    setTracks((tracks) => {
+      tracks.splice(index, 1);
+      return [...tracks];
+    });
+  }, []);
 
   /** is currently saving output */
   const [saving, setSaving] = useState(false);
@@ -70,7 +98,15 @@ export const useLessonAll = () => {
   const commitRecording = useCallback(() => {
     const clone = new Float32Array(recordTrack);
     /** add new track */
-    setTracks((tracks) => [...tracks, clone]);
+    setTracks((tracks) =>
+      tracks.concat([
+        {
+          name: `Tracks ${tracks.length + 1}`,
+          muted: false,
+          audio: clone,
+        },
+      ]),
+    );
     /** reset recording buffer */
     resetRecordTrack();
   }, [recordTrack, resetRecordTrack]);
@@ -146,6 +182,8 @@ export const useLessonAll = () => {
     mark,
     tracks,
     setTracks,
+    updateTrack,
+    deleteTrack,
     recordTrack,
     setRecordTrack,
     recordTrackUpdated,

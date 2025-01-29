@@ -1,0 +1,11 @@
+.slider {
+  width: calc(100% - 2   * 5px);
+  margin: 5px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  transition: accent-color var(--fast);
+}
+
+.slider:hover {
+  accent-color: var(--off-black);
+}

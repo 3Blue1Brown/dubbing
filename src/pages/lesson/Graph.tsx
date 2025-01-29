@@ -7,6 +7,7 @@ import {
   NO_OUTPUT,
   OUTPUT,
 } from "virtual-audio-graph";
+import type StandardVirtualAudioNode from "virtual-audio-graph/dist/VirtualAudioNodes/StandardVirtualAudioNode";
 import { useInterval } from "@reactuses/core";
 import { floatToAudio } from "@/audio";
 import { useGraph } from "@/audio/graph";
@@ -87,27 +88,27 @@ const Graph = () => {
   );
 
   /** existing audio tracks */
-  const trackNodes = useMemo(
-    () =>
-      playing
-        ? Object.fromEntries(
-            tracks.map((track, index) => [
-              /**
-               * tie node id to track # and time that playback started, such
-               * that subsequent calls to graph.update (e.g. volume change)
-               * while playing doesn't mess with already playing audio
-               */
-              `track-${index}-${mark.timestamp}`,
-              /** node contents */
-              bufferSource("volume", {
-                buffer: floatToAudio(track, sampleRate),
-                offsetTime: mark.time,
-              }),
-            ]),
-          )
-        : {},
-    [playing, tracks, mark, sampleRate],
-  );
+  const trackNodes = useMemo(() => {
+    const nodes: Record<string, StandardVirtualAudioNode> = {};
+    if (playing)
+      tracks.forEach(({ muted, audio }, index) => {
+        /**
+         * tie node id to track # and time that playback started, such that
+         * subsequent calls to graph.update (e.g. volume change) while playing
+         * doesn't mess with already playing audio
+         */
+        const bufferId = `track-${index}-${mark.timestamp}`;
+        const muteId = `track-${index}-mute`;
+
+        nodes[bufferId] = bufferSource(muteId, {
+          buffer: floatToAudio(audio, sampleRate),
+          offsetTime: mark.time,
+        });
+        nodes[muteId] = gain("volume", { gain: muted ? 0 : 1 });
+      });
+
+    return nodes;
+  }, [playing, tracks, mark, sampleRate]);
 
   /** main volume control */
   const volumeNode = useMemo(

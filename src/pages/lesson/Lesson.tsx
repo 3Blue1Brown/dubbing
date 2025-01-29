@@ -66,8 +66,14 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
 
       /** load test waveforms */
       const testTracks = (
-        await Promise.all([test].map((file) => request(file, "arrayBuffer")))
-      ).map((buffer) => intToFloat(new Int16Array(buffer)));
+        await Promise.all(
+          [test, test, test].map((file) => request(file, "arrayBuffer")),
+        )
+      ).map((buffer, index) => ({
+        name: `Test track ${index + 1}`,
+        muted: true,
+        audio: intToFloat(new Int16Array(buffer)),
+      }));
       lesson.setTracks((tracks) => [...tracks, ...testTracks]);
     })().catch(console.error);
 

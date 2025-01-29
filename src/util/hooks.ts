@@ -8,6 +8,9 @@ export const useShortcutClick = <Ref extends HTMLElement = HTMLElement>(
   const ref = useRef<Ref>(null);
 
   useEventListener("keydown", (event: KeyboardEvent) => {
+    /** don't interfere with e.g. input controls */
+    if (document.activeElement !== document.body) return;
+
     if (event.key === key) {
       ref.current?.click();
       event.preventDefault();

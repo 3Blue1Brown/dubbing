@@ -3,11 +3,19 @@ import Button from "@/components/Button";
 
 type Props = {
   ref?: Ref<HTMLButtonElement>;
-  checked: boolean;
   label: string;
-} & ComponentProps<"button">;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+} & Omit<ComponentProps<"button">, "onChange">;
 
-const CheckButton = ({ ref, checked, label, children, ...props }: Props) => {
+const CheckButton = ({
+  ref,
+  label,
+  checked,
+  onChange,
+  children,
+  ...props
+}: Props) => {
   return (
     <Button
       ref={ref}
@@ -15,6 +23,7 @@ const CheckButton = ({ ref, checked, label, children, ...props }: Props) => {
       square
       accent={checked}
       role="checkbox"
+      onClick={() => onChange(!checked)}
       data-tooltip={label}
       aria-checked={checked ? "true" : "false"}
     >

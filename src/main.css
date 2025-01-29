@@ -59,21 +59,7 @@ label {
 
 input {
   min-width: 0;
-}
-
-input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-}
-
-input[type="range"] {
-  accent-color: var(--primary);
-  cursor: pointer;
-  transition: accent-color var(--fast);
-}
-
-input[type="range"]:hover {
-  accent-color: var(--off-black);
+  font: inherit;
 }
 
 [disabled] {

@@ -1,22 +1,33 @@
 .tracks {
   display: grid;
-  grid-template-columns: 100px 1fr;
+  grid-template-columns: 120px 1fr;
   width: 100%;
   border: var(--border);
   border-radius: var(--rounded);
 }
 
-.tracks > :nth-child(-n + 2) {
+.tracks > :nth-last-child(n + 3) {
   border-bottom: var(--border);
 }
 
 .label {
-  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   border-right: var(--border);
-  background: var(--light-gray);
 }
 
-.track {
+.name {
+  padding: 5px 10px;
+  border: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.waveform {
   height: 100px;
   min-height: 50px;
   max-height: 500px;

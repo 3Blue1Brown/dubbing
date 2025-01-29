@@ -25,17 +25,17 @@ const Actions = () => {
         const filename = [year, title, language, "dub"];
         try {
           /** get mp3 file blobs */
-          const blobs = await Promise.all(
-            tracks.map((track) =>
-              getMp3(track, { channels: 1, sampleRate, bitrate: 192 }),
-            ),
+          const files = await Promise.all(
+            tracks.map(async ({ name, audio }, index) => ({
+              blob: await getMp3(audio, {
+                channels: 1,
+                sampleRate,
+                bitrate: 192,
+              }),
+              filename: name ?? `Track ${index + 1}`,
+              ext: "mp3",
+            })),
           );
-          /** make full files with names */
-          const files = blobs.map((blob, index) => ({
-            blob,
-            filename: `Track ${index + 1}`,
-            ext: "mp3",
-          }));
           /** zip together and download */
           await downloadZip(files, filename);
         } catch (error) {
