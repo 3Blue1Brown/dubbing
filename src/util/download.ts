@@ -1,8 +1,7 @@
-import { wrap } from "comlink";
+import { pool } from "workerpool";
 import { BlobReader, BlobWriter, ZipWriter } from "@zip.js/zip.js";
-import EncodeWorker from "@/audio/encode.worker?worker";
-import type { MP3Params } from "@/audio/encode.worker.ts";
-import * as encodeWorkerAPI from "@/audio/encode.worker.ts";
+import EncodeWorker from "@/audio/encode.worker?worker&url";
+import type { EncodeMp3, Mp3Params } from "@/audio/encode.worker.ts";
 
 export type Filename = string | string[];
 
@@ -29,12 +28,15 @@ export const downloadBlob = (blob: Blob, filename: Filename, ext: string) => {
   window.URL.revokeObjectURL(url);
 };
 
-/** create worker */
-const encodeWorker = wrap<typeof encodeWorkerAPI>(new EncodeWorker());
+/** create encoder worker pool */
+const encoderPool = pool(EncodeWorker, {
+  maxWorkers: 16,
+  workerOpts: { type: import.meta.env.PROD ? undefined : "module" },
+});
 
 /** encode mp3 to blob */
-export const getMp3 = (data: Float32Array, params: MP3Params) =>
-  encodeWorker.encodeMp3(data, params);
+export const getMp3 = (data: Float32Array, params: Mp3Params) =>
+  encoderPool.exec<EncodeMp3>("encodeMp3", [data, params]);
 
 /** download zip of multiple files */
 export const downloadZip = async (

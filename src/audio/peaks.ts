@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { wrap, type Remote } from "comlink";
 import { clamp } from "lodash";
+import { pool } from "workerpool";
+import PeaksWorker from "@/audio/peaks.worker?worker&url";
 import type { Peaks } from "@/audio/peaks.worker.ts";
-import * as peaksWorkerAPI from "@/audio/peaks.worker.ts";
 import { peaks as peaksSync } from "./peaks.worker";
-import PeaksWorker from "./peaks.worker?worker";
 
 /** time to wait before returning detailed peaks, in ms */
 const debounce = 1000;
+
+/** create peaks worker pool */
+const peaksPool = pool(PeaksWorker, {
+  maxWorkers: 16,
+  workerOpts: { type: import.meta.env.PROD ? undefined : "module" },
+});
 
 /** use peaks with dynamic level of detail */
 export const usePeaks = ({
@@ -20,11 +25,6 @@ export const usePeaks = ({
   divisions,
   step = 1,
 }: Parameters<Peaks>["0"] & { updated?: unknown }) => {
-  const worker = useRef<Remote<typeof peaksWorkerAPI>>(null);
-
-  /** create worker */
-  if (!worker.current) worker.current = wrap(new PeaksWorker());
-
   /** peaks state */
   const [peaks, setPeaks] = useState<ReturnType<Peaks>>([]);
 
@@ -59,12 +59,9 @@ export const usePeaks = ({
       if (!latest) return;
 
       /** calc detailed peaks */
-      const result = await worker.current?.peaks({
-        array,
-        start,
-        end,
-        divisions,
-      });
+      const result = await peaksPool
+        .exec<Peaks>("peaks", [{ array, start, end, divisions }])
+        .timeout(100);
 
       if (!latest) return;
 

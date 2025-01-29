@@ -1,13 +1,11 @@
 import { fileURLToPath, URL } from "url";
 import { defineConfig } from "vite";
-import { comlink } from "vite-plugin-comlink";
 import mkcert from "vite-plugin-mkcert";
 import react from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    comlink(),
     react(),
     /**
      * fake https for local development so getUserMedia does not fail:
@@ -17,8 +15,5 @@ export default defineConfig({
   ],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
-  },
-  worker: {
-    plugins: () => [comlink()],
   },
 });

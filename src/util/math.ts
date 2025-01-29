@@ -50,9 +50,3 @@ export const logSpace = (
     return array[lower]! + percent * (array[upper]! - array[lower]!);
   });
 };
-
-const array = Array(10)
-  .fill(0)
-  .map((_, index) => index);
-
-console.log(logSpace(array, 22050 / 2, 22050, 20, 22050));

@@ -1,4 +1,4 @@
-import { expose } from "comlink";
+import { worker } from "workerpool";
 
 export type Props = {
   /** raw samples */
@@ -52,4 +52,4 @@ export const peaks = ({ array, start, end, divisions, step = 1 }: Props) => {
 
 export type Peaks = typeof peaks;
 
-expose({ peaks });
+worker({ peaks });
