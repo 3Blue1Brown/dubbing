@@ -9,8 +9,8 @@ import {
 } from "react-icons/fa6";
 import { MdTranslate } from "react-icons/md";
 import { PiMouseScrollBold } from "react-icons/pi";
+import Analyzer from "@/components/Analyzer";
 import CheckButton from "@/components/CheckButton";
-import Monitor from "@/components/Monitor";
 import Select from "@/components/Select";
 import { useLesson } from "@/pages/lesson/state";
 import { useShortcutClick } from "@/util/hooks";
@@ -82,7 +82,7 @@ const Controls = () => {
               <FaHeadphonesSimple />
             </CheckButton>
 
-            <Monitor
+            <Analyzer
               data={micAnal}
               mirror={micAnalByFreq}
               onClick={() => setMicAnalByFreq(!micAnalByFreq)}

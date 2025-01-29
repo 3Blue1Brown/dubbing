@@ -74,7 +74,7 @@ const Graph = () => {
     [micStream, recorderNode],
   );
 
-  /** mic analyzer/monitor */
+  /** mic analyzer/Analyzer */
   const analyzerNode = useMemo(
     () => ({ analyzer: analyser(NO_OUTPUT, { fftSize }) }),
     [],

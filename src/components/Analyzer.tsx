@@ -3,7 +3,7 @@ import { max } from "lodash";
 import { useElementBounding } from "@reactuses/core";
 import { peaks } from "@/audio/peaks.worker";
 import { power } from "@/util/math";
-import classes from "./Monitor.module.css";
+import classes from "./Analyzer.module.css";
 
 type Props = {
   data: number[];
@@ -17,7 +17,7 @@ const lineWidth = 1;
 const oversample = window.devicePixelRatio * 2;
 
 /** visualizer for audio analyzer data */
-const Monitor = ({ data, mirror = false, ...props }: Props) => {
+const Analyzer = ({ data, mirror = false, ...props }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
 
@@ -41,7 +41,7 @@ const Monitor = ({ data, mirror = false, ...props }: Props) => {
   const maxAbs = max(data.map(Math.abs)) ?? 0;
 
   /** draw data */
-  const monitor = peaks({
+  const Analyzer = peaks({
     array: data,
     start: 0,
     end: data.length,
@@ -49,13 +49,13 @@ const Monitor = ({ data, mirror = false, ...props }: Props) => {
   });
 
   /** boost visibility of lower values */
-  monitor.forEach((value) => {
+  Analyzer.forEach((value) => {
     value.max = power(value.max, 0.75);
     value.min = mirror ? -value.max : power(value.min, 0.75);
   });
 
   /** whether there is any signal */
-  const hasSignal = monitor.some(({ min, max }) => min !== 0 || max !== 0);
+  const hasSignal = Analyzer.some(({ min, max }) => min !== 0 || max !== 0);
 
   /** keep track of last time we had signal */
   const lastSignal = useRef(0);
@@ -77,7 +77,7 @@ const Monitor = ({ data, mirror = false, ...props }: Props) => {
     /** draw waveform */
     ctx.strokeStyle = maxAbs > 0.9 ? "#ff1493" : "#00bfff";
     ctx.beginPath();
-    monitor.forEach(({ min, max }, x) => {
+    Analyzer.forEach(({ min, max }, x) => {
       ctx.moveTo(x, halfHeight + min * halfHeight - ctx.lineWidth / 2);
       ctx.lineTo(x, halfHeight + max * halfHeight + ctx.lineWidth / 2);
     });
@@ -93,7 +93,7 @@ const Monitor = ({ data, mirror = false, ...props }: Props) => {
     }
   });
 
-  return <canvas {...props} ref={canvasRef} className={classes.monitor} />;
+  return <canvas {...props} ref={canvasRef} className={classes.Analyzer} />;
 };
 
-export default Monitor;
+export default Analyzer;
