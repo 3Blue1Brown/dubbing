@@ -30,8 +30,9 @@ const Controls = () => {
   const setDevice = useLesson("setDevice");
   const playthrough = useLesson("playthrough");
   const setPlaythrough = useLesson("setPlaythrough");
-  const micTimeAnal = useLesson("micTimeAnal");
-  const micFreqAnal = useLesson("micFreqAnal");
+  const micAnal = useLesson("micAnal");
+  const micAnalByFreq = useLesson("micAnalByFreq");
+  const setMicAnalByFreq = useLesson("setMicAnalByFreq");
   const recording = useLesson("recording");
   const setRecording = useLesson("setRecording");
   const playing = useLesson("playing");
@@ -81,7 +82,16 @@ const Controls = () => {
               <FaHeadphonesSimple />
             </CheckButton>
 
-            <Monitor time={micTimeAnal} freq={micFreqAnal} />
+            <Monitor
+              data={micAnal}
+              mirror={micAnalByFreq}
+              onClick={() => setMicAnalByFreq(!micAnalByFreq)}
+              data-tooltip={
+                micAnalByFreq
+                  ? "Switch to oscilloscope (time) view"
+                  : "Switch to spectrum (frequency) view"
+              }
+            />
 
             <CheckButton
               ref={recordButtonRef}

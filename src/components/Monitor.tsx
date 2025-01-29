@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ComponentProps } from "react";
+import { useEffect, useRef, type ComponentProps } from "react";
 import { max } from "lodash";
 import { useElementBounding } from "@reactuses/core";
 import { peaks } from "@/audio/peaks.worker";
@@ -6,8 +6,8 @@ import { power } from "@/util/math";
 import classes from "./Monitor.module.css";
 
 type Props = {
-  time: number[];
-  freq: number[];
+  data: number[];
+  mirror: boolean;
 } & ComponentProps<"canvas">;
 
 /** waveform line stroke width, in px */
@@ -16,8 +16,8 @@ const lineWidth = 1;
 /** extra draw resolution */
 const oversample = window.devicePixelRatio * 2;
 
-/** graph time or frequency data */
-const Monitor = ({ time, freq, ...props }: Props) => {
+/** visualizer for audio analyzer data */
+const Monitor = ({ data, mirror = false, ...props }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
 
@@ -37,29 +37,22 @@ const Monitor = ({ time, freq, ...props }: Props) => {
     ctxRef.current?.scale(oversample, oversample);
   }, [width, height]);
 
-  /** whether to display frequency or time data */
-  const [byFreq, setByFreq] = useState(true);
-
   /** max absolute value */
-  const maxAbs = max(time.map(Math.abs)) ?? 0;
+  const maxAbs = max(data.map(Math.abs)) ?? 0;
 
   /** draw data */
   const monitor = peaks({
-    array: byFreq ? freq : time,
+    array: data,
     start: 0,
-    end: byFreq ? freq.length : time.length,
+    end: data.length,
     divisions: width,
   });
-  if (byFreq) {
-    monitor.forEach((value) => {
-      value.min = -value.max;
-    });
-  } else {
-    monitor.forEach((value) => {
-      value.min = power(value.min, 0.75);
-      value.max = power(value.max, 0.75);
-    });
-  }
+
+  /** boost visibility of lower values */
+  monitor.forEach((value) => {
+    value.max = power(value.max, 0.75);
+    value.min = mirror ? -value.max : power(value.min, 0.75);
+  });
 
   /** whether there is any signal */
   const hasSignal = monitor.some(({ min, max }) => min !== 0 || max !== 0);
@@ -100,19 +93,7 @@ const Monitor = ({ time, freq, ...props }: Props) => {
     }
   });
 
-  return (
-    <canvas
-      {...props}
-      ref={canvasRef}
-      className={classes.monitor}
-      onClick={() => setByFreq(!byFreq)}
-      data-tooltip={
-        byFreq
-          ? "Switch to oscilloscope (time) view"
-          : "Switch to spectrum (frequency) view"
-      }
-    />
-  );
+  return <canvas {...props} ref={canvasRef} className={classes.monitor} />;
 };
 
 export default Monitor;

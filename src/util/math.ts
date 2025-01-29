@@ -11,8 +11,7 @@ export const sign = (value: number) => (value < 0 ? -1 : 1);
 export const round = (value: number, multiple: number) =>
   Math.round(value / multiple) * multiple;
 
-/** convert linearly spaced array values to log spaced with interpolation */
-/** https://stackoverflow.com/questions/35799286/get-logarithmic-bytefrequencydata-from-audio/79394526#79394526 */
+/** convert linearly spaced array values to log spaced */
 export const logSpace = (
   array: number[],
   linMin: number,
@@ -20,33 +19,32 @@ export const logSpace = (
   logMin: number,
   logMax: number,
 ) => {
-  /** generate evenly spaced linear steps */
+  /** pre-compute as much as possible */
+  const steps = array.length - 1;
   const linRange = linMax - linMin;
-  const linSteps = Array(array.length)
-    .fill(0)
-    .map((_, index) => linMin + linRange * (index / (array.length - 1)));
-
-  /** generate evenly spaced log steps */
+  const linMultiple = linRange / (array.length - 1);
   logMin = Math.log(logMin);
   logMax = Math.log(logMax);
   const logRange = logMax - logMin;
-  const logSteps = Array(array.length)
-    .fill(0)
-    .map((_, index) =>
-      Math.exp(logMin + logRange * (index / (array.length - 1))),
-    );
 
-  let lower = 0;
-  /** for each log step */
-  return logSteps.map((logStep) => {
-    /** find pair of linear steps that log step falls between */
-    while (linSteps[lower]! < logStep && lower < linSteps.length - 2) lower++;
+  return array.map((_, index) => {
+    /** evenly spaced log step */
+    const log = Math.exp(logMin + logRange * (index / steps));
+
+    /** find pair of linear steps log step falls between */
+    const lower = clamp(
+      Math.floor((log - linMin) / linMultiple),
+      0,
+      array.length - 2,
+    );
     const upper = lower + 1;
-    const lowerLin = linSteps[lower]!;
-    const upperLin = linSteps[upper]!;
+    const lowerLin = linMin + linRange * (lower / steps);
+    const upperLin = linMin + linRange * (upper / steps);
+
     /** how far along between lin pair log step is */
-    const percent = clamp((logStep - lowerLin) / (upperLin - lowerLin), 0, 1);
-    /** interpolate array values */
+    const percent = clamp((log - lowerLin) / (upperLin - lowerLin), 0, 1);
+
+    /** interpolate values */
     return array[lower]! + percent * (array[upper]! - array[lower]!);
   });
 };

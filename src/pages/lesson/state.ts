@@ -27,11 +27,13 @@ export const useLessonAll = () => {
   const { devices, device, setDevice, micStream, refresh } = useMicrophone({
     sampleRate,
   });
-  /** mic analyzer data */
-  const [micTimeAnal, setTimeAnal] = useState<number[]>([]);
-  const [micFreqAnal, setFreqAnal] = useState<number[]>([]);
+
   /** is mic play-through enabled */
   const [playthrough, setPlaythrough] = useState(false);
+  /** mic analyzer data */
+  const [micAnal, setMicAnal] = useState<number[]>([]);
+  /** whether to show frequency or time data for analyzer */
+  const [micAnalByFreq, setMicAnalByFreq] = useState(true);
   /** is mic recording armed */
   const [recording, _setRecording] = useState(false);
   /** is timeline playing */
@@ -126,10 +128,10 @@ export const useLessonAll = () => {
     device,
     setDevice,
     micStream,
-    micTimeAnal,
-    setTimeAnal,
-    micFreqAnal,
-    setFreqAnal,
+    micAnal,
+    setMicAnal,
+    micAnalByFreq,
+    setMicAnalByFreq,
     refresh,
     playthrough,
     setPlaythrough,

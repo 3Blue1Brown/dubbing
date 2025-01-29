@@ -13,9 +13,12 @@ import { useGraph } from "@/audio/graph";
 import { updateInterval, useLesson } from "@/pages/lesson/state";
 import { logSpace, power } from "@/util/math";
 
-/** higher -> slower oscilloscope */
+/** higher -> slower oscilloscope. min/max: 2^5 / 2^15 */
 const fftSize = 2 ** 12;
-/** min/max: 2^5 / 2^15 */
+
+/** https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode */
+const timeSamples = fftSize;
+const freqSamples = fftSize / 2;
 
 /** audio graph */
 const Graph = () => {
@@ -24,17 +27,16 @@ const Graph = () => {
   const setRecordTrack = useLesson("setRecordTrack");
   const volume = useLesson("volume");
   const micStream = useLesson("micStream");
-  const setTimeAnal = useLesson("setTimeAnal");
-  const setFreqAnal = useLesson("setFreqAnal");
+  const micAnalByFreq = useLesson("micAnalByFreq");
+  const setMicAnal = useLesson("setMicAnal");
   const playthrough = useLesson("playthrough");
   const sampleRate = useLesson("sampleRate");
   const mark = useLesson("mark");
   const playing = useLesson("playing");
   const recording = useLesson("recording");
 
-  /** analyzer buffers */
-  const timeAnalBuffer = useRef(new Uint8Array(fftSize));
-  const freqAnalBuffer = useRef(new Uint8Array(fftSize / 2));
+  /** analyzer buffer */
+  const analBuffer = useRef(new Uint8Array(timeSamples));
 
   /** virtual audio graph */
   const { graph, worklets } = useGraph(
@@ -162,38 +164,44 @@ const Graph = () => {
 
     const analyzer = graph.getAudioNodeById("analyzer");
     if (!(analyzer instanceof AnalyserNode)) return;
-    /** fill analyzer buffers */
-    analyzer.getByteTimeDomainData(timeAnalBuffer.current);
-    analyzer.getByteFrequencyData(freqAnalBuffer.current);
 
-    setTimeAnal(
-      Array.from(timeAnalBuffer.current).map(
-        (value) =>
-          /** int to float */
-          1 - value / 128,
-      ),
-    );
+    if (micAnalByFreq) {
+      /** fill analyzer buffer with frequency data */
+      analyzer.getByteFrequencyData(analBuffer.current);
 
-    const nyquist = analyzer.context.sampleRate / 2;
-    setFreqAnal(
+      /** transform freq analyzer data */
+      let freqAnal = Array.from(analBuffer.current.slice(0, freqSamples));
+
+      /** skip some data points for log space performance */
+      freqAnal = freqAnal.filter((_, index) => index % 10 === 0);
+
+      freqAnal = freqAnal.map(
+        (value, index, array) =>
+          /**
+           * reduce power of lower frequencies
+           * https://en.wikipedia.org/wiki/Equal-loudness_contour
+           */
+          (index / array.length) ** 0.5 *
+          /** int to float, */
+          (value / 128),
+      );
+
+      const nyquist = analyzer.context.sampleRate / 2;
       /** linearly-spaced values to logarithmically-spaced values */
-      logSpace(
-        Array.from(freqAnalBuffer.current).map(
-          (value, index, array) =>
-            /**
-             * reduce power of lower frequencies
-             * https://en.wikipedia.org/wiki/Equal-loudness_contour
-             */
-            (index / array.length) ** 0.5 *
-            /** int to float */
-            (value / 128),
-        ),
-        0,
-        nyquist,
-        20,
-        nyquist,
-      ),
-    );
+      freqAnal = logSpace(freqAnal, 0, nyquist, 20, nyquist);
+
+      setMicAnal(freqAnal);
+    } else {
+      /** fill analyzer buffer with time data */
+      analyzer.getByteTimeDomainData(analBuffer.current);
+
+      setMicAnal(
+        /** transform time analyzer data */
+        Array.from(analBuffer.current)
+          /** int to float */
+          .map((value) => 1 - value / 128),
+      );
+    }
   }, updateInterval);
 
   return <></>;
