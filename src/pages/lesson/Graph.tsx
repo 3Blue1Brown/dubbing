@@ -3,8 +3,9 @@ import {
   analyser,
   bufferSource,
   gain,
-  mediaStreamDestination,
   mediaStreamSource,
+  NO_OUTPUT,
+  OUTPUT,
 } from "virtual-audio-graph";
 import { useInterval } from "@reactuses/core";
 import { floatToAudio } from "@/audio";
@@ -46,16 +47,10 @@ const Graph = () => {
     !!micStream,
   );
 
-  /** https://github.com/benji6/virtual-audio-graph/issues/265 */
-  const noOutputNode = useMemo(
-    () => ({ "no-output": mediaStreamDestination() }),
-    [],
-  );
-
   /** capture raw mic audio data */
   const recorderNode = useMemo(() => {
     if (!playing || !recording) return null;
-    const recorder = worklets.recorder?.("no-output");
+    const recorder = worklets.recorder?.(NO_OUTPUT);
     return recorder ? { recorder } : null;
   }, [worklets, playing, recording]);
 
@@ -79,7 +74,7 @@ const Graph = () => {
 
   /** mic analyzer/monitor */
   const analyzerNode = useMemo(
-    () => ({ analyzer: analyser("no-output", { fftSize }) }),
+    () => ({ analyzer: analyser(NO_OUTPUT, { fftSize }) }),
     [],
   );
 
@@ -114,7 +109,7 @@ const Graph = () => {
 
   /** main volume control */
   const volumeNode = useMemo(
-    () => ({ volume: gain("output", { gain: power(volume, 2) }) }),
+    () => ({ volume: gain(OUTPUT, { gain: power(volume, 2) }) }),
     [volume],
   );
 
@@ -124,7 +119,6 @@ const Graph = () => {
 
     /** update audio graph */
     graph.update({
-      ...noOutputNode,
       ...micNode,
       ...analyzerNode,
       ...recorderNode,
@@ -135,7 +129,6 @@ const Graph = () => {
   }, [
     graph,
     micStream,
-    noOutputNode,
     micNode,
     analyzerNode,
     recorderNode,
