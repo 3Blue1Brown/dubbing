@@ -37,7 +37,8 @@ const update = (element: Element & { _tippy?: Instance }) => {
 
   instance.setContent(content);
 
-  if (!element.textContent?.trim()) element.setAttribute("aria-label", content);
+  if (!element.textContent?.trim() && !element.getAttribute("aria-label"))
+    element.setAttribute("aria-label", content);
 
   if (instance.popperInstance)
     window.setTimeout(instance.popperInstance.update, 20);

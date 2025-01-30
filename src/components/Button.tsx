@@ -26,7 +26,6 @@ const Button = ({
         accent && classes.accent,
         square && classes.square,
       )}
-      role="checkbox"
     >
       {children}
     </button>

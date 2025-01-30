@@ -23,9 +23,9 @@ const CheckButton = ({
       square
       accent={checked}
       role="checkbox"
+      aria-checked={checked ? "true" : "false"}
       onClick={() => onChange(!checked)}
       data-tooltip={label}
-      aria-checked={checked ? "true" : "false"}
     >
       {children}
     </Button>

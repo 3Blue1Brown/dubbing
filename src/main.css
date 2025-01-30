@@ -1,6 +1,6 @@
 :root {
-  --primary: #00ade6;
-  --secondary: #ff1493;
+  --primary: hsl(195, 100%, 45%);
+  --secondary: hsl(330, 100%, 45%);
   --primary-light: color-mix(in srgb, var(--primary), var(--white) 50%);
   --secondary-light: color-mix(in hsl, var(--secondary), var(--white) 50%);
 
