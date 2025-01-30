@@ -20,6 +20,10 @@
   border-right: var(--border);
 }
 
+.label input {
+  text-align: center;
+}
+
 .name {
   padding: 5px 10px;
   border: none;
@@ -32,7 +36,7 @@
 
 .waveform {
   height: 100px;
-  min-height: 50px;
+  min-height: max(50px, 100%);
   max-height: 500px;
   overflow: hidden;
   resize: vertical;

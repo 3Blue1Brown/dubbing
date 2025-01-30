@@ -52,9 +52,9 @@ const Tracks = () => {
     <div className={classes.tracks}>
       {tracks.map(({ name, muted, audio }, index) => {
         /** is this track only one not muted */
-        const solod = tracks.every(({ muted }, i) =>
-          i === index ? !muted : muted,
-        );
+        const solod =
+          tracks.length > 1 &&
+          tracks.every(({ muted }, i) => (i === index ? !muted : muted));
 
         return (
           <Fragment key={index}>
@@ -67,7 +67,7 @@ const Tracks = () => {
               />
               <div className={classes.actions}>
                 <CheckButton
-                  label="Solo track"
+                  label="Solo track (mute all others)"
                   checked={solod}
                   onChange={() => {
                     if (solod) updateTrack(-1, { muted: false });
