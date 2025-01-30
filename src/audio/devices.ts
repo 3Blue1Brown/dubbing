@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@reactuses/core";
+import { isFirefox } from "@/util/browser";
 
 /** for debugging */
 window.localStorage.clear();
@@ -84,15 +85,18 @@ export const useMicrophone = ({
 
         if (!latest) return;
 
-        /**
-         * firefox bug:
-         * https://stackoverflow.com/questions/67378379/how-to-get-the-sample-rate-from-a-mediadevices-getusermedia-stream
-         */
-        const testContext = new AudioContext();
-        testContext.createMediaStreamSource(stream);
-        const actualSampleRate = testContext.sampleRate;
-        if (actualSampleRate === sampleRate) setMicStream(stream);
-        else setSampleRate(new AudioContext().sampleRate);
+        /** https://stackoverflow.com/questions/67378379/how-to-get-the-sample-rate-from-a-mediadevices-getusermedia-stream */
+        if (isFirefox) {
+          const testContext = new AudioContext();
+          testContext.createMediaStreamSource(stream);
+          const actualSampleRate = testContext.sampleRate;
+          if (actualSampleRate !== sampleRate) {
+            setSampleRate(new AudioContext().sampleRate);
+            return;
+          }
+        }
+
+        setMicStream(stream);
       })().catch(console.error);
 
     return () => {

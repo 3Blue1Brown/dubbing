@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ComponentProps } from "react";
 import {
   useElementBounding,
   useEventListener,
@@ -34,7 +34,7 @@ type Props = {
   showTicks?: boolean;
   /** current time change */
   onSeek?: (time: number) => void;
-};
+} & Omit<ComponentProps<"canvas">, "onWheel">;
 
 /** min dist between ticks, in px */
 const minTickDist = 100;
@@ -75,6 +75,7 @@ const Waveform = ({
   sampleRate,
   showTicks = true,
   onSeek,
+  ...props
 }: Props) => {
   /** waveform before current time, "active" */
   const pastColor = getCSSVar("--primary");
@@ -259,6 +260,7 @@ const Waveform = ({
         const sample = percentToSample(transform, percent);
         onSeek?.(sample.x / sampleRate);
       }}
+      {...props}
     />
   );
 };

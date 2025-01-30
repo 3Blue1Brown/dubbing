@@ -6,6 +6,7 @@ import TextBox from "@/components/TextBox";
 import { useTransform } from "@/components/transform";
 import WaveformComponent from "@/components/Waveform";
 import { useLesson } from "@/pages/lesson/state";
+import { isSafari } from "@/util/browser";
 import classes from "./Tracks.module.css";
 
 /** tracks section */
@@ -101,6 +102,7 @@ const Tracks = () => {
             </div>
             <div
               className={classes.waveform}
+              style={{ paddingBottom: isSafari ? "5px" : 0 }}
               onDoubleClick={(event) => (event.currentTarget.style.height = "")}
             >
               <WaveformComponent
@@ -120,7 +122,10 @@ const Tracks = () => {
         <div className={classes.label}>
           <FaMicrophone style={{ color: "var(--gray)" }} />
         </div>
-        <div className={classes.waveform}>
+        <div
+          className={classes.waveform}
+          style={{ paddingBottom: isSafari ? "5px" : 0 }}
+        >
           <WaveformComponent
             waveform={recordTrack}
             waveformUpdated={recordTrackUpdated}
