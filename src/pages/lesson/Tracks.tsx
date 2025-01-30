@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef } from "react";
-import { FaXmark } from "react-icons/fa6";
+import { FaMicrophone, FaXmark } from "react-icons/fa6";
 import Button from "@/components/Button";
 import CheckButton from "@/components/CheckButton";
 import TextBox from "@/components/TextBox";
@@ -117,7 +117,7 @@ const Tracks = () => {
       })}
 
       <div className={classes.label}>
-        <div className={classes.name}>Recording</div>
+        <FaMicrophone style={{ color: "var(--gray)" }} />
       </div>
       <div className={classes.waveform}>
         <WaveformComponent

@@ -39,7 +39,15 @@ export const useTypedArray = (size = 0) => {
   /** wrapped setter */
   const set = useCallback(
     (newArray: Float32Array, offset = 0) => {
-      array.current.set(newArray, offset);
+      if (offset > array.current.length - 1) return;
+      array.current.set(
+        /**
+         * if new array + offset extends beyond current array, trim off excess
+         * to avoid range error
+         */
+        newArray.slice(0, Math.max(0, array.current.length - 1 - offset)),
+        offset,
+      );
       update();
     },
     [update],

@@ -96,12 +96,15 @@ export const useLessonAll = () => {
 
   /** "commit" recorded audio to new track */
   const commitRecording = useCallback(() => {
-    const clone = new Float32Array(recordTrack);
+    /** find index of last sample that is non-0 to trim off tail silence */
+    const lastSignal = recordTrack.findLastIndex(Boolean);
+    /** trim off */
+    const clone = new Float32Array(recordTrack.slice(0, lastSignal));
     /** add new track */
     setTracks((tracks) =>
       tracks.concat([
         {
-          name: `Tracks ${tracks.length + 1}`,
+          name: `Track ${tracks.length + 1}`,
           muted: false,
           audio: clone,
         },
@@ -146,7 +149,9 @@ export const useLessonAll = () => {
   /** tick time */
   useInterval(
     () => {
-      _setTime(mark.time + (now() - mark.timestamp) / 1000);
+      const newTime = mark.time + (now() - mark.timestamp) / 1000;
+      if (newTime > length) setPlaying(false);
+      else _setTime(newTime);
     },
     playing ? updateInterval : null,
   );

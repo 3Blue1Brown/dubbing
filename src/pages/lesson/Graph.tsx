@@ -21,6 +21,13 @@ const fftSize = 2 ** 12;
 const timeSamples = fftSize;
 const freqSamples = fftSize / 2;
 
+/** node ids */
+const micId = "mic";
+const recorderId = "recorder";
+const analyzerId = "analyzer";
+const playthroughId = "playthrough";
+const volumeId = "volume";
+
 /** audio graph */
 const Graph = () => {
   /** use lesson state */
@@ -62,11 +69,11 @@ const Graph = () => {
     () =>
       micStream
         ? {
-            mic: mediaStreamSource(
+            [micId]: mediaStreamSource(
               [
-                ...(recorderNode ? ["recorder"] : []),
-                "analyzer",
-                "playthrough",
+                ...(recorderNode ? [recorderId] : []),
+                analyzerId,
+                playthroughId,
               ],
               { mediaStream: micStream },
             ),
@@ -83,7 +90,7 @@ const Graph = () => {
 
   /** whether to play-through mic audio to speakers */
   const playthroughNode = useMemo(
-    () => ({ playthrough: gain("volume", { gain: playthrough ? 1 : 0 }) }),
+    () => ({ playthrough: gain(volumeId, { gain: playthrough ? 1 : 0 }) }),
     [playthrough],
   );
 
@@ -104,7 +111,7 @@ const Graph = () => {
           buffer: floatToAudio(audio, sampleRate),
           offsetTime: mark.time,
         });
-        nodes[muteId] = gain("volume", { gain: muted ? 0 : 1 });
+        nodes[muteId] = gain(volumeId, { gain: muted ? 0 : 1 });
       });
 
     return nodes;
@@ -142,7 +149,7 @@ const Graph = () => {
 
   /** keep this after graph.update call so node id is defined */
   useEffect(() => {
-    const recorder = graph?.getAudioNodeById("recorder") as AudioWorkletNode;
+    const recorder = graph?.getAudioNodeById(recorderId) as AudioWorkletNode;
     if (!recorder) return;
 
     /** what sample # in timeline to record to */
@@ -151,7 +158,7 @@ const Graph = () => {
     /** listen for audio worklet messages */
     recorder.port.onmessage = ({ data }: MessageEvent<Float32Array>) => {
       /** prevent last message coming in after recording stopped */
-      if (!graph?.getAudioNodeById("recorder")) return;
+      if (!graph?.getAudioNodeById(recorderId)) return;
       /** process recorded data */
       setRecordTrack(data, sampleOffset);
       /** increment offset based on length of data returned */
@@ -163,7 +170,7 @@ const Graph = () => {
   useInterval(() => {
     if (!graph) return;
 
-    const analyzer = graph.getAudioNodeById("analyzer");
+    const analyzer = graph.getAudioNodeById(analyzerId);
     if (!(analyzer instanceof AnalyserNode)) return;
 
     if (micAnalByFreq) {
