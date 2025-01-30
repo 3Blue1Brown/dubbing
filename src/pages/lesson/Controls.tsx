@@ -129,7 +129,7 @@ const Controls = () => {
           value={volume}
           onChange={setVolume}
           min={0}
-          max={1}
+          max={2}
           step={0.1}
           style={{ width: 50 }}
           data-tooltip="Playback and mic playthrough volume"

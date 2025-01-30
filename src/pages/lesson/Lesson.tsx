@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useParams } from "react-router";
 import Actions from "@/pages/lesson/Actions";
+import Debug from "@/pages/lesson/Debug";
 import Graph from "@/pages/lesson/Graph";
 import { LessonContext, useLessonAll } from "@/pages/lesson/state";
 import test from "@/test.wav?url";
@@ -24,6 +25,7 @@ const Lesson = () => {
       <Tracks />
       <Actions />
       <Graph />
+      <Debug />
     </LessonProvider>
   );
 };

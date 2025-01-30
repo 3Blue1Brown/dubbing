@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@reactuses/core";
-import { isFirefox } from "@/util/browser";
+import { isFirefox, isSafari } from "@/util/browser";
 
 /** for debugging */
 window.localStorage.clear();
@@ -50,11 +50,12 @@ export const useMicrophone = ({
     let latest = true;
     (async () => {
       /**
-       * for firefox: call getUserMedia before enumerateDevices so it will
-       * return all available devices and not just device user approved
-       * permissions for
+       * in some browsers, enumerateDevices returns only device user approved
+       * permissions for. try to request mic permission beforehand to get all
+       * available devices.
        */
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (isSafari || isFirefox)
+        await navigator.mediaDevices.getUserMedia({ audio: true });
       if (!latest) return;
       await refresh();
     })().catch(console.error);
@@ -77,9 +78,6 @@ export const useMicrophone = ({
             sampleRate,
             sampleSize: bitDepth,
             channelCount: 1,
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false,
           },
         });
 
@@ -96,13 +94,20 @@ export const useMicrophone = ({
           }
         }
 
+        if (isSafari) {
+          const actualDeviceId = stream
+            .getAudioTracks()[0]
+            ?.getCapabilities().deviceId;
+          setDevice(actualDeviceId ?? "");
+        }
+
         setMicStream(stream);
       })().catch(console.error);
 
     return () => {
       latest = false;
     };
-  }, [device, sampleRate, setSampleRate, bitDepth]);
+  }, [device, setDevice, sampleRate, setSampleRate, bitDepth]);
 
   return { devices, device, setDevice, micStream, refresh };
 };

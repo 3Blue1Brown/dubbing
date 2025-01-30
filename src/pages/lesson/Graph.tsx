@@ -22,7 +22,11 @@ const timeSamples = fftSize;
 const freqSamples = fftSize / 2;
 
 /** node ids */
-const micId = "mic";
+const bufferId = (index: number, timestamp: number) =>
+  `track-${index}-${timestamp}`;
+const muteId = (index: number) => `track-${index}-mute`;
+const micId = (device: string) => `mic-${device}`;
+// const micId = (device: string) => `mic`;
 const recorderId = "recorder";
 const analyzerId = "analyzer";
 const playthroughId = "playthrough";
@@ -35,6 +39,7 @@ const Graph = () => {
   const setRecordTrack = useLesson("setRecordTrack");
   const volume = useLesson("volume");
   const micStream = useLesson("micStream");
+  const device = useLesson("device");
   const micAnalByFreq = useLesson("micAnalByFreq");
   const setMicAnal = useLesson("setMicAnal");
   const playthrough = useLesson("playthrough");
@@ -69,7 +74,7 @@ const Graph = () => {
     () =>
       micStream
         ? {
-            [micId]: mediaStreamSource(
+            [micId(device)]: mediaStreamSource(
               [
                 ...(recorderNode ? [recorderId] : []),
                 analyzerId,
@@ -79,7 +84,7 @@ const Graph = () => {
             ),
           }
         : null,
-    [micStream, recorderNode],
+    [device, micStream, recorderNode],
   );
 
   /** mic analyzer/Analyzer */
@@ -104,14 +109,11 @@ const Graph = () => {
          * subsequent calls to graph.update (e.g. volume change) while playing
          * doesn't mess with already playing audio
          */
-        const bufferId = `track-${index}-${mark.timestamp}`;
-        const muteId = `track-${index}-mute`;
-
-        nodes[bufferId] = bufferSource(muteId, {
+        nodes[bufferId(index, mark.timestamp)] = bufferSource(muteId(index), {
           buffer: floatToAudio(audio, sampleRate),
           offsetTime: mark.time,
         });
-        nodes[muteId] = gain(volumeId, { gain: muted ? 0 : 1 });
+        nodes[muteId(index)] = gain(volumeId, { gain: muted ? 0 : 1 });
       });
 
     return nodes;

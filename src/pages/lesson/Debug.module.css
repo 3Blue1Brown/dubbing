@@ -1,0 +1,15 @@
+.debug {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 20px;
+}
+
+.debug > :nth-child(odd) {
+  font-weight: bold;
+}
+
+.debug > :nth-child(even) {
+  overflow: auto;
+  overflow-wrap: anywhere;
+  white-space: pre;
+}

@@ -9,5 +9,3 @@ export const isFirefox = userAgent.browser.name
 export const isSafari = userAgent.browser.name
   ?.toLowerCase()
   .includes("safari");
-
-console.debug({ isFirefox, isSafari });
