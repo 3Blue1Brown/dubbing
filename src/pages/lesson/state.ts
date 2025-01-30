@@ -18,14 +18,16 @@ export const useLessonAll = () => {
   /** video length, in seconds */
   const [length, setLength] = useState<number>(60 * 60);
 
-  /** audio sample rate */
-  const [sampleRate] = useState(
-    isFirefox ? new AudioContext().sampleRate : 44100,
-  );
+  /** project-wide sample rate */
+  const [sampleRate, setSampleRate] = useState(44100);
+  /** project-wide bit depth */
+  const [bitDepth] = useState(16);
 
   /** mic props */
   const { devices, device, setDevice, micStream, refresh } = useMicrophone({
     sampleRate,
+    setSampleRate,
+    bitDepth,
   });
 
   /** is mic play-through enabled */
@@ -204,9 +206,6 @@ export const useLessonAll = () => {
 type Lesson = ReturnType<typeof useLessonAll>;
 
 export const LessonContext = createContextWithSelectors<Lesson>({} as Lesson);
-
-/** crudely detect firefox browser */
-const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
 
 /** use piece of lesson data */
 export const useLesson = <Key extends keyof Lesson>(key: Key) =>

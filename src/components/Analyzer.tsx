@@ -87,9 +87,9 @@ const Analyzer = ({ data, mirror = false, ...props }: Props) => {
     if (noSignal) {
       ctx.fillStyle = "gray";
       ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+      ctx.textBaseline = "hanging";
       ctx.font = "10px Open Sans";
-      ctx.fillText("No signal", width / 2, height / 2);
+      ctx.fillText("No signal", width / 2, 10);
     }
   });
 

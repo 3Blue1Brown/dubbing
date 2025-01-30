@@ -1,10 +1,9 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useParams } from "react-router";
-import { intToFloat } from "@/audio";
 import Actions from "@/pages/lesson/Actions";
 import Graph from "@/pages/lesson/Graph";
 import { LessonContext, useLessonAll } from "@/pages/lesson/state";
-import test from "@/test.raw?url";
+import test from "@/test.wav?url";
 import { request } from "@/util/request";
 import Controls from "./Controls";
 import { getData } from "./data";
@@ -47,38 +46,63 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
     document.title = [year, title, language].join(" / ");
   }, [year, title, language]);
 
+  const {
+    setVideo,
+    setSentences,
+    setLength,
+    sampleRate,
+    setTracks,
+    micStream,
+  } = lesson;
+
+  /** only load data once */
   const dataLoaded = useRef(false);
 
   useEffect(() => {
     if (dataLoaded.current) return;
 
     (async () => {
-      /** load main lesson data, if not already loaded */
+      /** load main lesson data */
       const { video, sentences, length } = await getData({
         year,
         title,
         language,
       });
 
-      lesson.setVideo(video);
-      lesson.setSentences(sentences);
-      lesson.setLength(length);
-
-      /** load test waveforms */
-      const testTracks = (
-        await Promise.all(
-          [test, test, test].map((file) => request(file, "arrayBuffer")),
-        )
-      ).map((buffer, index) => ({
-        name: `Test track ${index + 1}`,
-        muted: true,
-        audio: intToFloat(new Int16Array(buffer)),
-      }));
-      lesson.setTracks((tracks) => [...tracks, ...testTracks]);
+      setVideo(video);
+      setSentences(sentences);
+      setLength(length);
     })().catch(console.error);
 
     dataLoaded.current = true;
-  }, [lesson, year, title, language]);
+  }, [year, title, language, setVideo, setSentences, setLength]);
+
+  /** only load test tracks once */
+  const testLoaded = useRef(false);
+
+  useEffect(() => {
+    if (testLoaded.current) return;
+
+    /** if not on "final" sample rate, don't load */
+    if (!micStream) return;
+
+    /** load test waveforms */
+    (async () => {
+      const decoder = new AudioContext({ sampleRate });
+      const testTracks = await Promise.all(
+        [test, test, test].map(async (file, index) => ({
+          name: `Test track ${index + 1}`,
+          muted: true,
+          audio: (
+            await decoder.decodeAudioData(await request(file, "arrayBuffer"))
+          ).getChannelData(0),
+        })),
+      );
+      setTracks((tracks) => [...tracks, ...testTracks]);
+    })().catch(console.error);
+
+    testLoaded.current = true;
+  }, [micStream, sampleRate, setTracks]);
 
   return (
     <LessonContext.Provider value={lesson}>{children}</LessonContext.Provider>

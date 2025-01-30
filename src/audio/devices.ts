@@ -1,21 +1,35 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@reactuses/core";
 
-export const useMicrophone = ({ sampleRate = 44100, bitDepth = 16 }) => {
+/** for debugging */
+window.localStorage.clear();
+
+/**
+ * special string to indicate no device. can't be empty string because some
+ * browsers use that to mean "default device". can't use null or similar because
+ * we need to sync with localStorage (string-based).
+ */
+const noDevice = "NO_DEVICE";
+
+type UseMicrophone = {
+  sampleRate: number;
+  setSampleRate: (value: number) => void;
+  bitDepth: number;
+};
+
+export const useMicrophone = ({
+  sampleRate,
+  setSampleRate,
+  bitDepth,
+}: UseMicrophone) => {
   /** selected device id */
-  const [device, setDevice] = useLocalStorage<
-    MediaDeviceInfo["deviceId"] | null
-  >("device", null);
+  let [device, setDevice] = useLocalStorage<string>("device", noDevice);
+  /** fallback if no storage set yet */
+  device ??= noDevice;
   /** list of available devices */
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   /** microphone audio stream */
   const [micStream, setMicStream] = useState<MediaStream | null>(null);
-
-  /** request microphone permission */
-  const request = useCallback(
-    () => navigator.mediaDevices.getUserMedia({ audio: true }),
-    [],
-  );
 
   /** refresh devices */
   const refresh = useCallback(async () => {
@@ -23,19 +37,23 @@ export const useMicrophone = ({ sampleRate = 44100, bitDepth = 16 }) => {
     /** get only audio input devices */
     const mics = devices.filter(({ kind }) => kind === "audioinput");
     setDevices(mics);
+  }, []);
+
+  useEffect(() => {
     /** auto-select first device if none selected already */
-    setDevice((device) => device ?? mics[0]?.deviceId ?? "");
-  }, [setDevice]);
+    if (device === noDevice && devices[0]) setDevice(devices[0].deviceId);
+  }, [device, setDevice, devices]);
 
   /** init */
   useEffect(() => {
     let latest = true;
-    /**
-     * some browsers (which ?) error on enumerateDevices if mic permissions not
-     * requested first
-     */
     (async () => {
-      await request();
+      /**
+       * for firefox: call getUserMedia before enumerateDevices so it will
+       * return all available devices and not just device user approved
+       * permissions for
+       */
+      // await navigator.mediaDevices.getUserMedia({ audio: true });
       if (!latest) return;
       await refresh();
     })().catch(console.error);
@@ -43,12 +61,13 @@ export const useMicrophone = ({ sampleRate = 44100, bitDepth = 16 }) => {
     return () => {
       latest = false;
     };
-  }, [request, refresh]);
+  }, [refresh]);
 
   /** update mic stream */
   useEffect(() => {
     let latest = true;
-    if (device !== null)
+
+    if (device !== noDevice)
       (async () => {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: false,
@@ -62,13 +81,24 @@ export const useMicrophone = ({ sampleRate = 44100, bitDepth = 16 }) => {
             autoGainControl: false,
           },
         });
+
         if (!latest) return;
-        setMicStream(stream);
+
+        /**
+         * firefox bug:
+         * https://stackoverflow.com/questions/67378379/how-to-get-the-sample-rate-from-a-mediadevices-getusermedia-stream
+         */
+        const testContext = new AudioContext();
+        testContext.createMediaStreamSource(stream);
+        const actualSampleRate = testContext.sampleRate;
+        if (actualSampleRate === sampleRate) setMicStream(stream);
+        else setSampleRate(new AudioContext().sampleRate);
       })().catch(console.error);
+
     return () => {
       latest = false;
     };
-  }, [device, sampleRate, bitDepth]);
+  }, [device, sampleRate, setSampleRate, bitDepth]);
 
   return { devices, device, setDevice, micStream, refresh };
 };
