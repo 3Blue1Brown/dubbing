@@ -53,7 +53,7 @@ export const useMicrophone = ({
        * return all available devices and not just device user approved
        * permissions for
        */
-      // await navigator.mediaDevices.getUserMedia({ audio: true });
+      await navigator.mediaDevices.getUserMedia({ audio: true });
       if (!latest) return;
       await refresh();
     })().catch(console.error);

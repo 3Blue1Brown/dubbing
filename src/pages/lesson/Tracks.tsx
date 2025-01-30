@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { FaMicrophone, FaXmark } from "react-icons/fa6";
 import Button from "@/components/Button";
 import CheckButton from "@/components/CheckButton";
@@ -57,7 +57,7 @@ const Tracks = () => {
           tracks.every(({ muted }, i) => (i === index ? !muted : muted));
 
         return (
-          <Fragment key={index}>
+          <div key={index} className={classes.track}>
             <div className={classes.label}>
               <TextBox
                 className={classes.name}
@@ -112,23 +112,25 @@ const Tracks = () => {
                 onSeek={onSeek}
               />
             </div>
-          </Fragment>
+          </div>
         );
       })}
 
-      <div className={classes.label}>
-        <FaMicrophone style={{ color: "var(--gray)" }} />
-      </div>
-      <div className={classes.waveform}>
-        <WaveformComponent
-          waveform={recordTrack}
-          waveformUpdated={recordTrackUpdated}
-          transform={transform}
-          onWheel={onWheel}
-          sampleRate={sampleRate}
-          time={time}
-          onSeek={onSeek}
-        />
+      <div className={classes.track}>
+        <div className={classes.label}>
+          <FaMicrophone style={{ color: "var(--gray)" }} />
+        </div>
+        <div className={classes.waveform}>
+          <WaveformComponent
+            waveform={recordTrack}
+            waveformUpdated={recordTrackUpdated}
+            transform={transform}
+            onWheel={onWheel}
+            sampleRate={sampleRate}
+            time={time}
+            onSeek={onSeek}
+          />
+        </div>
       </div>
     </div>
   );

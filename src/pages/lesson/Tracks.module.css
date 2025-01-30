@@ -1,30 +1,40 @@
 .tracks {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-rows: min-content;
+  grid-template-columns: min-content 1fr;
   width: 100%;
   border: var(--border);
   border-radius: var(--rounded);
 }
 
-.tracks > :nth-last-child(n + 3) {
+.track {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+}
+
+.track:not(:last-child) {
   border-bottom: var(--border);
 }
 
 .label {
   display: flex;
+  grid-column: 1 / span 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 0;
-  min-width: 100%;
+  height: 0;
+  min-height: 100%;
   padding: 5px;
+  overflow: hidden;
   gap: 5px;
   border-right: var(--border);
 }
 
-.label:nth-last-child(2) {
-  width: 120px;
-  min-width: 100px;
+.track:last-child > .label {
+  width: 150px;
+  min-width: 120px;
   overflow: hidden;
   resize: horizontal;
 }
@@ -35,7 +45,6 @@
 
 .name {
   padding: 5px 10px;
-  border: none;
 }
 
 .actions {
@@ -45,9 +54,15 @@
 }
 
 .waveform {
+  grid-column: 2 / span 1;
   height: 100px;
-  min-height: max(50px, 100%);
+  min-height: 80px;
   max-height: 500px;
+  padding: 5px;
   overflow: hidden;
   resize: vertical;
+}
+
+.waveform > * {
+  isolation: isolate;
 }
