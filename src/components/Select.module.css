@@ -12,7 +12,6 @@
   border-radius: var(--rounded);
   background: var(--light-gray);
   color: currentColor;
-  font: inherit;
   cursor: pointer;
   transition:
     background var(--fast),

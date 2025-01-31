@@ -53,12 +53,6 @@ const Controls = () => {
       <div className={classes.row}>
         {devices.length ? (
           <Select
-            label={
-              <FaMicrophone
-                className={classes.small}
-                aria-label="Microphone device"
-              />
-            }
             data-tooltip={`Microphone device, ${sampleRate / 1000} kHz`}
             value={device ?? ""}
             onChange={setDevice}
@@ -66,7 +60,12 @@ const Controls = () => {
               value: deviceId,
               label: label || "Device",
             }))}
-          />
+          >
+            <FaMicrophone
+              className={classes.small}
+              aria-label="Microphone device"
+            />
+          </Select>
         ) : (
           <span className={classes.small}>No devices</span>
         )}

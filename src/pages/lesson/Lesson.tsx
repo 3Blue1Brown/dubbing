@@ -1,11 +1,11 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import Actions from "@/pages/lesson/Actions";
 import Debug from "@/pages/lesson/Debug";
 import Graph from "@/pages/lesson/Graph";
 import { LessonContext, useLessonAll } from "@/pages/lesson/state";
 import Controls from "./Controls";
-import { getData } from "./data";
+import { fetchData, parseData } from "./data";
 import classes from "./Lesson.module.css";
 import Player from "./Player";
 import Sentences from "./Sentences";
@@ -40,6 +40,7 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
 
   /** get use params */
   const { year = "", title = "", language = "" } = useParams();
+  const { state } = useLocation();
 
   /** update tab title */
   useEffect(() => {
@@ -54,21 +55,18 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (dataLoaded.current) return;
 
+    /** load main lesson data */
     (async () => {
-      /** load main lesson data */
-      const { video, sentences, length } = await getData({
-        year,
-        title,
-        language,
-      });
-
+      /** load raw data from state object, or fetch based on url params */
+      const data = state ?? fetchData({ year, title, language });
+      const { video, sentences, length } = await parseData(data);
       setVideo(video);
       setSentences(sentences);
       setLength(length);
     })().catch(console.error);
 
     dataLoaded.current = true;
-  }, [year, title, language, setVideo, setSentences, setLength]);
+  }, [state, year, title, language, setVideo, setSentences, setLength]);
 
   return (
     <LessonContext.Provider value={lesson}>{children}</LessonContext.Provider>

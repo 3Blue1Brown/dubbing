@@ -58,8 +58,8 @@ const Debug = ({ data = {} }: Props) => {
               ...(testTrack.current
                 ? [
                     {
-                      name: `Test track ${tracks.length + 1}`,
-                      muted: true,
+                      name: `Track ${tracks.length + 1}`,
+                      muted: false,
                       audio: testTrack.current!,
                     },
                   ]

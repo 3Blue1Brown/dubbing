@@ -6,17 +6,23 @@ type Props = {
   onChange: (value: string) => void;
 } & Omit<ComponentProps<"input">, "onChange">;
 
-const TextBox = ({ className, onChange, children, ...props }: Props) => {
+const FileBox = ({ className, onChange, children, ...props }: Props) => {
   return (
     <label>
       <span>{children}</span>
       <input
+        type="file"
         className={clsx(classes.textbox, className)}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          const content = await file.text();
+          onChange(content);
+        }}
         {...props}
       />
     </label>
   );
 };
 
-export default TextBox;
+export default FileBox;

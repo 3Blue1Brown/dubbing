@@ -24,20 +24,25 @@ const pauseGap = 2;
 /** characters that indicate pause and let user judge time until next sentence */
 const pauseChars = Array(10).fill("▪").join(" ");
 
-/** get lesson data */
-export const getData = async (lesson: LessonId): Promise<Data> => {
-  /** get video url */
-  const video =
-    (await request(videoFile(lesson), "text")).split(/\/|=/).pop() ?? "";
-
-  /** get raw translation sentences */
-  const translationSentences = await request<_TranslationSentences>(
+/** fetch lesson data from external sources */
+export const fetchData = async (lesson: LessonId) => ({
+  video: await request(videoFile(lesson), "text"),
+  translationSentences: await request<_TranslationSentences>(
     sentenceTranslationsFile(lesson),
-  );
+  ),
+  wordTimings: await request<_WordTimings>(wordTimingsFile(lesson)),
+});
 
+/** parse lesson data into format needed for app */
+export const parseData = async ({
+  video,
+  translationSentences,
+  wordTimings,
+}: Awaited<ReturnType<typeof fetchData>>): Promise<Data> => {
   for (let index = -1; index < translationSentences.length; index++) {
     const prevEnd = translationSentences[index - 1]?.end || 0;
     const nextStart = translationSentences[index]?.start || 0;
+    /** add "pause" entry between entries whose start/end times have gap */
     if (prevEnd < nextStart - pauseGap) {
       translationSentences.splice(index, 0, {
         start: prevEnd,
@@ -49,7 +54,8 @@ export const getData = async (lesson: LessonId): Promise<Data> => {
       index--;
     }
   }
-  const wordTimings = await request<_WordTimings>(wordTimingsFile(lesson));
+
+  /** split sentence into words and distribute evenly between start/end times */
   const splitEvenly = (text: string, start: number, end: number) => {
     const words = text.split(/\s/);
     const step = (end - start) / words.length;
@@ -59,8 +65,12 @@ export const getData = async (lesson: LessonId): Promise<Data> => {
       end: start + step * (index + 1),
     }));
   };
+
+  /** for each sentence */
   const sentences: Sentence[] = translationSentences.map((sentence) => {
+    /** (english) */
     let original = wordTimings
+      /** get all word timings within sentence start/end */
       .filter(
         ([, wordStart, wordEnd]) =>
           wordStart >= sentence.start &&
@@ -69,24 +79,33 @@ export const getData = async (lesson: LessonId): Promise<Data> => {
           wordEnd <= sentence.end,
       )
       .map(([text, start, end]) => ({ text, start, end }));
+
+    /**
+     * if no word timings (e.g. inserted pause chars), just make them up from
+     * sentence start/end
+     */
     if (!original.length)
       original = splitEvenly(sentence.input, sentence.start, sentence.end);
+
+    /** (non-english) */
+    /** make up word timings */
     const translation = splitEvenly(
       sentence.translatedText,
       sentence.start,
       sentence.end,
     );
+
     return { original, translation };
   });
 
   /** video length, based on sentence timings */
   const length = sentences.at(-1)!.translation.at(-1)!.end;
 
-  return { video, sentences, length };
+  return { video: video.split(/\/|=/).pop() ?? "", sentences, length };
 };
 
 /** raw translation sentences format */
-type _TranslationSentences = {
+export type _TranslationSentences = {
   input: string;
   translatedText: string;
   from_community_srt: string;
@@ -95,7 +114,7 @@ type _TranslationSentences = {
 }[];
 
 /** raw word timings */
-type _WordTimings = [string, number, number][];
+export type _WordTimings = [string, number, number][];
 
 /** video url */
 export type Video = string;

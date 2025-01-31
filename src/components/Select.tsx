@@ -1,15 +1,14 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 import classes from "./Select.module.css";
 
 type Props = {
-  label: ReactNode;
   options: { value: string; label: string }[];
   onChange?: (value: string) => void;
 } & Omit<ComponentProps<"select">, "onChange">;
 
-const Select = ({ label, options, onChange, ...props }: Props) => (
-  <label className={classes.label}>
-    {label}
+const Select = ({ options, onChange, children, ...props }: Props) => (
+  <label>
+    {children}
     <select
       className={classes.select}
       {...props}
