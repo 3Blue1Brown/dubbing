@@ -4,6 +4,7 @@ import { useMicrophone } from "@/audio/devices";
 import type { PlayerRef } from "@/components/Player";
 import type { Sentence } from "@/pages/lesson/data";
 import { useTypedArray } from "@/util/hooks";
+import { sleep } from "@/util/misc";
 import { createContextWithSelectors, useContextSelector } from "@/util/state";
 
 /** all lesson state */
@@ -60,6 +61,9 @@ export const useLessonAll = () => {
   /** track specifically to hold recording */
   const [recordTrack, recordTrackUpdated, setRecordTrack, resetRecordTrack] =
     useTypedArray(length * sampleRate);
+
+  /** countdown to starting recording */
+  const [recordCountdown, setRecordCountdown] = useState(0);
 
   /** update props of a track or all tracks */
   const updateTrack = useCallback(
@@ -121,6 +125,8 @@ export const useLessonAll = () => {
     (recording: boolean) => {
       _setRecording(recording);
       setMark(time);
+
+      /** end-recording */
       if (!recording && playing) commitRecording();
     },
     [setMark, time, playing, commitRecording],
@@ -128,10 +134,22 @@ export const useLessonAll = () => {
 
   /** playing set wrapper */
   const setPlaying = useCallback(
-    (playing: boolean) => {
+    async (playing: boolean) => {
+      /** start-recording countdown */
+      if (playing && recording)
+        for (let seconds = 3; seconds > 0; seconds--) {
+          setRecordCountdown(seconds);
+          await sleep(1000);
+        }
+      setRecordCountdown(0);
+
       _setPlaying(playing);
       setMark(time);
+
+      /** end-recording */
       if (recording && !playing) commitRecording();
+
+      /** sync video */
       if (playing) playerRef.current?.play().catch(console.error);
       else playerRef.current?.pause().catch(console.error);
     },
@@ -143,6 +161,8 @@ export const useLessonAll = () => {
     (time: number) => {
       setMark(time);
       _setTime(time);
+
+      /** sync video */
       playerRef.current?.seek(time).catch(console.error);
     },
     [setMark],
@@ -151,8 +171,11 @@ export const useLessonAll = () => {
   /** tick time */
   useInterval(
     () => {
+      /** naive time += interval approach would drift over time */
       const newTime = mark.time + (now() - mark.timestamp) / 1000;
-      if (newTime > length) setPlaying(false);
+
+      /** stop if past end of timeline */
+      if (newTime > length) setPlaying(false).catch(console.error);
       else _setTime(newTime);
     },
     playing ? updateInterval : null,
@@ -180,6 +203,7 @@ export const useLessonAll = () => {
     setPlaythrough,
     recording,
     setRecording,
+    recordCountdown,
     playing,
     setPlaying,
     volume,

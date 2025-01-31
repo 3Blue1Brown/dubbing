@@ -36,6 +36,7 @@ const Controls = () => {
   const setMicAnalByFreq = useLesson("setMicAnalByFreq");
   const recording = useLesson("recording");
   const setRecording = useLesson("setRecording");
+  const recordCountdown = useLesson("recordCountdown");
   const playing = useLesson("playing");
   const setPlaying = useLesson("setPlaying");
   const volume = useLesson("volume");
@@ -105,7 +106,7 @@ const Controls = () => {
               checked={recording}
               onChange={() => setRecording(!recording)}
             >
-              <FaCircle />
+              {recordCountdown || <FaCircle />}
             </CheckButton>
           </>
         ) : (
