@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { uniqueId } from "lodash";
 import {
   analyser,
   bufferSource,
@@ -25,8 +26,7 @@ const freqSamples = fftSize / 2;
 const bufferId = (index: number, timestamp: number) =>
   `track-${index}-${timestamp}`;
 const muteId = (index: number) => `track-${index}-mute`;
-const micId = (device: string) => `mic-${device}`;
-// const micId = (device: string) => `mic`;
+const micId = () => `mic-${uniqueId()}`;
 const recorderId = "recorder";
 const analyzerId = "analyzer";
 const playthroughId = "playthrough";
@@ -39,7 +39,6 @@ const Graph = () => {
   const setRecordTrack = useLesson("setRecordTrack");
   const volume = useLesson("volume");
   const micStream = useLesson("micStream");
-  const device = useLesson("device");
   const micAnalByFreq = useLesson("micAnalByFreq");
   const setMicAnal = useLesson("setMicAnal");
   const playthrough = useLesson("playthrough");
@@ -74,7 +73,7 @@ const Graph = () => {
     () =>
       micStream
         ? {
-            [micId(device)]: mediaStreamSource(
+            [micId()]: mediaStreamSource(
               [
                 ...(recorderNode ? [recorderId] : []),
                 analyzerId,
@@ -84,7 +83,7 @@ const Graph = () => {
             ),
           }
         : null,
-    [device, micStream, recorderNode],
+    [micStream, recorderNode],
   );
 
   /** mic analyzer/Analyzer */
