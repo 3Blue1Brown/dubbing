@@ -143,6 +143,9 @@ export const useLessonAll = () => {
         }
       setRecordCountdown(0);
 
+      /** move cursor back to mark, DAW-style */
+      if (!playing) _setTime(mark.time);
+
       _setPlaying(playing);
       setMark(time);
 
@@ -153,7 +156,7 @@ export const useLessonAll = () => {
       if (playing) playerRef.current?.play().catch(console.error);
       else playerRef.current?.pause().catch(console.error);
     },
-    [setMark, time, recording, commitRecording],
+    [mark, setMark, time, recording, commitRecording],
   );
 
   /** time set wrapper */
