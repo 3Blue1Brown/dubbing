@@ -67,7 +67,7 @@ details {
 }
 
 summary {
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   padding: 5px;
   border-radius: var(--rounded);
   background: var(--light-gray);

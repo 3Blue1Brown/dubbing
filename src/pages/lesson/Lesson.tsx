@@ -4,8 +4,6 @@ import Actions from "@/pages/lesson/Actions";
 import Debug from "@/pages/lesson/Debug";
 import Graph from "@/pages/lesson/Graph";
 import { LessonContext, useLessonAll } from "@/pages/lesson/state";
-import test from "@/test.wav?url";
-import { request } from "@/util/request";
 import Controls from "./Controls";
 import { getData } from "./data";
 import classes from "./Lesson.module.css";
@@ -48,14 +46,7 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
     document.title = [year, title, language].join(" / ");
   }, [year, title, language]);
 
-  const {
-    setVideo,
-    setSentences,
-    setLength,
-    sampleRate,
-    setTracks,
-    micStream,
-  } = lesson;
+  const { setVideo, setSentences, setLength } = lesson;
 
   /** only load data once */
   const dataLoaded = useRef(false);
@@ -78,33 +69,6 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
 
     dataLoaded.current = true;
   }, [year, title, language, setVideo, setSentences, setLength]);
-
-  /** only load test tracks once */
-  const testLoaded = useRef(false);
-
-  useEffect(() => {
-    if (testLoaded.current) return;
-
-    /** if not on "final" sample rate, don't load */
-    if (!micStream) return;
-
-    /** load test waveforms */
-    (async () => {
-      const decoder = new AudioContext({ sampleRate });
-      const testTracks = await Promise.all(
-        [test, test, test].map(async (file, index) => ({
-          name: `Test track ${index + 1}`,
-          muted: true,
-          audio: (
-            await decoder.decodeAudioData(await request(file, "arrayBuffer"))
-          ).getChannelData(0),
-        })),
-      );
-      setTracks((tracks) => [...tracks, ...testTracks]);
-    })().catch(console.error);
-
-    testLoaded.current = true;
-  }, [micStream, sampleRate, setTracks]);
 
   return (
     <LessonContext.Provider value={lesson}>{children}</LessonContext.Provider>
