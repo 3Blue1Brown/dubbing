@@ -63,7 +63,9 @@ const Home = () => {
           </TextBox>
         </div>
 
-        <Button accent>Go</Button>
+        <Button accent type="submit">
+          Go
+        </Button>
       </form>
 
       <hr />
@@ -103,7 +105,9 @@ const Home = () => {
           </FileBox>
         </div>
 
-        <Button accent>Go</Button>
+        <Button accent type="submit">
+          Go
+        </Button>
       </form>
     </>
   );
