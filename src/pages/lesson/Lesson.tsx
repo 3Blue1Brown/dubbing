@@ -60,7 +60,6 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
       /** load raw data from state object, or fetch based on url params */
       const data = state ?? (await fetchData({ year, title, language }));
       const { video, sentences, length } = await parseData(data);
-      console.log(data);
       setVideo(video);
       setSentences(sentences);
       setLength(length);

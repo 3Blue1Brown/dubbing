@@ -1,13 +1,27 @@
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { useEventListener } from "@reactuses/core";
 import Button from "@/components/Button";
 import { useLesson } from "@/pages/lesson/state";
 import test from "@/test.wav?url";
 import { userAgent } from "@/util/browser";
+import { sleep } from "@/util/misc";
 import { request } from "@/util/request";
 import classes from "./Debug.module.css";
 
+type Data = Record<string, unknown>;
+
 type Props = {
-  data?: Record<string, unknown>;
+  data?: Data;
+};
+
+export const debug = (data: Data) =>
+  window.dispatchEvent(new CustomEvent("debug", { detail: data }));
+
+let before = 0;
+export const timeStart = () => (before = window.performance.now());
+export const timeEnd = (key: string) => {
+  const diff = window.performance.now() - before;
+  if (diff) debug({ [key]: diff });
 };
 
 const Debug = ({ data = {} }: Props) => {
@@ -17,7 +31,14 @@ const Debug = ({ data = {} }: Props) => {
   const devices = useLesson("devices");
   const setTracks = useLesson("setTracks");
 
+  const [event, setEvent] = useState<Data>({});
+
+  useEventListener("debug", ({ detail }) =>
+    sleep().then(() => setEvent((event) => ({ ...event, ...detail }))),
+  );
+
   data = {
+    ...event,
     userAgent,
     ...data,
     sampleRate,
