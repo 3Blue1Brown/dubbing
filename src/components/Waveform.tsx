@@ -228,13 +228,9 @@ const Waveform = ({
       ctx.lineTo(mouseClient.elementX, height);
       ctx.stroke();
       const mouseTime =
-        percentToSample(
-          transform,
-          clientToPercent(
-            { left, top, width, height },
-            { x: mouseClient.elementX },
-          ),
-        ).x / sampleRate;
+        percentToSample(transform, {
+          x: mouseClient.elementX / mouseClient.elementW,
+        }).x / sampleRate;
       ctx.fillText(
         formatTime(mouseTime),
         mouseClient.elementX + ctx.lineWidth * 2,
