@@ -63,7 +63,7 @@ const tickTimes = [
   60 * 60,
 ];
 /** extra draw resolution */
-const oversample = window.devicePixelRatio * 2;
+const oversample = window.devicePixelRatio * 1;
 
 /** audio waveform with zoom, pan, etc */
 const Waveform = ({
@@ -138,6 +138,15 @@ const Waveform = ({
     /** larger # of samples -> skip more */
     step: (endSample - startSample) / 1000,
   });
+  // const points = useMemo(
+  //   () =>
+  //     _points.map(({ min, max, ...rest }) => ({
+  //       ...rest,
+  //       top: sampleToPercent(transform, { y: min }).y,
+  //       bottom: sampleToPercent(transform, { y: max }).y,
+  //     })),
+  //   [_points, transform],
+  // );
 
   /** mouse coords */
   const mouseClient = useMouse(canvasRef);
@@ -158,12 +167,12 @@ const Waveform = ({
 
       for (let x = 0; x < points.length; x++) {
         /** get point */
-        const { min, max, start } = points[x]!;
+        const { start, min, max } = points[x]!;
+        const top = sampleToPercent(transform, { y: min }).y;
+        const bottom = sampleToPercent(transform, { y: max }).y;
 
         /** draw line */
         ctx.strokeStyle = start > currentSample ? futureColor : pastColor;
-        const top = sampleToPercent(transform, { y: min }).y;
-        const bottom = sampleToPercent(transform, { y: max }).y;
         ctx.beginPath();
         ctx.moveTo(x, halfHeight + top * halfHeight - ctx.lineWidth / 2);
         ctx.lineTo(x, halfHeight + bottom * halfHeight + ctx.lineWidth / 2);

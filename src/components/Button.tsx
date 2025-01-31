@@ -19,6 +19,7 @@ const Button = ({
   return (
     <button
       ref={ref}
+      type="button"
       {...props}
       className={clsx(
         className,

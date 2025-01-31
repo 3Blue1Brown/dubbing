@@ -14,7 +14,7 @@ type Props = {
 const lineWidth = 1;
 
 /** extra draw resolution */
-const oversample = window.devicePixelRatio * 2;
+const oversample = window.devicePixelRatio * 1;
 
 /** visualizer for audio analyzer data */
 const Analyzer = ({ data, mirror = false, ...props }: Props) => {
