@@ -7,7 +7,7 @@ const Player = () => {
   const playerRef = useLesson("playerRef");
   const video = useLesson("video");
 
-  if (!video) return <div />;
+  if (!video) return <div className="placeholder">No video loaded</div>;
 
   return <PlayerComponent ref={playerRef} video={video} />;
 };

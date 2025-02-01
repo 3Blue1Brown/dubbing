@@ -1,3 +1,4 @@
+import srtParser2 from "srt-parser-2";
 import { request } from "@/util/request";
 
 /** lesson id */
@@ -38,7 +39,7 @@ export const parseData = async ({
   video,
   translationSentences,
   wordTimings,
-}: Awaited<ReturnType<typeof fetchData>>): Promise<Data> => {
+}: _Data): Promise<Data> => {
   for (let index = -1; index < translationSentences.length; index++) {
     const prevEnd = translationSentences[index - 1]?.end || 0;
     const nextStart = translationSentences[index]?.start || 0;
@@ -49,7 +50,6 @@ export const parseData = async ({
         end: nextStart,
         input: pauseChars,
         translatedText: pauseChars,
-        from_community_srt: "",
       });
       index--;
     }
@@ -69,22 +69,24 @@ export const parseData = async ({
   /** for each sentence */
   const sentences: Sentence[] = translationSentences.map((sentence) => {
     /** (english) */
-    let original = wordTimings
-      /** get all word timings within sentence start/end */
-      .filter(
-        ([, wordStart, wordEnd]) =>
-          wordStart >= sentence.start &&
-          wordStart <= sentence.end &&
-          wordEnd >= sentence.start &&
-          wordEnd <= sentence.end,
-      )
-      .map(([text, start, end]) => ({ text, start, end }));
+    let original = wordTimings.length
+      ? wordTimings
+          /** get all word timings within sentence start/end */
+          .filter(
+            ([, wordStart, wordEnd]) =>
+              wordStart >= sentence.start &&
+              wordStart <= sentence.end &&
+              wordEnd >= sentence.start &&
+              wordEnd <= sentence.end,
+          )
+          .map(([text, start, end]) => ({ text, start, end }))
+      : [];
 
     /**
      * if no word timings (e.g. inserted pause chars), just make them up from
      * sentence start/end
      */
-    if (!original.length)
+    if (wordTimings.length && !original.length)
       original = splitEvenly(sentence.input, sentence.start, sentence.end);
 
     /** (non-english) */
@@ -104,11 +106,21 @@ export const parseData = async ({
   return { video: video.split(/\/|=/).pop() ?? "", sentences, length };
 };
 
+/** convert SRT file to raw translation sentences format */
+export const parseSRT = (content: string) =>
+  new srtParser2()
+    .fromSrt(content)
+    .map(({ text, startSeconds, endSeconds }) => ({
+      input: "",
+      translatedText: text,
+      start: startSeconds,
+      end: endSeconds,
+    }));
+
 /** raw translation sentences format */
 export type _TranslationSentences = {
   input: string;
   translatedText: string;
-  from_community_srt: string;
   start: number;
   end: number;
 }[];
@@ -116,8 +128,12 @@ export type _TranslationSentences = {
 /** raw word timings */
 export type _WordTimings = [string, number, number][];
 
-/** video url */
-export type Video = string;
+/** all raw data together */
+export type _Data = {
+  video: string;
+  translationSentences: _TranslationSentences;
+  wordTimings: _WordTimings;
+};
 
 /** sentences text and timings */
 export type Sentence = {
@@ -129,4 +145,8 @@ export type Sentence = {
 export type Length = number;
 
 /** lesson data */
-export type Data = { video: Video; sentences: Sentence[]; length: Length };
+export type Data = {
+  video: string;
+  sentences: Sentence[];
+  length: Length;
+};

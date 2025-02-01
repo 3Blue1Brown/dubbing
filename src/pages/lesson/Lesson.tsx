@@ -5,7 +5,7 @@ import Debug from "@/pages/lesson/Debug";
 import Graph from "@/pages/lesson/Graph";
 import { LessonContext, useLessonAll } from "@/pages/lesson/state";
 import Controls from "./Controls";
-import { fetchData, parseData } from "./data";
+import { fetchData, parseData, type _Data } from "./data";
 import classes from "./Lesson.module.css";
 import Player from "./Player";
 import Sentences from "./Sentences";
@@ -58,7 +58,8 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
     /** load main lesson data */
     (async () => {
       /** load raw data from state object, or fetch based on url params */
-      const data = state ?? (await fetchData({ year, title, language }));
+      const data =
+        (state as _Data) ?? (await fetchData({ year, title, language }));
       const { video, sentences, length } = await parseData(data);
       setVideo(video);
       setSentences(sentences);

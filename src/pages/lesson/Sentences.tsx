@@ -8,7 +8,6 @@ const Sentences = () => {
   const ref = useRef<HTMLDivElement>(null);
 
   /** use lesson state */
-  const video = useLesson("video");
   const sentences = useLesson("sentences");
   const playing = useLesson("playing");
   const time = useLesson("time");
@@ -16,7 +15,10 @@ const Sentences = () => {
   const showOriginal = useLesson("showOriginal");
   const autoScroll = useLesson("autoScroll");
 
-  if (!video || !sentences) return <></>;
+  if (!sentences) return <div className="placeholder">No sentences loaded</div>;
+
+  if (showOriginal && sentences.every((sentence) => !sentence.original.length))
+    return <div className="placeholder">No sentences loaded</div>;
 
   return (
     <div ref={ref} className={classes.sentences}>

@@ -50,9 +50,20 @@ a:hover {
   color: var(--secondary);
 }
 
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  color: var(--gray);
+  text-align: center;
+}
+
 form {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 500px;
   gap: 20px;
 }
 
@@ -68,9 +79,15 @@ label {
   cursor: pointer;
 }
 
+.required {
+  position: relative;
+  top: -0.1em;
+  color: hsl(330, 100%, 45%);
+}
+
 .form-grid {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto auto;
   gap: 10px;
 }
 
@@ -83,9 +100,6 @@ label {
 
 .form-grid > * > :first-child {
   grid-column: 1;
-  width: max-content;
-  min-width: 50px;
-  max-width: 200px;
 }
 
 .form-grid > * > :last-child {
