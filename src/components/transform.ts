@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { clamp } from "lodash";
+import { useDebounceFn } from "@reactuses/core";
 
 /** speed/strength of waveform scrolling */
 const scrollXPower = 0.2;
@@ -92,28 +93,24 @@ export const useTransform = ({ length, sampleRate }: Props) => {
   );
 
   /** transform state */
-  const [transform, setTransform] = useState<Transform>(
+  const [transform, setTransform] = useState<Transform>(() =>
     limit({
       translate: { x: 0, y: 0 },
       scale: { x: 0, y: 1 },
     }),
   );
 
-  /** run limit when it changes */
-  useEffect(() => {
-    setTransform((transform) => limit(transform));
-  }, [limit]);
-
   /** center transform around time, in seconds */
   const center = useCallback(
-    (time: number) =>
-      setTransform((transform) => {
+    async (time: number) => {
+      await setTransform((transform) => {
         /** current time sample # */
         const currentSample = time * sampleRate;
         /** center horizontally */
         transform.translate.x = 0.5 - currentSample * transform.scale.x;
         return limit(transform);
-      }),
+      });
+    },
     [limit, sampleRate],
   );
 
@@ -185,5 +182,14 @@ export const useTransform = ({ length, sampleRate }: Props) => {
     [transform, limit],
   );
 
-  return { transform, onWheel, center };
+  /**
+   * debounce (or otherwise make async) to avoid "maximum update depth
+   * exceeded". not caused by infinite recursion. caused by center being called
+   * inside useEffect rapidly (e.g. dragging current time rapidly), changing
+   * transform, causing many (but not infinite) re-renders dependent on
+   * transform.
+   */
+  const { run: _center } = useDebounceFn(center, 10, { maxWait: 10 });
+
+  return { transform, onWheel, center: _center };
 };
