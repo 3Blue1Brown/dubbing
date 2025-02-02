@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { FaMicrophone, FaXmark } from "react-icons/fa6";
 import Button from "@/components/Button";
 import CheckButton from "@/components/CheckButton";
@@ -31,11 +31,23 @@ const Tracks = () => {
     autoScroll,
   });
 
+  /** flag that time changed due to user seek */
+  const justSeeked = useRef(false);
+
   /** when current time changes */
   useEffect(() => {
-    /** center view on current time */
-    if (autoScroll) center(time)?.catch(console.error);
+    /** if auto-scroll on, and if didn't change because of seek */
+    if (autoScroll && !justSeeked.current)
+      /** center view on current time */
+      center(time)?.catch(console.error);
+    justSeeked.current = false;
   }, [center, time, autoScroll]);
+
+  /** on waveform seek */
+  const onSeek = (time: number) => {
+    justSeeked.current = true;
+    setTime(time);
+  };
 
   return (
     <div className={classes.tracks}>
@@ -99,7 +111,7 @@ const Tracks = () => {
                 onWheel={onWheel}
                 sampleRate={sampleRate}
                 time={time}
-                onSeek={setTime}
+                onSeek={onSeek}
               />
             </div>
           </div>
@@ -121,7 +133,7 @@ const Tracks = () => {
             onWheel={onWheel}
             sampleRate={sampleRate}
             time={time}
-            onSeek={setTime}
+            onSeek={onSeek}
           />
         </div>
       </div>
