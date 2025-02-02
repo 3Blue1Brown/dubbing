@@ -47,7 +47,7 @@ export const useLessonAll = () => {
   /** current time, in seconds */
   const [time, _setTime] = useState(0);
 
-  /** show original (english) text */
+  /** show original text */
   const [showOriginal, setShowOriginal] = useState(false);
 
   /** should auto-scroll */

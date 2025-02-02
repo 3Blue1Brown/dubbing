@@ -12,6 +12,7 @@
 .word {
   position: relative;
   border-bottom: solid 2px transparent;
+  white-space: nowrap;
   /* causes slowdown in safari due to many elements */
   /* transition-duration: 0.25s; */
   /* transition-property: color, background; */

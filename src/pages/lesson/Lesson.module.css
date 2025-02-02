@@ -7,7 +7,8 @@
 }
 
 .top > * {
-  height: 180px;
+  --height: 240px;
+  height: var(--height);
   overflow: hidden;
   border: var(--border);
   border-radius: var(--rounded);
@@ -16,10 +17,10 @@
 
 .top > :first-child {
   flex-shrink: 0;
-  width: 260px;
-  min-width: 100px;
+  width: calc(var(--height) * 16 / 9);
+  min-width: 200px;
   max-width: 1000px;
-  height: 180px;
+  height: var(--height);
   min-height: 100px;
   max-height: 600px;
 }
