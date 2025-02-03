@@ -10,27 +10,31 @@
 }
 
 .word {
-  position: relative;
+  /* position: relative; */
   border-bottom: solid 2px transparent;
-  white-space: nowrap;
+  /* white-space: nowrap; */
 }
 
-.word::before {
+/* .word::before {
   position: absolute;
   inset: -2px;
   border-bottom: solid 2px transparent;
   content: "";
   pointer-events: none;
-}
+} */
 
 .past {
   color: var(--primary);
 }
 
 .present {
-  color: var(--secondary);
+  /* color: var(--secondary); */
 }
 
 .present::before {
-  border-color: var(--secondary);
+  /* border-color: var(--secondary); */
+}
+
+.future {
+  /* color: var(--gray); */
 }
