@@ -50,11 +50,6 @@ const Sentences = () => {
                       state === "present" && classes.present,
                       state === "future" && classes.future,
                     )}
-                    style={{
-                      opacity: playing
-                        ? 0.25 + 1.25 ** -Math.abs(time - (end + start) / 2)
-                        : 1,
-                    }}
                     onClick={() => setTime(start)}
                   >
                     {text}

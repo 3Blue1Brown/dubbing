@@ -6,7 +6,7 @@ import type { Peaks } from "@/audio/peaks.worker.ts";
 import { peaks as peaksSync } from "./peaks.worker";
 
 /** time to wait before returning detailed peaks, in ms */
-const debounce = 50;
+const debounce = 100;
 
 /** create peaks worker pool */
 const peaksPool = pool(PeaksWorker, {
