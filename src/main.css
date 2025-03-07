@@ -126,6 +126,11 @@ summary {
   cursor: pointer;
 }
 
+pre {
+  width: 100%;
+  overflow-x: auto;
+}
+
 [disabled] {
   filter: saturate(0);
   pointer-events: none;

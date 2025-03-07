@@ -10,6 +10,7 @@ import {
 } from "react-router";
 import Home from "@/pages/Home.tsx";
 import Lesson from "@/pages/lesson/Lesson.tsx";
+import { userAgent } from "@/util/browser";
 import "@/util/tooltips";
 import "./main.css";
 
@@ -62,6 +63,7 @@ const HandlerError = ({ error, resetErrorBoundary }: FallbackProps) => (
     ) : (
       String(error)
     )}
+    <pre>{JSON.stringify(userAgent, null, 2)}</pre>
     <button onClick={resetErrorBoundary}>Reset</button>
   </>
 );
