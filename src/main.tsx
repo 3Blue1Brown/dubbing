@@ -1,5 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import type { FallbackProps } from "react-error-boundary";
+import { ErrorBoundary } from "react-error-boundary";
 import {
   createBrowserRouter,
   Outlet,
@@ -15,7 +17,9 @@ import "./main.css";
 const Layout = () => {
   return (
     <main>
-      <Outlet />
+      <ErrorBoundary fallbackRender={HandlerError}>
+        <Outlet />
+      </ErrorBoundary>
     </main>
   );
 };
@@ -44,6 +48,23 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
+const HandlerError = ({ error, resetErrorBoundary }: FallbackProps) => (
+  <>
+    <h2>Application Error</h2>
+    {error instanceof Error ? (
+      <>
+        {error.message}
+        <br />
+        <br />
+        {error.stack}
+      </>
+    ) : (
+      String(error)
+    )}
+    <button onClick={resetErrorBoundary}>Reset</button>
+  </>
+);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
