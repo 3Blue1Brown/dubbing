@@ -3,14 +3,8 @@ import { clamp } from "lodash";
 import { useDebounceFn } from "@reactuses/core";
 
 /** speed/strength of waveform scrolling */
-const scrollXPower = 0.2;
-const scrollYPower = 1.2;
-
-/**
- * keep track of max wheel delta seen so far (to calibrate based on
- * mouse/trackpad/etc differences)
- */
-let maxDelta = 0;
+const scrollXPower = 0.005;
+const scrollYPower = 1.01;
 
 type Props = {
   /** total length of timeline, in seconds */
@@ -124,13 +118,6 @@ export const useTransform = ({ length, sampleRate }: Props) => {
       let { deltaX, deltaY, shiftKey, ctrlKey, altKey, clientX, clientY } =
         event;
       const target = event.currentTarget as HTMLElement;
-
-      /** update max wheel delta seen so far */
-      maxDelta = Math.max(maxDelta, Math.abs(deltaX), Math.abs(deltaY));
-
-      /** normalize scroll deltas */
-      deltaX /= maxDelta;
-      deltaY /= maxDelta;
 
       /** make wheel effect more precise */
       if (altKey) {
