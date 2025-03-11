@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ComponentProps } from "react";
 import { max } from "lodash";
 import { useElementBounding } from "@reactuses/core";
-import { peaks } from "@/audio/peaks.worker";
+import { getPeaks } from "@/audio/peaks";
 import { power } from "@/util/math";
 import classes from "./Analyzer.module.css";
 
@@ -41,7 +41,7 @@ const Analyzer = ({ data, mirror = false, ...props }: Props) => {
   const maxAbs = max(data.map(Math.abs)) ?? 0;
 
   /** draw data */
-  const Analyzer = peaks({
+  const Analyzer = getPeaks({
     array: data,
     start: 0,
     end: data.length,

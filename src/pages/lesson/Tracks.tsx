@@ -112,6 +112,7 @@ const Tracks = () => {
                 sampleRate={sampleRate}
                 time={time}
                 onSeek={onSeek}
+                totalWaveforms={tracks.length + 1}
               />
             </div>
           </div>
@@ -134,6 +135,7 @@ const Tracks = () => {
             sampleRate={sampleRate}
             time={time}
             onSeek={onSeek}
+            totalWaveforms={tracks.length + 1}
           />
         </div>
       </div>

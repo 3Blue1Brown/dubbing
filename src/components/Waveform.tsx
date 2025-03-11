@@ -34,6 +34,8 @@ type Props = {
   showTicks?: boolean;
   /** current time change */
   onSeek?: (time: number) => void;
+  /** total number of waveforms being displayed, used to tune performance */
+  totalWaveforms?: number;
 } & Omit<ComponentProps<"canvas">, "onWheel">;
 
 /** min dist between ticks, in px */
@@ -75,6 +77,7 @@ const Waveform = ({
   sampleRate,
   showTicks = true,
   onSeek,
+  totalWaveforms = 1,
   ...props
 }: Props) => {
   /** waveform before current time, "active" */
@@ -91,7 +94,7 @@ const Waveform = ({
 
   /** element size */
   let { left, top, width, height } = useElementBounding(canvasRef);
-  width ||= 100;
+  width ||= window.innerWidth;
   height ||= 100;
   const halfHeight = height / 2;
 
@@ -136,17 +139,8 @@ const Waveform = ({
     /** one point for each pixel of width */
     divisions: width,
     /** larger # of samples -> skip more */
-    step: (endSample - startSample) / 1000,
+    step: (totalWaveforms * (endSample - startSample)) / 100000,
   });
-  // const points = useMemo(
-  //   () =>
-  //     _points.map(({ min, max, ...rest }) => ({
-  //       ...rest,
-  //       top: sampleToPercent(transform, { y: min }).y,
-  //       bottom: sampleToPercent(transform, { y: max }).y,
-  //     })),
-  //   [_points, transform],
-  // );
 
   /** mouse coords */
   const mouseClient = useMouse(canvasRef);

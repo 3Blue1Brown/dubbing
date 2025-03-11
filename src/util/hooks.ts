@@ -20,10 +20,16 @@ export const useShortcutClick = <Ref extends HTMLElement = HTMLElement>(
   return ref;
 };
 
+/** https://github.com/facebook/react/issues/14490#issuecomment-451924162 */
+const empty = new Float32Array(0);
+
 /** reactive typed array */
 export const useTypedArray = (size = 0) => {
-  const array = useRef(new Float32Array(size));
+  const array = useRef(empty);
   const [updated, setUpdated] = useState(0);
+
+  /** init array */
+  if (array.current === empty) array.current = new Float32Array(size);
 
   /** increment updated key */
   const update = useCallback(() => setUpdated((update) => update + 1), []);

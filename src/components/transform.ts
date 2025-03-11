@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { clamp } from "lodash";
 import { useDebounceFn } from "@reactuses/core";
 
@@ -94,10 +94,15 @@ export const useTransform = ({ length, sampleRate }: Props) => {
     }),
   );
 
+  /** limit when anything affecting limit func changes */
+  useEffect(() => {
+    setTransform((transform) => limit(transform));
+  }, [limit]);
+
   /** center transform around time, in seconds */
   const center = useCallback(
     async (time: number) => {
-      await setTransform((transform) => {
+      setTransform((transform) => {
         /** current time sample # */
         const currentSample = time * sampleRate;
         /** center horizontally */

@@ -1,5 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
+import { random } from "lodash";
 import { useEventListener } from "@reactuses/core";
+import { concatFloats } from "@/audio";
 import Button from "@/components/Button";
 import { useLesson } from "@/pages/lesson/state";
 import test from "@/test.wav?url";
@@ -81,7 +83,11 @@ const Debug = ({ data = {} }: Props) => {
                     {
                       name: `Track ${tracks.length + 1}`,
                       muted: false,
-                      audio: testTrack.current!,
+                      audio: concatFloats(
+                        /** insert random amount of silence at beginning */
+                        new Float32Array(random(0, 20 * sampleRate)).fill(0),
+                        testTrack.current!,
+                      ),
                     },
                   ]
                 : []),
