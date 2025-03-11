@@ -7,8 +7,9 @@
 /**
  * max # of audio samples worklet buffer can hold. allocate large enough # such
  * that one call to process should never exceed it (resulting in loss of data).
+ * https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process
  */
-const maxSamples = 100000;
+const maxSamples = 128 * 10;
 /**
  * once collected samples exceeds this amount, "flush" buffer (send message to
  * parent audio graph with collected sample data). lower -> more frequent
