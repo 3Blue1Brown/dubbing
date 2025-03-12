@@ -93,9 +93,7 @@ const Waveform = ({
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
 
   /** element size */
-  let { left, top, width, height } = useElementBounding(canvasRef);
-  width ||= window.innerWidth;
-  height ||= 100;
+  const { left, top, width, height } = useElementBounding(canvasRef);
   const halfHeight = height / 2;
 
   /** when size changes */
@@ -251,6 +249,8 @@ const Waveform = ({
     <canvas
       ref={canvasRef}
       className={classes.waveform}
+      /** wait until dimensions defined to show */
+      style={{ opacity: !width && !height ? 0 : 1 }}
       onClick={({ clientX }) => {
         const percent = clientToPercent(
           { left, top, width, height },

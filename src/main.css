@@ -128,7 +128,7 @@ summary {
 
 pre {
   width: 100%;
-  overflow-x: auto;
+  margin: 0;
 }
 
 [disabled] {

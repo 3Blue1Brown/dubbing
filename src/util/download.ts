@@ -30,6 +30,7 @@ export const downloadBlob = (blob: Blob, filename: Filename, ext: string) => {
 
 /** create encoder worker pool */
 const encoderPool = pool(EncodeWorker, {
+  /** https://github.com/josdejong/workerpool/issues/341#issuecomment-2046514842 */
   workerOpts: { type: import.meta.env.PROD ? undefined : "module" },
 });
 

@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from "react";
+import { now } from "lodash";
 import { useInterval } from "@reactuses/core";
 import { useMicrophone } from "@/audio/devices";
 import type { PlayerRef } from "@/components/Player";
 import type { Sentence } from "@/pages/lesson/data";
 import { useTypedArray } from "@/util/hooks";
-import { sleep } from "@/util/misc";
 import { createContextWithSelectors, useContextSelector } from "@/util/state";
 
 /** all lesson state */
@@ -58,12 +58,9 @@ export const useLessonAll = () => {
     { name: string; muted: boolean; audio: Float32Array }[]
   >([]);
 
-  /** track specifically to hold recording */
+  /** track specifically to hold current recording */
   const [recordTrack, recordTrackUpdated, setRecordTrack, resetRecordTrack] =
     useTypedArray(length * sampleRate);
-
-  /** countdown to starting recording */
-  const [recordCountdown, setRecordCountdown] = useState(0);
 
   /** update props of a track or all tracks */
   const updateTrack = useCallback(
@@ -134,15 +131,7 @@ export const useLessonAll = () => {
 
   /** playing set wrapper */
   const setPlaying = useCallback(
-    async (playing: boolean) => {
-      /** start-recording countdown */
-      if (playing && recording)
-        for (let seconds = 3; seconds > 0; seconds--) {
-          setRecordCountdown(seconds);
-          await sleep(1000);
-        }
-      setRecordCountdown(0);
-
+    (playing: boolean) => {
       /** move cursor back to mark, DAW-style */
       if (!playing) _setTime(mark.time);
 
@@ -178,7 +167,7 @@ export const useLessonAll = () => {
       const newTime = mark.time + (now() - mark.timestamp) / 1000;
 
       /** stop if past end of timeline */
-      if (newTime > length) setPlaying(false).catch(console.error);
+      if (newTime >= length) setPlaying(false);
       else _setTime(newTime);
     },
     playing ? updateInterval : null,
@@ -206,7 +195,6 @@ export const useLessonAll = () => {
     setPlaythrough,
     recording,
     setRecording,
-    recordCountdown,
     playing,
     setPlaying,
     volume,
@@ -237,9 +225,6 @@ export const LessonContext = createContextWithSelectors<Lesson>({} as Lesson);
 /** use piece of lesson data */
 export const useLesson = <Key extends keyof Lesson>(key: Key) =>
   useContextSelector(LessonContext, (state) => state[key]);
-
-/** timestamp shorthand */
-const now = () => window.performance.now();
 
 /** update frequency of UI in ms, i.e. for current time, freq analyzer, etc. */
 export const updateInterval =

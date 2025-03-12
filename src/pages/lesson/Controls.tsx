@@ -14,7 +14,7 @@ import CheckButton from "@/components/CheckButton";
 import Select from "@/components/Select";
 import Slider from "@/components/Slider";
 import { useLesson } from "@/pages/lesson/state";
-import { useShortcutClick } from "@/util/hooks";
+import { useCountdown, useShortcutClick } from "@/util/hooks";
 import { formatTime } from "@/util/string";
 import classes from "./Controls.module.css";
 
@@ -36,7 +36,6 @@ const Controls = () => {
   const setMicAnalByFreq = useLesson("setMicAnalByFreq");
   const recording = useLesson("recording");
   const setRecording = useLesson("setRecording");
-  const recordCountdown = useLesson("recordCountdown");
   const playing = useLesson("playing");
   const setPlaying = useLesson("setPlaying");
   const volume = useLesson("volume");
@@ -48,6 +47,8 @@ const Controls = () => {
   const setShowOriginal = useLesson("setShowOriginal");
   const autoScroll = useLesson("autoScroll");
   const setAutoScroll = useLesson("setAutoScroll");
+
+  const [countdown, startCountdown, stopCountdown] = useCountdown(3);
 
   return (
     <div className={classes.controls}>
@@ -104,9 +105,12 @@ const Controls = () => {
               style={{ "--accent": "var(--secondary)" } as CSSProperties}
               label={recording ? "Disarm recording (R)" : "Arm recording (R)"}
               checked={recording}
-              onChange={() => setRecording(!recording)}
+              onChange={(value) => {
+                if (countdown) stopCountdown();
+                setRecording(value);
+              }}
             >
-              {recordCountdown || <FaCircle />}
+              {countdown ? Math.floor(countdown + 1).toFixed(0) : <FaCircle />}
             </CheckButton>
           </>
         ) : (
@@ -117,7 +121,13 @@ const Controls = () => {
           ref={playButtonRef}
           label={playing ? "Pause (Space)" : "Play (Space)"}
           checked={playing}
-          onChange={() => setPlaying(!playing)}
+          onChange={(value) => {
+            if (countdown) stopCountdown();
+            else if (value) {
+              if (recording) startCountdown(() => setPlaying(true));
+              else setPlaying(true);
+            } else setPlaying(false);
+          }}
         >
           {playing ? <FaPause /> : <FaPlay />}
         </CheckButton>

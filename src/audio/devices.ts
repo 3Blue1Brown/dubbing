@@ -53,6 +53,7 @@ export const useMicrophone = ({
        * in some browsers, enumerateDevices returns only device user approved
        * permissions for. try to request mic permission beforehand to get all
        * available devices.
+       * https://stackoverflow.com/questions/51387564/navigator-mediadevices-enumeratedevices-only-returns-default-devices-on-safari?rq=3
        */
       if (isSafari || isFirefox)
         await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -71,6 +72,7 @@ export const useMicrophone = ({
 
     if (device !== noDevice)
       (async () => {
+        /** get mic stream */
         const stream = await navigator.mediaDevices.getUserMedia({
           video: false,
           audio: {
@@ -94,11 +96,15 @@ export const useMicrophone = ({
           }
         }
 
+        /** odd occasional safari behavior where device id changes */
         if (isSafari) {
           const actualDeviceId = stream
             .getAudioTracks()[0]
             ?.getCapabilities().deviceId;
-          setDevice(actualDeviceId ?? "");
+          if (device !== actualDeviceId) {
+            setDevice(actualDeviceId ?? noDevice);
+            return;
+          }
         }
 
         setMicStream(stream);

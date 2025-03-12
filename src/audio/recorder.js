@@ -9,7 +9,7 @@
  * that one call to process should never exceed it (resulting in loss of data).
  * https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process
  */
-const maxSamples = 128 * 10;
+const maxSamples = 128 * 100;
 /**
  * once collected samples exceeds this amount, "flush" buffer (send message to
  * parent audio graph with collected sample data). lower -> more frequent

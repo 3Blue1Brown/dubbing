@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useEventListener } from "@reactuses/core";
+import { now } from "lodash";
+import { useEventListener, useInterval } from "@reactuses/core";
 
 /** conveniently add keyboard shortcut to button click event */
 export const useShortcutClick = <Ref extends HTMLElement = HTMLElement>(
@@ -66,4 +67,54 @@ export const useTypedArray = (size = 0) => {
   }, [update]);
 
   return [array.current, updated, set, reset] as const;
+};
+
+/** countdown hook */
+export const useCountdown = (seconds: number, poll = 50) => {
+  /** current time remaining, in seconds. 0 if stopped. */
+  const [countdown, setCountdown] = useState(0);
+  /** timestamp mark */
+  const timestamp = useRef(now());
+  /** func to call when time runs out */
+  const doneFunc = useRef<() => void>(undefined);
+
+  /** start countdown */
+  const start = useCallback(
+    (onDone?: () => void) => {
+      timestamp.current = now();
+      setCountdown(seconds);
+      doneFunc.current = onDone;
+    },
+    [seconds],
+  );
+
+  /** stop countdown */
+  const stop = useCallback(() => {
+    setCountdown(0);
+    doneFunc.current = undefined;
+  }, []);
+
+  /** poll to get updated time */
+  useInterval(
+    () => {
+      /** https://github.com/childrentime/reactuse/issues/128 */
+      if (!countdown) return;
+      /** exact time elapsed since countdown started */
+      const value = seconds - (now() - timestamp.current) / 1000;
+
+      /** if still time left, update time */
+      if (value > 0) setCountdown(value);
+      else {
+        /** otherwise, stop */
+        setCountdown(0);
+        doneFunc.current?.();
+        doneFunc.current = undefined;
+      }
+    },
+    countdown ? poll : null,
+    /** so we don't get brief flash of countdown exactly === seconds */
+    { immediate: true },
+  );
+
+  return [countdown, start, stop] as const;
 };

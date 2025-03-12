@@ -44,8 +44,8 @@ const LessonProvider = ({ children }: { children: ReactNode }) => {
 
   /** update tab title */
   useEffect(() => {
-    document.title = [year, title, language].join(" / ");
-  }, [year, title, language]);
+    document.title = state ? "Uploaded" : [year, title, language].join(" / ");
+  }, [state, year, title, language]);
 
   const { setVideo, setSentences, setLength } = lesson;
 

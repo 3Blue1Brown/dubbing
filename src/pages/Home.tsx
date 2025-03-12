@@ -32,7 +32,7 @@ const Home = () => {
 
       navigate(
         /** go to lesson page */
-        `/${year}/${title}/${language}`,
+        upload ? "/upload" : `/${year}/${title}/${language}`,
         /** pass raw data in state object if uploaded */
         upload
           ? {

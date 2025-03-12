@@ -16,7 +16,7 @@
 .present {
   color: var(--secondary);
   text-decoration: underline;
-  text-underline-offset: 5px;
+  text-underline-offset: 3px;
 }
 
 .future {

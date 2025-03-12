@@ -25,21 +25,28 @@ const init = () => {
 const updateAll = () =>
   document.querySelectorAll("[data-tooltip]").forEach(update);
 
-/** update element tolltip */
+/** update element tooltip */
 const update = (element: Element & { _tippy?: Instance }) => {
+  /** if element detached from dom, dispose */
   if (!element.isConnected) return element._tippy?.destroy();
 
+  /** get content to put in tooltip from element attribute */
   const content = element.getAttribute("data-tooltip")?.trim() || "";
 
+  /** if no/empty content, dispose */
   if (!content) return element._tippy?.destroy();
 
+  /** get existing tippy instance on element, or create new one */
   const instance = element._tippy ?? tippy(element, options);
 
+  /** set tooltip content */
   instance.setContent(content);
 
+  /** if no screen-reader-readable text within element, add aria label */
   if (!element.textContent?.trim() && !element.getAttribute("aria-label"))
     element.setAttribute("aria-label", content);
 
+  /** update position after waiting for layout shifts */
   if (instance.popperInstance)
     window.setTimeout(instance.popperInstance.update, 20);
 };

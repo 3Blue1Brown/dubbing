@@ -43,6 +43,10 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "/upload",
+        element: <Lesson />,
+      },
+      {
         path: "/:year/:title/:language",
         element: <Lesson />,
       },

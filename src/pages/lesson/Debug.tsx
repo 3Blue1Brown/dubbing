@@ -16,9 +16,11 @@ type Props = {
   data?: Data;
 };
 
+/** trigger debug event from outside component */
 export const debug = (data: Data) =>
   window.dispatchEvent(new CustomEvent("debug", { detail: data }));
 
+/** timing debug util funcs */
 let before = 0;
 export const timeStart = () => (before = window.performance.now());
 export const timeEnd = (key: string) => {
@@ -33,12 +35,15 @@ const Debug = ({ data = {} }: Props) => {
   const devices = useLesson("devices");
   const setTracks = useLesson("setTracks");
 
+  /** current debug data to show */
   const [event, setEvent] = useState<Data>({});
 
+  /** listen for debug event from outside component, update internal state */
   useEventListener("debug", ({ detail }) =>
     sleep().then(() => setEvent((event) => ({ ...event, ...detail }))),
   );
 
+  /** compile useful info into one object */
   data = {
     ...event,
     userAgent,
@@ -50,13 +55,14 @@ const Debug = ({ data = {} }: Props) => {
     devices,
   };
 
+  /** dummy audio */
   const testTrack = useRef<Float32Array>(null);
 
   useEffect(() => {
     /** only load test track once */
     if (testTrack.current) return;
 
-    /** if not on "final" sample rate, don't load */
+    /** if not on real sample rate yet, don't decode */
     if (!micStream) return;
 
     /** load test waveforms */
@@ -100,11 +106,11 @@ const Debug = ({ data = {} }: Props) => {
           {Object.entries(data).map(([key, value]) => (
             <Fragment key={key}>
               <div>{key}</div>
-              <div>
-                {typeof value === "object"
-                  ? JSON.stringify(value, null, 2)
-                  : String(value)}
-              </div>
+              {typeof value === "object" ? (
+                <pre>{JSON.stringify(value, null, 2)}</pre>
+              ) : (
+                <div>{String(value)}</div>
+              )}
             </Fragment>
           ))}
         </div>

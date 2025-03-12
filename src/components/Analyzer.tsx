@@ -93,7 +93,7 @@ const Analyzer = ({ data, mirror = false, ...props }: Props) => {
     }
   });
 
-  return <canvas {...props} ref={canvasRef} className={classes.Analyzer} />;
+  return <canvas {...props} ref={canvasRef} className={classes.analyzer} />;
 };
 
 export default Analyzer;
