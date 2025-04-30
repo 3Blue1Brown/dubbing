@@ -97,7 +97,10 @@ export const parseData = async ({
   });
 
   /** video length, based on sentence timings */
-  const length = sentences.at(-1)!.translation.at(-1)!.end;
+  const length =
+    sentences.at(-1)!.translation.at(-1)!.end +
+    /** add some padding */
+    3;
 
   return { video, sentences, length };
 };

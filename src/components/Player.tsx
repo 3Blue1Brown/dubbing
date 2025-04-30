@@ -7,6 +7,8 @@ type Props = {
   ref?: Ref<PlayerRef>;
   /** video id */
   video: string;
+  /** length callback */
+  onLength?: (length: number) => void;
 };
 
 export type PlayerRef = {
@@ -17,7 +19,7 @@ export type PlayerRef = {
 };
 
 /** video player */
-const Player = ({ ref, video }: Props) => {
+const Player = ({ ref, video, onLength }: Props) => {
   const playerRef = useRef<YouTubePlayer>(null);
 
   /** expose methods */
@@ -47,6 +49,8 @@ const Player = ({ ref, video }: Props) => {
       onReady={async (event) => {
         playerRef.current = event.target;
         await playerRef.current?.mute();
+        const length = await playerRef.current?.getDuration();
+        if (length) onLength?.(length);
       }}
       className={classes.container}
       iframeClassName={classes.iframe}
